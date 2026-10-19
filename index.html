@@ -1718,9 +1718,18 @@ function kcFrame(now){const t=now-player.deadAt;
  const hi=KC.killer.list.indexOf(KC.killer.parts.head),ci=player.list.indexOf(player.parts.chest),kh=new THREE.Vector3(K[1][hi*7],K[1][hi*7+1],K[1][hi*7+2]),vc=new THREE.Vector3(Vv[1][ci*7],Vv[1][ci*7+1],Vv[1][ci*7+2]);
  const dir=vc.clone().sub(kh);dir.y=0;const L=Math.max(.5,dir.length());dir.normalize();const right=new THREE.Vector3(-dir.z,0,dir.x);
  const u=Math.min(1,(now-KC.start)/KC_LEN),sh=KC_SHOTS[KC.ang],o=sh.f(kh,vc,dir,right,L,u);
- // keep the camera out of walls: pull it in towards what it's looking at
- const an=o.anchor||vc,dv=o.p.clone().sub(an),dl=dv.length();if(dl>.3){dv.divideScalar(dl);const h=castRay(an,dv,dl,null,1);if(h.hit)o.p.copy(an).addScaledVector(dv,Math.max(.25,an.distanceTo(h.p)-.2));}
- cam.position.copy(o.p);if(cam.fov!==o.fov){cam.fov=o.fov;cam.updateProjectionMatrix();}cam.up.set(0,1,0);cam.lookAt(o.look||vc);if(o.roll)cam.rotateZ(o.roll);cam.updateMatrixWorld();return true;}
+ // both the killer and the victim must be in shot: aim between them and back off until they fit
+ const pts=[kh.clone().add(E3(0,.25,0)),kh.clone().add(E3(0,-1.2,0)),vc.clone().add(E3(0,.6,0)),vc.clone().add(E3(0,-.8,0))],mid=kh.clone().lerp(vc,.5),look=(o.look||vc).clone();
+ let fov=o.fov;const fits=()=>{cam.position.copy(o.p);cam.up.set(0,1,0);cam.lookAt(look);if(o.roll)cam.rotateZ(o.roll);cam.fov=fov;cam.updateProjectionMatrix();cam.updateMatrixWorld();
+  for(const q of pts){const v=q.clone().project(cam);if(v.z>1||v.z<-1||Math.abs(v.x)>.82||Math.abs(v.y)>.78)return false;}
+  const a=kh.clone().project(cam),b=vc.clone().project(cam);ovl=Math.hypot(a.x-b.x,(a.y-b.y)*.6)<.22;return !ovl;};let ovl=false;
+ for(let i=0;i<14&&!fits();i++){look.lerp(mid,.3);const away=o.p.clone().sub(mid);if(away.lengthSq()<.01)away.set(-dir.x,.3,-dir.z);o.p.copy(mid).addScaledVector(away,ovl?1.05:1.18);if(ovl)o.p.addScaledVector(right,-.6);o.p.y=Math.max(o.p.y,groundH(o.p.x,o.p.z)+.15);}
+ // keep the camera out of walls: pull it in towards what it's looking at, then widen the lens if that cut someone out
+ const an=o.anchor||mid,dv=o.p.clone().sub(an),dl=dv.length();if(dl>.3){dv.divideScalar(dl);const h=castRay(an,dv,dl,null,1);if(h.hit)o.p.copy(an).addScaledVector(dv,Math.max(.25,an.distanceTo(h.p)-.2));}
+ for(let i=0;i<10&&!fits();i++){fov=Math.min(100,fov+6);look.lerp(mid,.25);}
+ // still can't see both (tight room): fall back to just behind the killer, looking at the victim
+ if(!fits()){o.roll=0;fov=60;look.copy(kh).lerp(vc,.7);o.p.copy(kh).addScaledVector(dir,-1.3).addScaledVector(right,-.9).add(E3(0,.45,0));const bk=castRay(kh,E3(-dir.x,.3,-dir.z).normalize(),1.4,null,1);if(bk.hit)o.p.copy(kh).add(E3(0,.5,0));for(let i=0;i<6&&!fits();i++)fov=Math.min(100,fov+8);}
+ return true;}
 // ---------- loop ----------
 let cullTick=0;const DT=1/400;let acc=0,last=performance.now();
 const tgt=new THREE.Vector3(0,1,0);const _fpS=new THREE.Vector3();let fpOn=false,fpWas=false,camCD=3.6,cqTick=0,cqT=0,cqK=0;
