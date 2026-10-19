@@ -415,7 +415,7 @@ let menuOpen=false;const menuEl=document.getElementById('m'),volEl=document.getE
 function showSettings(){botsEl.value=settings.bots;diffEl.value=settings.diff;document.getElementById('bv').textContent=settings.bots;optEl.checked=!!settings.opt;volEl.value=Math.round(settings.vol*100);sensEl.value=Math.round(settings.sens*100);document.getElementById('vv').textContent=volEl.value+'%';document.getElementById('sv').textContent=(settings.sens).toFixed(2)+'x';}
 function saveSettings(){settings.vol=volEl.value/100;settings.sens=sensEl.value/100;settings.opt=optEl.checked;settings.bots=+botsEl.value;settings.diff=+diffEl.value;applyOpt();syncBots();if(master)master.gain.value=settings.vol;showSettings();try{localStorage.setItem('ragdollSettings',JSON.stringify(settings));}catch(e){}}
 for(const el of[volEl,sensEl,optEl,botsEl,diffEl])for(const ev of['input','change'])el.addEventListener(ev,saveSettings);
-function toggleMenu(){menuOpen=!menuOpen;menuEl.style.display=menuOpen?'flex':'none';
+function toggleMenu(){menuOpen=!menuOpen;menuEl.style.display=menuOpen?'flex':'none';{const lb=$('mLeave');lb.style.display=mode?'block':'none';lb.textContent=NET.on?'Leave server':'Leave game';}
  if(menuOpen){for(const k in keys)keys[k]=false;aiming=false;fireHeld=false;for(const id of['tRun','tAim'])document.getElementById(id).classList.remove('on');fireReq=false;showSettings();if(document.pointerLockElement)document.exitPointerLock();}}
 // optimised mode: lower render resolution, no shadows, faster collision broadphase, fewer solver passes, idle objects sleep
 let optOn=null;const OPT_FAR=60;   // optimised: anything further than this is hidden (fades into fog first)
@@ -1454,7 +1454,7 @@ $('sbnick').addEventListener('change',()=>{const v=$('sbnick').value.trim().slic
 $('sbcreate').onclick=createServer;$('sbquick').onclick=quickMatch;
 $('sbback').onclick=()=>{$('sb').style.display='none';NET.want=false;if(NET.lobby)NET.lobby.presence({br:null}).catch(()=>{});
  if(!mode){use(player);player.team='A';setupZone();syncBots();respawnAt(MAPS[curMap||'tester'].start);startGame(pendMode);$('score').style.display='block';}};
-$('mLeave').onclick=()=>leaveServer();
+$('mLeave').onclick=()=>NET.on?leaveServer():location.reload();   // vs bots: back to the main menu
 // ---------- combat HUD ----------
 function updateHUD(){$('hpf').style.width=player.hp+'%';$('hpf').style.background=player.hp>50?'#4cd06a':player.hp>25?'#e8b23a':'#e04a3a';
  $('hpt').textContent=Math.max(0,player.hp|0);{const pw=cur===player?wpn:player.wpn;$('wn').textContent=pw?pw.name:'';}$('kd').textContent=`K ${player.kills}  ·  D ${player.deaths}`;}
