@@ -214,7 +214,7 @@ function seg(x1,z1,x2,z2,h,t,col,y0=0){const lx=Math.abs(x2-x1),lz=Math.abs(z2-z
 // straight wall with doors (full-height gap, lintel above) and windows (sill below, lintel above) — ops: [[centre, width, 'door'|'window'], ...]
 function wallLine(x1,z1,x2,z2,ops,h,t,col){const alongX=Math.abs(x2-x1)>Math.abs(z2-z1),a0=alongX?Math.min(x1,x2):Math.min(z1,z2),a1=alongX?Math.max(x1,x2):Math.max(z1,z2),c=alongX?z1:x1;
  const S=(u0,u1,y0,y1)=>{if(u1-u0<.02||y1-y0<.02)return;alongX?seg(u0,c,u1,c,y1-y0,t,col,y0):seg(c,u0,c,u1,y1-y0,t,col,y0);};
- let u=a0;for(const[oc,ow,ty]of ops.slice().sort((p,q)=>p[0]-q[0])){const o0=oc-ow/2,o1=oc+ow/2;S(u,o0,0,h);
+ let u=a0;for(const[oc,ow0,ty]of ops.slice().sort((p,q)=>p[0]-q[0])){const ow=ty==='door'?ow0+.4:ow0,o0=oc-ow/2,o1=oc+ow/2;S(u,o0,0,h);   // doors get 40 cm extra so swinging arms clear the frame
   if(ty==='door')S(o0,o1,2.15,h);else{S(o0,o1,0,1);S(o0,o1,2.05,h);}u=o1;}
  S(u,a1,0,h);}
 // decoration only (no collision): flat ground patches, canopies, roofs
@@ -482,7 +482,8 @@ function navStep(d,P,q){if(!NAV||walkClear(P.x,P.z,q.x,q.z)){d.path=null;d.navF=
  if(!d.path||!d.path.length){d.navF=false;return q;}
  d.navF=true;let w=navPos(d.path[d.pi]);
  while(d.pi<d.path.length-1&&Math.hypot(w.x-P.x,w.z-P.z)<.6){d.pi++;w=navPos(d.path[d.pi]);}
- d.navLong=false;for(let k=Math.min(d.path.length-1,d.pi+6);k>d.pi;k--){const v=navPos(d.path[k]);if(walkClear(P.x,P.z,v.x,v.z)){d.navLong=k-d.pi>=4;d.pi=k;w=v;break;}}   // cut corners only when a whole body fits
+ for(let k=Math.min(d.path.length-1,d.pi+6);k>d.pi;k--){const v=navPos(d.path[k]);if(walkClear(P.x,P.z,v.x,v.z,.4)){d.pi=k;w=v;break;}}   // wide margin: line up square to doorways
+ d.navLong=Math.hypot(w.x-P.x,w.z-P.z)>2.5;                                  // heading at a far, clear point: safe to run   // cut corners only when a whole body fits
  return w;}
 buildMap('tester',false);   // default scenery behind the menus (bot navigation is built when a map is chosen)
 // ---------- foot planting: a planted foot is pinned to the floor so it cannot slide ----------
@@ -1068,41 +1069,58 @@ function safestSpawn(d){const pts=teamSpawns(d.team);let best=pts[0]||spawnPoint
  return best;}
 // ---------- AI brain (runs with the bot's state swapped in, so it just presses the same "keys" a player would) ----------
 function clearDir(P,a){const dir={x:Math.sin(a),y:0,z:Math.cos(a)};return!castRay({x:P.x,y:P.y-.35,z:P.z},dir,1.6,null,1).hit&&!castRay({x:P.x,y:P.y+.35,z:P.z},dir,1.6,null,1).hit;}
+// AI: perceive -> pick a goal (objective / fight / hunt / retreat) -> move along routes -> look at and shoot whoever is visible
 function aiThink(d,dt,now){
  if(d.dead){aiming=false;for(const k in keys)keys[k]=false;return;}
  const D=DIFF[settings.diff|0]||DIFF[1],P=pel.position;
  d.tt-=dt;
  if(d.tt<=0){d.tt=.12;
-  let best=null,bd=1e9,bv=false;const eye=head.position;
-  for(const o of[player,...bots]){if(o===d||o.dead||!isEnemy(d,o))continue;const q=o.chest.position,dd=Math.hypot(q.x-P.x,q.z-P.z);
-   const v=dd<D.range+8&&los(eye,q),sc=dd-(v?100:0);if(sc<bd){bd=sc;best=o;bv=v;}}
-  if(bv&&(!d.vis||d.target!==best))d.seen=now;d.vis=bv;d.target=best;
-  d.moving=false;keys.shift=false;keys.c=false;
-  if(best){const q=best.pel.position,dx=q.x-P.x,dz=q.z-P.z,dist=Math.hypot(dx,dz)||1,ux=dx/dist,uz=dz/dist;let mx,mz;
-   if(bv&&NAV&&!walkClear(P.x,P.z,q.x,q.z)&&!ZONE){const g=navStep(d,P,q);mx=g.x-P.x;mz=g.z-P.z;const gl=Math.hypot(mx,mz)||1;mx/=gl;mz/=gl;}   // in sight through a window/gap: close in by the path, shooting as it goes
-   else if(bv){if(now>d.strafeT){d.strafe=Math.random()<.5?-1:1;d.strafeT=now+700+Math.random()*1800;}   // in sight: hold range and strafe
-    const f=dist>D.range*.7*wpn.pref?1:dist<(wpn.pref<.5?2.5:6)?-1:0;mx=ux*f+uz*d.strafe*.9;mz=uz*f-ux*d.strafe*.9;
-    if(now>(d.crT||0)){d.cr=Math.random()<.4;d.crT=now+1500+Math.random()*2500;}keys.c=d.cr&&f===0;if(keys.c){mx*=.5;mz*=.5;}}
-   else if(ZONE&&Math.hypot(ZONE.x-P.x,ZONE.z-P.z)<ZONE.r*.8){mx=0;mz=0;}                                // zone mode: already holding the zone
-   else{const goal=ZONE?{x:ZONE.x,z:ZONE.z}:q,gdist=Math.hypot(goal.x-P.x,goal.z-P.z);const g=navStep(d,P,goal);mx=g.x-P.x;mz=g.z-P.z;const gl=Math.hypot(mx,mz)||1;mx/=gl;mz/=gl;keys.shift=gdist>8&&(!d.navF||d.navLong);}   // hunting (or heading for the zone): follow the path
-   const a0=Math.atan2(mx,mz);d.moveA=a0;
+  // 1. perception: visible enemies (anyone who just shot me is noticed from much further away and preferred)
+  const eye=head.position,threat=now<(d.threatT||0)?d.threat:null;let best=null,bs=1e9,bv=false;
+  for(const o of[player,...others()]){if(o===d||o.dead||!isEnemy(d,o))continue;const q=o.chest.position,dd=Math.hypot(q.x-P.x,q.z-P.z);
+   const v=dd<(o===threat?90:D.range+8)&&los(eye,q),sc=dd-(v?100:0)-(o===threat?60:0);if(sc<bs){bs=sc;best=o;bv=v;}}
+  if(bv&&(!d.vis||d.target!==best))d.seen=now-(best===threat?D.react*.6:0);   // returning fire is quicker than reacting to a fresh sighting
+  d.vis=bv;d.target=best;
+  // 2. goal
+  keys.shift=false;keys.c=false;d.moving=false;let mx=0,mz=0,goal=null,mode='idle';
+  const q=best?best.pel.position:null,dist=q?Math.hypot(q.x-P.x,q.z-P.z)||1:1e9;
+  if(ZONE&&Math.hypot(ZONE.x-P.x,ZONE.z-P.z)>ZONE.r*.7){mode='obj';goal={x:ZONE.x,z:ZONE.z};}          // objective modes: the zone comes first
+  else if(ZONE)mode=bv?'fight':'hold';
+  else if(best&&bv&&d.hp<35&&threat){mode='retreat';const sp=safestSpawn(d);goal={x:sp.x,z:sp.z};}   // badly hurt and under fire: fall back
+  else if(best&&bv&&walkClear(P.x,P.z,q.x,q.z))mode='fight';
+  else if(best){mode='hunt';goal=q;}
+  d.mode=mode;
+  // 3. movement
+  if(goal){const g=navStep(d,P,goal),gd=Math.hypot(goal.x-P.x,goal.z-P.z);mx=g.x-P.x;mz=g.z-P.z;const gl=Math.hypot(mx,mz)||1;mx/=gl;mz/=gl;
+   keys.shift=gd>5&&(!bv||dist>16||mode==='retreat')&&(!d.navF||d.navLong);}                       // run unless an enemy is close or a tight turn is coming
+  else if(mode==='fight'){const ux=(q.x-P.x)/dist,uz=(q.z-P.z)/dist;
+   if(now>d.strafeT){d.strafe=Math.random()<.5?-1:1;d.strafeT=now+700+Math.random()*1800;}
+   const f=dist>D.range*.7*wpn.pref?1:dist<(wpn.pref<.5?2.5:6)?-1:0;mx=ux*f+uz*d.strafe*.9;mz=uz*f-ux*d.strafe*.9;keys.shift=f>0&&dist>25;
+   if(threat&&now>(d.dodgeT||0)){d.strafe*=-1;d.dodgeT=now+600+Math.random()*700;}                   // under fire: keep changing direction
+   if(now>(d.crT||0)){d.cr=Math.random()<(threat?.25:.4);d.crT=now+1500+Math.random()*2500;}keys.c=d.cr&&f===0;if(keys.c){mx*=.5;mz*=.5;}}
+  else if(mode==='hold'){if(now>d.strafeT){d.strafe=Math.random()<.5?-1:1;d.strafeT=now+1200+Math.random()*2000;}   // inside the zone: shuffle about, crouch sometimes
+   const zx=ZONE.x-P.x,zz=ZONE.z-P.z,zl=Math.hypot(zx,zz)||1;mx=-zz/zl*d.strafe*.6+zx/zl*.3;mz=zx/zl*d.strafe*.6+zz/zl*.3;
+   if(now>(d.crT||0)){d.cr=Math.random()<.5;d.crT=now+2000+Math.random()*2500;}keys.c=d.cr;}
+  if(mx||mz){const a0=Math.atan2(mx,mz);d.moveA=a0;
    if(!d.navF)for(const o of[0,.5,-.5,1,-1,1.6,-1.6,2.4,-2.4])if(clearDir(P,a0+o*d.side)){d.moveA=a0+o*d.side;break;}
    d.moving=Math.hypot(mx,mz)>.1;}
   if(now<(d.unstickT||0)){d.moveA=d.unstickA;d.moving=true;}                         // backing off a snag
-  // stuck against something: try to climb it, otherwise jump and go round the other way
+  // stuck against something: sidestep and re-plan twice, then try to climb it or jump
   if(d.moving&&Math.hypot(pel.velocity.x,pel.velocity.z)<.3)d.stuck+=.12;else d.stuck=Math.max(0,d.stuck-.06);
   if(d.stuck<.2&&d.moving)d.unstickN=0;
   if(d.stuck>1.1&&js===0&&cs===0&&contact()){
    if(d.navF&&(d.unstickN|0)<2){d.unstickN=(d.unstickN|0)+1;d.unstickA=d.moveA+Math.PI*(Math.random()<.5?.65:-.65)+(d.unstickN>1?Math.PI*.35:0);d.unstickT=now+700;d.path=null;d.stuck=0;}
    else{const L=findLedge();if(L)startClimb(L);else startJump();d.side*=-1;d.stuck=0;d.unstickN=0;}}}
- const T=d.target,tClose=T&&Math.hypot(T.chest.position.x-P.x,T.chest.position.z-P.z)<14,lookT=d.vis&&T&&(!d.navF||tClose)&&now>=(d.unstickT||0),
+ // 4. look and shoot: any visible enemy within reach, even on the move (moving keys are worked out relative to where it faces)
+ const T=d.target,tDist=T?Math.hypot(T.chest.position.x-P.x,T.chest.position.z-P.z):1e9,
+  lookT=d.vis&&T&&now>=(d.unstickT||0)&&(d.mode==='fight'||d.mode==='hold'||tDist<(T===d.threat&&now<(d.threatT||0)?60:30)),
   face=lookT?Math.atan2(T.chest.position.x-P.x,T.chest.position.z-P.z):d.moving?d.moveA:yaw;
  camYaw=face-Math.PI;
  const rel=d.moveA-face,f=d.moving?Math.cos(rel):0,rr2=d.moving?-Math.sin(rel):0;
  keys.w=f>.38;keys.s=f<-.38;keys.d=rr2>.38;keys.a=rr2<-.38;
  if(lookT){aiming=true;const q=T.chest.position;aimT.set(q.x+d.err.x,q.y+d.err.y,q.z+d.err.z);
   if(aimK>.8&&now-d.seen>D.react&&now-lastShot>Math.max(wpn.rate,wpn.auto?D.rate*.3:D.rate)*(.75+Math.random()*.5)){fire(now);
-   const sc=D.err*cl(Math.hypot(q.x-P.x,q.z-P.z)/15,.5,2);d.err.set((Math.random()-.5)*2*sc,(Math.random()-.5)*1.6*sc,(Math.random()-.5)*2*sc);}}
+   const sc=D.err*cl(Math.hypot(q.x-P.x,q.z-P.z)/15,.5,2)*(d.moving?1.3:1);d.err.set((Math.random()-.5)*2*sc,(Math.random()-.5)*1.6*sc,(Math.random()-.5)*2*sc);}}
  else{aiming=false;const h=head.position;aimT.set(h.x+Math.sin(yaw)*10,h.y-.3,h.z+Math.cos(yaw)*10);}}
 // ---------- damage: every body section has its own multiplier, and dead-centre hits on a section do more ----------
 const LIMB={thigh:.55,shin:.55,foot:.7,toe:.8,uarm:.6,farm:.6,hand:.7};   // how much strength a section keeps after each hit
@@ -1123,6 +1141,7 @@ function hurt(T,b,p,dir,by,now,w=W.pistol){
  if(LIMB[b.pn])b.wk=Math.max(.3,(b.wk||1)*LIMB[b.pn]);                                             // that muscle is now weaker
  T.hp-=dmg;if(T.hp===1-dmg)T.hp=0;
  if(T===player)hurtFlash(dmg);
+ if(T.ai&&by&&by!==T){T.threat=by;T.threatT=now+5000;T.tt=0;}             // bots notice who's shooting them and respond right away
  if(T.hp>0){const kind=PART_PAIN[b.pn]||'chest',side=/-1$/.test(Object.keys(T.parts).find(k=>T.parts[k]===b)||'')?-1:1,
   P={kind,side,t0:now,amp:Math.min(1,.55+dmg/45),hold:PAIN[kind].hold*(.8+Math.random()*.4)};P.kind=kind;
   if(T===cur)pain=P;else T.pain=P;}
