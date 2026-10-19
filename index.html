@@ -1675,7 +1675,7 @@ function kcShot(m,e,now){if(KC.on)return;KC.shots.push({t:now,m:m.clone(),e:new 
 // replay clock: 1x up to just before the kill, then slow motion through it
 function kcTime(el){const pre=2200;return el<pre?KC.t0-2600+el:KC.t0-400+(el-pre)*.3;}
 // killcam camera shots. f(killerHead, victimChest, dir killer->victim, right, distance, progress 0..1)
-const KC_LEN=2200+850/.3,E3=(x,y,z)=>new THREE.Vector3(x,y,z),ease=u=>u*u*(3-2*u);
+const _kq1=new THREE.Quaternion(),_kq2=new THREE.Quaternion(),KC_LEN=2200+850/.3,E3=(x,y,z)=>new THREE.Vector3(x,y,z),ease=u=>u*u*(3-2*u);
 const KC_SHOTS=[
  {n:'OVER THE SHOULDER',f:(kh,vc,d,r,L,u)=>({p:kh.clone().addScaledVector(d,-1.1-u*.4).addScaledVector(r,-.45).add(E3(0,.3,0)),fov:50-u*12,anchor:kh})},
  {n:'ORBIT',f:(kh,vc,d,r,L,u)=>{const a=Math.atan2(d.z,d.x)+Math.PI*.35+ease(u)*Math.PI*1.1;return{p:vc.clone().add(E3(Math.cos(a)*3.2,.7-u*.3,Math.sin(a)*3.2)),fov:45};}},
@@ -1704,18 +1704,23 @@ function kcReplayEvents(rt){KC.rep=true;
 function kcFrame(now){const t=now-player.deadAt;
  const want=player.dead&&player.killer&&player.killer!==player&&t>800&&!KC.done&&KC.buf.length>10;
  if(!want){if(KC.on){KC.on=false;$('kc').style.display='none';for(const m of KC.pool)m.visible=false;$('kcsk').style.display='none';kcRestoreBlood();}return false;}
- if(!KC.on){KC.on=true;KC.t0=player.deadAt;KC.start=now;KC.killer=player.killer;$('kc').style.display='block';$('kcwho').textContent=`${KC.killer.name} · ${KC.killer.wpn?KC.killer.wpn.name:''}`;KC.lastRt=KC.t0-2600;KC.hidden=kcHideBlood(KC.t0-2600);KC.loop=0;KC.ang=Math.random()*KC_SHOTS.length|0;$('kcsk').style.display='block';$('kcang').textContent=KC_SHOTS[KC.ang].n;}
- let rt=kcTime(now-KC.start);if(rt>KC.t0+450){KC.start=now;KC.loop++;KC.ang=(KC.ang+1)%KC_SHOTS.length;$('kcang').textContent=KC_SHOTS[KC.ang].n;kcWipeReplay();rt=kcTime(0);}
+ if(!KC.on){KC.on=true;KC.t0=player.deadAt;KC.start=now;KC.killer=player.killer;$('kc').style.display='block';$('kcwho').textContent=`${KC.killer.name} · ${KC.killer.wpn?KC.killer.wpn.name:''}`;KC.lastRt=KC.t0-2600;KC.hidden=kcHideBlood(KC.t0-2600);KC.loop=0;KC.camSnap=true;KC.fb=false;KC.ang=Math.random()*KC_SHOTS.length|0;$('kcsk').style.display='block';$('kcang').textContent=KC_SHOTS[KC.ang].n;}
+ let rt=kcTime(now-KC.start);if(rt>KC.t0+450){KC.start=now;KC.loop++;KC.camSnap=true;KC.fb=false;KC.ang=(KC.ang+1)%KC_SHOTS.length;$('kcang').textContent=KC_SHOTS[KC.ang].n;kcWipeReplay();rt=kcTime(0);}
  // pose every doll as it was at time rt
- let snap=KC.buf[0];for(const sn of KC.buf){if(sn.t>rt)break;snap=sn;}
- for(const[d,a]of snap.d){if(!d.list)continue;d.list.forEach((b,i)=>{const o=i*7;if(o+6>=a.length)return;b.mesh.position.set(a[o],a[o+1],a[o+2]);b.mesh.quaternion.set(a[o+3],a[o+4],a[o+5],a[o+6]);});}
+ let si=0;for(let i=0;i<KC.buf.length;i++){if(KC.buf[i].t>rt)break;si=i;}
+ const snap=KC.buf[si],nx=KC.buf[Math.min(si+1,KC.buf.length-1)],al=nx.t>snap.t?Math.min(1,Math.max(0,(rt-snap.t)/(nx.t-snap.t))):0;
+ for(const[d,a]of snap.d){if(!d.list)continue;const nb=nx.d.find(x=>x[0]===d),c=nb&&nb[1].length===a.length?nb[1]:a;
+  d.list.forEach((b,i)=>{const o=i*7;if(o+6>=a.length)return;b.mesh.position.set(a[o]+(c[o]-a[o])*al,a[o+1]+(c[o+1]-a[o+1])*al,a[o+2]+(c[o+2]-a[o+2])*al);
+   _kq1.set(a[o+3],a[o+4],a[o+5],a[o+6]);_kq2.set(c[o+3],c[o+4],c[o+5],c[o+6]);b.mesh.quaternion.copy(_kq1).slerp(_kq2,al);});}
  kcReplayEvents(rt);
  // tracers fired around that moment
  let k=0;for(const sh of KC.shots){if(rt>=sh.t&&rt<sh.t+90){let m=KC.pool[k];if(!m){m=new THREE.Mesh(tracerGeo,tracerMat);scene.add(m);KC.pool.push(m);}m.visible=true;
   m.position.copy(sh.m).add(sh.e).multiplyScalar(.5);m.scale.z=sh.m.distanceTo(sh.e);m.lookAt(sh.e);k++;}}for(let i=k;i<KC.pool.length;i++)KC.pool[i].visible=false;
  // dramatic camera: a different shot every time the replay loops
  const K=snap.d.find(x=>x[0]===KC.killer),Vv=snap.d.find(x=>x[0]===player);if(!K||!Vv)return true;
- const hi=KC.killer.list.indexOf(KC.killer.parts.head),ci=player.list.indexOf(player.parts.chest),kh=new THREE.Vector3(K[1][hi*7],K[1][hi*7+1],K[1][hi*7+2]),vc=new THREE.Vector3(Vv[1][ci*7],Vv[1][ci*7+1],Vv[1][ci*7+2]);
+ const rkh=KC.killer.parts.head.mesh.position,rvc=player.parts.chest.mesh.position,cdt=Math.min(.1,Math.max(0,(now-(KC.camT||now))/1000));KC.camT=now;
+ if(KC.camSnap||!KC.skh){KC.skh=rkh.clone();KC.svc=rvc.clone();}else{const f=1-Math.exp(-cdt*5);KC.skh.lerp(rkh,f);KC.svc.lerp(rvc,f);}
+ const kh=KC.skh.clone(),vc=KC.svc.clone();
  const dir=vc.clone().sub(kh);dir.y=0;const L=Math.max(.5,dir.length());dir.normalize();const right=new THREE.Vector3(-dir.z,0,dir.x);
  const u=Math.min(1,(now-KC.start)/KC_LEN),sh=KC_SHOTS[KC.ang],o=sh.f(kh,vc,dir,right,L,u);
  // both the killer and the victim must be in shot: aim between them and back off until they fit
@@ -1728,7 +1733,10 @@ function kcFrame(now){const t=now-player.deadAt;
  const an=o.anchor||mid,dv=o.p.clone().sub(an),dl=dv.length();if(dl>.3){dv.divideScalar(dl);const h=castRay(an,dv,dl,null,1);if(h.hit)o.p.copy(an).addScaledVector(dv,Math.max(.25,an.distanceTo(h.p)-.2));}
  for(let i=0;i<10&&!fits();i++){fov=Math.min(100,fov+6);look.lerp(mid,.25);}
  // still can't see both (tight room): fall back to just behind the killer, looking at the victim
- if(!fits()){o.roll=0;fov=60;look.copy(kh).lerp(vc,.7);o.p.copy(kh).addScaledVector(dir,-1.3).addScaledVector(right,-.9).add(E3(0,.45,0));const bk=castRay(kh,E3(-dir.x,.3,-dir.z).normalize(),1.4,null,1);if(bk.hit)o.p.copy(kh).add(E3(0,.5,0));for(let i=0;i<6&&!fits();i++)fov=Math.min(100,fov+8);}
+ if(KC.fb||!fits()){KC.fb=true;o.roll=0;fov=60;look.copy(kh).lerp(vc,.7);o.p.copy(kh).addScaledVector(dir,-1.3).addScaledVector(right,-.9).add(E3(0,.45,0));const bk=castRay(kh,E3(-dir.x,.3,-dir.z).normalize(),1.4,null,1);if(bk.hit)o.p.copy(kh).add(E3(0,.5,0));for(let i=0;i<6&&!fits();i++)fov=Math.min(100,fov+8);}
+ if(KC.camSnap||!KC.cp){KC.cp=o.p.clone();KC.cl=look.clone();KC.cf=fov;KC.cr=o.roll||0;KC.camSnap=false;}
+ else{const f=1-Math.exp(-cdt*3.5);KC.cp.lerp(o.p,f);KC.cl.lerp(look,f);KC.cf+=(fov-KC.cf)*f;KC.cr+=((o.roll||0)-KC.cr)*f;}
+ cam.position.copy(KC.cp);cam.up.set(0,1,0);cam.lookAt(KC.cl);if(KC.cr)cam.rotateZ(KC.cr);cam.fov=KC.cf;cam.updateProjectionMatrix();cam.updateMatrixWorld();
  return true;}
 // ---------- loop ----------
 let cullTick=0;const DT=1/400;let acc=0,last=performance.now();
