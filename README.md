@@ -27,6 +27,10 @@ Every character is a fully simulated ragdoll: real muscles and joints, limping w
 | P | Menu (volume, sensitivity, bots, difficulty, loadout) |
 
 ### Online multiplayer
-Pick **ONLINE** on the game mode screen (Free For All, Team Deathmatch, 1v1 or Gun Game). Everyone who has the game open and searches for the same mode is matched together — up to 8 players.
+Pick **ONLINE** on the game mode screen, choose your loadout, then use the **server browser**:
+- **Create server** — host a game with your chosen mode and map; it appears in everyone's list
+- **Join** — pick any server from the list (you can join mid-match)
+- **Quick match** — joins the fullest open server of your mode, or creates one
+- The browser shows how many players are online right now. Up to 8 players per server.
 
-No server is needed: players' browsers connect directly to each other (WebRTC), finding each other through public Nostr relays via the open-source [Trystero](https://github.com/dmotz/trystero) library. A few strict networks (some schools/workplaces) block these direct connections.
+No server is needed: players' browsers connect directly to each other (WebRTC), finding each other through public Nostr relays via the open-source [Trystero](https://github.com/dmotz/trystero) library. A free public TURN relay is used for players whose networks block direct connections; a few very strict networks (some schools/workplaces) may still block it.

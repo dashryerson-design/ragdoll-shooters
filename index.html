@@ -51,10 +51,17 @@
 <div id="hurt" style="position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;background:radial-gradient(ellipse at center,transparent 45%,#c00000cc 100%)"></div>
 <div id="dead" style="position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:6;color:#fff;text-shadow:0 2px 6px #000"><div style="font:400 min(12vw,64px) 'Black Ops One',Impact,sans-serif;color:#ff4a3a;letter-spacing:3px">ELIMINATED</div><div id="dk" style="font:600 18px system-ui;margin-top:6px"></div><div id="dc" style="font:600 24px system-ui;margin-top:26px"></div><div id="ds" style="font:500 14px system-ui;opacity:.8;margin-top:6px"></div></div>
 <div id="ms"><h2>CHOOSE MAP</h2><div class="mg" id="mgrid"></div><div id="mload" style="margin-top:18px;font:600 14px system-ui;opacity:0;letter-spacing:2px">LOADING MAP…</div></div>
-<div id="gs" style="position:absolute;inset:0;z-index:21;display:none;flex-direction:column;align-items:center;overflow-y:auto;background:radial-gradient(ellipse at 50% 20%,#2a1010ee,#000f 75%);color:#fff;padding:22px 16px 40px;box-sizing:border-box;user-select:none;-webkit-user-select:none"><h2 class="gh">GAME MODE</h2><div id="gtabs" style="display:flex;gap:8px;margin:-6px 0 16px"><div class="chip sel" data-on="0">VS BOTS</div><div class="chip" data-on="1">ONLINE</div></div><div id="gonl" style="display:none;font:500 13px system-ui;opacity:.75;margin:-6px 0 14px;max-width:600px;text-align:center">Matchmaking pairs you with other people who have the game open right now and pick the same mode.</div><div class="mg" id="ggrid"></div></div>
+<div id="gs" style="position:absolute;inset:0;z-index:21;display:none;flex-direction:column;align-items:center;overflow-y:auto;background:radial-gradient(ellipse at 50% 20%,#2a1010ee,#000f 75%);color:#fff;padding:22px 16px 40px;box-sizing:border-box;user-select:none;-webkit-user-select:none"><h2 class="gh">GAME MODE</h2><div id="gtabs" style="display:flex;gap:8px;margin:-6px 0 16px"><div class="chip sel" data-on="0">VS BOTS</div><div class="chip" data-on="1">ONLINE</div></div><div id="gonl" style="display:none;font:500 13px system-ui;opacity:.75;margin:-6px 0 14px;max-width:600px;text-align:center">Join a server from the list, create your own, or quick-match. Online works in every mode.</div><div class="mg" id="ggrid"></div></div>
+<div id="sb" style="position:absolute;inset:0;z-index:23;display:none;flex-direction:column;align-items:center;overflow-y:auto;background:radial-gradient(ellipse at 50% 20%,#2a1010ee,#000f 75%);color:#fff;padding:22px 16px 40px;box-sizing:border-box">
+<div class="gh">SERVERS</div><div id="sbnet" style="font:600 13px system-ui;opacity:.8;margin:-6px 0 14px;text-align:center"></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center;width:min(820px,100%)"><label style="font:600 12px system-ui;opacity:.7;letter-spacing:1px">NAME <input id="sbnick" maxlength="24" style="margin-left:6px;padding:9px 10px;border-radius:8px;border:1px solid #444;background:#1b1d23;color:#fff;font:500 14px system-ui;width:150px"></label>
+<button id="sbquick" class="ebtn" style="font-size:17px;padding:10px 18px">QUICK MATCH</button><button id="sbcreate" class="ebtn" style="font-size:17px;padding:10px 18px;background:#22252c;border:2px solid #ff5a1f">CREATE SERVER</button></div>
+<div id="sbhint" style="font:500 12px system-ui;opacity:.6;margin:10px 0 4px;text-align:center"></div>
+<div id="sblist" style="width:min(820px,100%);display:flex;flex-direction:column;gap:8px;margin-top:10px"></div>
+<button id="sbback" class="ebtn" style="margin-top:22px;font-size:16px;padding:10px 22px;background:#22252c;border:2px solid #555">PLAY VS BOTS INSTEAD</button></div>
 <div id="mmw" style="position:absolute;inset:0;z-index:23;display:none;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%,#2a1010ee,#000f 75%);color:#fff;text-align:center;padding:16px"><div class="gh" style="font-size:min(9vw,42px)">MATCHMAKING</div><div id="mmmode" style="font:600 14px system-ui;letter-spacing:3px;opacity:.75"></div><div id="mmstat" style="font:600 20px system-ui;margin:22px 0 8px"></div><div id="mmlist" style="font:500 14px system-ui;opacity:.85;min-height:60px;line-height:1.7"></div><button id="mmcancel" class="ebtn" style="margin-top:20px;background:#22252c;border:2px solid #ff5a1f">CANCEL</button></div>
 <div id="score" style="position:absolute;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:none;z-index:4;pointer-events:none;text-align:center;color:#fff;text-shadow:0 1px 3px #000"><div id="smode" style="font:600 11px system-ui;letter-spacing:3px;opacity:.75"></div><div id="sline" style="font:400 22px 'Black Ops One',Impact,sans-serif;letter-spacing:1px;margin-top:2px"></div><div id="ssub" style="font:600 12px system-ui;opacity:.85;margin-top:2px"></div></div>
-<div id="end" style="position:absolute;inset:0;z-index:22;display:none;flex-direction:column;align-items:center;justify-content:center;background:#000c;color:#fff;text-align:center;padding:16px"><div id="etitle" style="font:400 min(16vw,90px) 'Black Ops One',Impact,sans-serif;letter-spacing:4px"></div><div id="esub" style="font:600 18px system-ui;margin:8px 0 26px;opacity:.9"></div><div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center"><button id="eagain" class="ebtn">PLAY AGAIN</button><button id="emenu" class="ebtn" style="background:#22252c;border:2px solid #ff5a1f">MAIN MENU</button></div></div>
+<div id="end" style="position:absolute;inset:0;z-index:22;display:none;flex-direction:column;align-items:center;justify-content:center;background:#000c;color:#fff;text-align:center;padding:16px"><div id="etitle" style="font:400 min(16vw,90px) 'Black Ops One',Impact,sans-serif;letter-spacing:4px"></div><div id="esub" style="font:600 18px system-ui;margin:8px 0 26px;opacity:.9"></div><div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center"><button id="eagain" class="ebtn">PLAY AGAIN</button><button id="emenu" class="ebtn" style="background:#22252c;border:2px solid #ff5a1f">LEAVE</button></div></div>
 <div id="lo"><h2>LOADOUT</h2>
 <div class="lsec">WEAPON <span id="ggnote" style="letter-spacing:1px;color:#ff9a6b"></span></div><div class="wg" id="lw"></div>
 <div class="lsec">ARMOUR (COSMETIC)</div>
@@ -62,7 +69,7 @@
 <div class="lrow"><span>BODY</span><div class="chips" id="lb"></div></div>
 <div class="lrow"><span>EXTRAS</span><div class="chips" id="lx"></div></div>
 <button id="deploy">DEPLOY</button></div>
-<div id="m"><div><h3>Menu</h3><label>Volume <span id="vv"></span></label><input id="vol" type="range" min="0" max="100"><label>Mouse sensitivity <span id="sv"></span></label><input id="sens" type="range" min="10" max="500" step="5"><label style="display:flex;align-items:center;gap:8px;margin-top:16px"><input id="opt" type="checkbox" style="width:auto"> Optimised <small>(less lag, lower quality)</small></label><h3 style="margin:18px 0 4px">AI enemies</h3><label>Number of bots <span id="bv"></span> <small>(split into teams in team modes; 1v1 always 1)</small></label><input id="bots" type="range" min="0" max="8"><label>Difficulty</label><select id="diff" style="width:100%;padding:6px;border-radius:6px;background:#22252c;color:#eee;border:1px solid #444"><option value="0">Easy</option><option value="1">Normal</option><option value="2">Hard</option><option value="3">Insane</option></select><br><br><button id="mLo" style="width:100%;padding:10px;font-size:16px;border-radius:8px;border:1px solid #ff5a1f;background:#22252c;color:#fff;margin-bottom:8px">Change loadout</button><button id="mClose" style="width:100%;padding:10px;font-size:16px;border-radius:8px;border:0;background:#ff5a1f;color:#fff">Close</button><br><small>or press P</small></div></div>
+<div id="m"><div><h3>Menu</h3><label>Volume <span id="vv"></span></label><input id="vol" type="range" min="0" max="100"><label>Mouse sensitivity <span id="sv"></span></label><input id="sens" type="range" min="10" max="500" step="5"><label style="display:flex;align-items:center;gap:8px;margin-top:16px"><input id="opt" type="checkbox" style="width:auto"> Optimised <small>(less lag, lower quality)</small></label><h3 style="margin:18px 0 4px">AI enemies</h3><label>Number of bots <span id="bv"></span> <small>(split into teams in team modes; 1v1 always 1)</small></label><input id="bots" type="range" min="0" max="8"><label>Difficulty</label><select id="diff" style="width:100%;padding:6px;border-radius:6px;background:#22252c;color:#eee;border:1px solid #444"><option value="0">Easy</option><option value="1">Normal</option><option value="2">Hard</option><option value="3">Insane</option></select><br><br><button id="mLeave" style="display:none;width:100%;padding:10px;font-size:16px;border-radius:8px;border:1px solid #888;background:#22252c;color:#fff;margin-bottom:8px">Leave server</button><button id="mLo" style="width:100%;padding:10px;font-size:16px;border-radius:8px;border:1px solid #ff5a1f;background:#22252c;color:#fff;margin-bottom:8px">Change loadout</button><button id="mClose" style="width:100%;padding:10px;font-size:16px;border-radius:8px;border:0;background:#ff5a1f;color:#fff">Close</button><br><small>or press P</small></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 <script>
@@ -443,7 +450,7 @@ $('lo').addEventListener('click',e=>{const w=e.target.closest('[data-w]'),c=e.ta
 function showLoadout(inGame){loOpen=true;$('lo').style.display='flex';$('deploy').textContent=inGame?'APPLY':'DEPLOY';renderLoadout();if(document.pointerLockElement)document.exitPointerLock();}
 $('deploy').onclick=()=>{loOpen=false;$('lo').style.display='none';saveLoadout();
  use(player);equipCur(settings.wpn);dressCur(settings);
- if(!mode&&NET.want){netSearch();return;}
+ if(NET.want&&!NET.on){showBrowser();return;}
  if(!mode){player.team='A';setupZone();if(gmode==='gungame'){equipCur(GG[0]);}respawnAt(GM[gmode].team?safestSpawn(player):MAPS[curMap||'tester'].start);startGame(pendMode);$('score').style.display='block';}
  else{if(gmode==='gungame')equipCur(GG[(player.gl||0)]);if(mode==='kb'&&!plFail){try{const r=lockEl.requestPointerLock();if(r&&r.catch)r.catch(()=>{});}catch(e){}}updateHUD();}};
 function showMaps(){$('ms').style.display='flex';
@@ -1229,7 +1236,7 @@ function setupZone(){if(zoneMesh){scene.remove(zoneMesh);scene.remove(zoneRing);
 const allyTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.fillStyle='#4aa3ff';g.strokeStyle='#002244';g.lineWidth=4;g.beginPath();g.moveTo(10,14);g.lineTo(54,14);g.lineTo(32,52);g.closePath();g.fill();g.stroke();return new THREE.CanvasTexture(c);})();
 function markAlly(d){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:allyTex,depthTest:false,transparent:true}));sp.scale.set(.22,.22,1);sp.position.set(0,.42,0);sp.renderOrder=999;d.parts.head.mesh.add(sp);}
 function onKill(by,T){if(!by||matchOver)return;const M=GM[gmode];
- if(gmode==='tdm'){teamScore[by.team]++;if(teamScore[by.team]>=M.limit)endMatch(by.team===player.team,by.team==='A'?'Blue team wins':'Red team wins');}
+ if(gmode==='tdm'){if(NET.on)return;teamScore[by.team]++;if(teamScore[by.team]>=M.limit)endMatch(by.team===player.team,by.team==='A'?'Blue team wins':'Red team wins');}
  else if(gmode==='ffa'||gmode==='duel'){if(by.kills>=M.limit)endMatch(by===player,by===player?'You reached '+M.limit+' kills':by.name+' reached '+M.limit+' kills');}
  else if(gmode==='gungame'){by.gl=(by.gl||0)+1;if(by.gl>=GG.length)endMatch(by===player,by===player?'You finished the gun ladder':by.name+' finished the gun ladder');else by.pendW=GG[by.gl];}}
 function endMatch(win,sub){matchOver=true;$('end').style.display='flex';$('etitle').textContent=win?'VICTORY':'DEFEAT';$('etitle').style.color=win?'#ffd36b':'#ff4a3a';$('esub').textContent=sub;
@@ -1241,7 +1248,11 @@ function restartMatch(){matchOver=false;teamScore={A:0,B:0};zoneOwner=null;$('en
  updateHUD();if(mode==='kb'&&!plFail){try{const r=lockEl.requestPointerLock();if(r&&r.catch)r.catch(()=>{});}catch(e){}}}
 // zone scoring + scoreboard text, once per frame
 function modeFrame(dt){const M=GM[gmode];
- if(gmode==='zone'&&ZONE&&!matchOver&&dt>0){let a=0,b=0;for(const d of[player,...bots]){if(d.dead)continue;const q=d.pel.position;if(Math.hypot(q.x-ZONE.x,q.z-ZONE.z)<ZONE.r){if(d.team==='A')a++;else b++;}}
+ if(NET.on&&gmode==='tdm'&&!matchOver){teamScore={A:0,B:0};for(const d of[player,...others()])if(d.team==='A'||d.team==='B')teamScore[d.team]+=d.kills|0;
+  for(const t of['A','B'])if(teamScore[t]>=M.limit){endMatch(t===player.team,t==='A'?'Blue team wins':'Red team wins');break;}}
+ if(NET.on&&!NET.host&&gmode==='zone'&&ZONE&&!matchOver){for(const t of['A','B'])if(teamScore[t]>=M.limit){endMatch(t===player.team,t==='A'?'Blue team held the zone':'Red team held the zone');break;}
+  const col=zoneOwner==='A'?0x4aa3ff:zoneOwner==='B'?0xff4a3a:zoneOwner==='X'?0xffd23f:0xffffff;zoneMesh.material.color.setHex(col);zoneRing.material.color.setHex(col);}
+ else if(gmode==='zone'&&ZONE&&!matchOver&&dt>0){let a=0,b=0;for(const d of[player,...others()]){if(d.dead)continue;const q=d.pel.position;if(Math.hypot(q.x-ZONE.x,q.z-ZONE.z)<ZONE.r){if(d.team==='A')a++;else b++;}}
   zoneOwner=a&&!b?'A':b&&!a?'B':a&&b?'X':null;if(zoneOwner==='A'||zoneOwner==='B'){teamScore[zoneOwner]+=dt;if(teamScore[zoneOwner]>=M.limit)endMatch(zoneOwner===player.team,zoneOwner==='A'?'Blue team held the zone':'Red team held the zone');}
   const col=zoneOwner==='A'?0x4aa3ff:zoneOwner==='B'?0xff4a3a:zoneOwner==='X'?0xffd23f:0xffffff;zoneMesh.material.color.setHex(col);zoneRing.material.color.setHex(col);}
  $('smode').textContent=M.name.toUpperCase();
@@ -1251,11 +1262,11 @@ function modeFrame(dt){const M=GM[gmode];
   $('sline').textContent=`GUN ${lv+1}/${GG.length} · ${W[GG[lv]].name}`;$('ssub').textContent=ld===player?'you are leading':`leader: ${ld.name} (gun ${Math.min(GG.length,(ld.gl||0)+1)})`;}
  else{const ld=others().sort((a,b)=>b.kills-a.kills)[0],tag=NET.on?(ld?ld.name.toUpperCase():'THEM'):'BOT';$('sline').textContent=gmode==='duel'?`YOU ${player.kills} — ${ld?ld.kills:0} ${tag}`:`YOU ${player.kills} · BEST ${NET.on?'OTHER':'BOT'} ${ld?ld.kills:0}`;$('ssub').textContent=`first to ${M.limit}`;}}
 function showModes(){$('gs').style.display='flex';
- $('ggrid').innerHTML=Object.entries(GM).filter(([k])=>!(NET.want&&k==='zone')).map(([k,m])=>`<div class="mc" data-g="${k}"><div class="pv" style="background:${m.card}">${m.name.toUpperCase()}</div><p>${m.desc}</p></div>`).join('');}
+ $('ggrid').innerHTML=Object.entries(GM).filter(()=>true).map(([k,m])=>`<div class="mc" data-g="${k}"><div class="pv" style="background:${m.card}">${m.name.toUpperCase()}</div><p>${m.desc}</p></div>`).join('');}
 $('gs').addEventListener('click',e=>{const t=e.target.closest('[data-on]');if(t){NET.want=t.dataset.on==='1';for(const c of $('gtabs').children)c.classList.toggle('sel',c===t);$('gonl').style.display=NET.want?'block':'none';showModes();return;}
  const c=e.target.closest('[data-g]');if(!c)return;gmode=c.dataset.g;settings.gm=gmode;saveLoadout();$('gs').style.display='none';showLoadout(false);});
-$('eagain').onclick=()=>NET.on?netRequeue():restartMatch();
-$('emenu').onclick=()=>location.reload();
+$('eagain').onclick=()=>NET.on?netAgain():restartMatch();
+$('emenu').onclick=()=>NET.on?leaveServer():location.reload();
 // ---------- online multiplayer ----------
 // Uses the page's live "room": everyone who has the game open right now. The lobby is for matchmaking; each match gets its own named room.
 //  - presence (about 15/s): my whole ragdoll pose + health/weapon/armour, so everyone else sees my real body (ragdoll deaths included)
@@ -1279,7 +1290,9 @@ async function p2pLobby(){let T=null;
  for(const u of['https://cdn.jsdelivr.net/npm/trystero@0.25.4/+esm','https://esm.sh/trystero@0.25.4']){try{T=await import(u);if(T&&T.joinRoom)break;}catch(e){T=null;}}
  if(!T||!T.joinRoom)return null;
  const me=T.selfId;
- const mk=name=>{const room=T.joinRoom({appId:P2P_APP},name),peers=new Map(),handlers={},ph=[];let myPres={},cache=[];
+ // a public TURN relay carries the game for players whose networks block direct connections (most home <-> mobile pairings need one)
+ const cfg={appId:P2P_APP,turnConfig:[{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turns:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]};
+ const mk=name=>{const room=T.joinRoom(cfg,name,{onJoinError:d=>{NET.connFail=(NET.connFail||0)+1;}}),peers=new Map(),handlers={},ph=[];let myPres={},cache=[];
   const who=(id,mine)=>({peer:id,by:null,isMe:mine,sameTab:mine,kind:'viewer',guest:false});
   const self=()=>({...who(me,true),presence:myPres,updatedAt:Date.now()});
   peers.set(me,self());cache=[...peers.values()];
@@ -1346,13 +1359,15 @@ const _pq=new THREE.Quaternion(),_pq2=new THREE.Quaternion();
 function netFrame(now,dt){if(!NET.on||!NET.room)return;const R=NET.room;
  // send my state ~15 times a second
  if(now-NET.sendT>66){NET.sendT=now;use(player);const st=[];for(const b of list){const p=b.position,q=b.quaternion;st.push(R3(p.x),R3(p.y),R3(p.z),R3(q.x),R3(q.y),R3(q.z),R3(q.w));}
-  R.presence({s:st,hp:Math.max(0,player.hp|0),dead:player.dead?1:0,w:wpn.id,c:[settings.head,settings.body,settings.knee?1:0,settings.gloves?1:0].join(','),nm:NET.name.slice(0,40),t:player.team||'',gl:player.gl||0}).catch(()=>{});}
+  R.presence({s:st,hp:Math.max(0,player.hp|0),dead:player.dead?1:0,w:wpn.id,c:[settings.head,settings.body,settings.knee?1:0,settings.gloves?1:0].join(','),nm:NET.name.slice(0,40),t:player.team||'',gl:player.gl||0,k:player.kills|0,d:player.deaths|0,h:NET.host?1:0,zs:NET.host&&gmode==='zone'?[R3(teamScore.A),R3(teamScore.B),zoneOwner||'']:null}).catch(()=>{});
+  if(NET.host&&now-(NET.advT||0)>1000){NET.advT=now;NET.lobby.presence({srv:{...NET.srv,n:R.peers().filter(p=>p.presence&&Array.isArray(p.presence.s)).length||1}}).catch(()=>{});}}   // keep the server listing's player count current
  // everyone else: make or update their puppet from their latest state
- const inMatch=new Set(NET.match.players);
- for(const pe of R.peers()){if(pe.sameTab||!inMatch.has(pe.peer))continue;const ps=pe.presence;if(!ps||!Array.isArray(ps.s))continue;
-  let d=NET.puppets.get(pe.peer);if(!d){d=makePuppet(pe.peer,NET.match.teams[pe.peer]||null);if(NET.user&&pe.by)NET.user.profiles([pe.by]).then(r=>{if(r[pe.by]&&r[pe.by].name)d.name=r[pe.by].name;}).catch(()=>{});}
+ for(const pe of R.peers()){if(pe.sameTab)continue;const ps=pe.presence;if(!ps||!Array.isArray(ps.s))continue;
+  const pt=typeof ps.t==='string'&&ps.t?ps.t:null;let d=NET.puppets.get(pe.peer);if(d&&d.team!==pt){removePuppet(d);d=null;}
+  if(!d){d=makePuppet(pe.peer,pt);if(NET.user&&pe.by)NET.user.profiles([pe.by]).then(r=>{if(r[pe.by]&&r[pe.by].name)d.name=r[pe.by].name;}).catch(()=>{});}
   if(d.name==='Player'&&typeof ps.nm==='string'&&ps.nm)d.name=ps.nm.slice(0,40);
-  d.hp=+ps.hp||0;d.dead=!!ps.dead;d.gl=+ps.gl||0;d.tgt=ps.s;
+  d.hp=+ps.hp||0;d.dead=!!ps.dead;d.gl=+ps.gl||0;d.tgt=ps.s;d.kills=+ps.k||0;d.deaths=+ps.d||0;d.isHost=!!ps.h;
+  if(ps.h&&Array.isArray(ps.zs)&&!NET.host&&gmode==='zone'){teamScore.A=+ps.zs[0]||0;teamScore.B=+ps.zs[1]||0;zoneOwner=ps.zs[2]||null;}
   if(typeof ps.w==='string'&&W[ps.w]&&ps.w!==d.wid){d.wid=ps.w;use(d);equipCur(ps.w);use(player);}
   if(typeof ps.c==='string'&&ps.c!==d.cosK){d.cosK=ps.c;const[h,bd,kn,gl]=ps.c.split(',');use(d);dressCur({head:h,body:bd,knee:kn==='1',gloves:gl==='1'});use(player);}}
  // glide each puppet toward its latest pose (snap after a big jump, e.g. a respawn)
@@ -1382,6 +1397,64 @@ function onNetHit(msg){if(msg.sameTab)return;const d=msg.data||{},by=NET.puppets
 function netKill(by,T,hs){if(T!==player||!NET.room)return;NET.room.emit('kill',{by:by&&by.peer?by.peer:null,hs:!!hs}).catch(()=>{});}
 function onNetKill(msg){const d=msg.data||{},vic=msg.sameTab?player:NET.puppets.get(msg.peer),by=d.by===NET.me?player:NET.puppets.get(d.by)||null;if(!vic)return;
  if(vic!==player){vic.deaths++;}if(by){by.kills++;onKill(by,vic);}addFeed(by,vic,!!d.hs);updateHUD();}
+// ---------- server browser ----------
+// Hosts advertise their server in the lobby (name, mode, map, players). Joining = entering that server's room; you can join mid-match.
+// Quick match = join the fullest open server of your mode, or create one if there isn't any.
+function sbList(){if(!NET.lobby)return[];const out=[];
+ for(const p of NET.lobby.peers()){const v=p.presence&&p.presence.srv;if(!v||typeof v!=='object'||typeof v.id!=='string'||!GM[v.mode]||!MAPS[v.map])continue;
+  out.push({id:v.id.slice(0,48),name:String(v.name||'Server').slice(0,40),mode:v.mode,map:v.map,n:Math.max(1,Math.min(16,+v.n||1)),max:Math.max(2,Math.min(16,+v.max||8)),mine:p.sameTab});}
+ return out.sort((a,b)=>b.n-a.n);}
+function sbRender(){if($('sb').style.display==='none')return;const L=NET.lobby;
+ if(!L){$('sbnet').textContent='Connecting to the game network…';return;}
+ const n=L.peers().length,net=NET.p2p?'public network (direct connection)':'claude.ai network';
+ $('sbnet').textContent=`${n} player${n===1?'':'s'} online on the ${net}`+(n===1?' — just you so far':'');
+ $('sbhint').textContent=NET.connFail?`${NET.connFail} connection attempt(s) were blocked by a network. If nobody shows up, try a different Wi-Fi or mobile data.`:
+  (NET.p2p?'Players on the claude.ai version are on a different network and won\'t appear here.':'Players on the GitHub version are on a different network and won\'t appear here.');
+ const list=sbList(),el=$('sblist'),key=JSON.stringify(list);if(key===NET.sbKey&&el.children.length)return;NET.sbKey=key;el.innerHTML='';   // only rebuild when the list changes (keeps buttons clickable)
+ if(!list.length){const d=document.createElement('div');d.style.cssText='text-align:center;opacity:.6;font:500 14px system-ui;padding:22px';d.textContent='No servers yet — create one and others can join you.';el.appendChild(d);return;}
+ for(const v of list){const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:12px;background:#1b1d23;border:2px solid #33363d;border-radius:10px;padding:10px 14px';
+  const info=document.createElement('div');info.style.cssText='flex:1;min-width:0';const nm=document.createElement('div');nm.style.cssText="font:400 17px 'Black Ops One',Impact,sans-serif;letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap";nm.textContent=v.name;
+  const sub=document.createElement('div');sub.style.cssText='font:500 12px system-ui;opacity:.7';sub.textContent=`${GM[v.mode].name} · ${MAPS[v.map].name}`;info.append(nm,sub);
+  const cnt=document.createElement('div');cnt.style.cssText='font:600 14px system-ui;opacity:.85';cnt.textContent=`${v.n}/${v.max}`;
+  const b=document.createElement('button');b.className='ebtn';b.style.cssText='font-size:15px;padding:8px 18px';b.textContent=v.mine?'YOURS':v.n>=v.max?'FULL':'JOIN';b.disabled=v.mine||v.n>=v.max;if(b.disabled)b.style.opacity=.45;
+  b.onclick=()=>joinServer(v,false);row.append(info,cnt,b);el.appendChild(row);}}
+async function showBrowser(){$('sb').style.display='flex';NET.sbKey=null;$('sbnick').value=NET.name;sbRender();const L=await netConnect();
+ if(!L){$('sbnet').textContent='Online play isn\'t available here';$('sbhint').textContent='Couldn\'t reach the game network. Check your internet connection (some school or work networks block it).';return;}
+ L.presence({srv:null,mm:null,br:1,nm:NET.name.slice(0,40)}).catch(()=>{});
+ if(!NET.sbT)NET.sbT=setInterval(sbRender,700);sbRender();}
+function hideBrowser(){$('sb').style.display='none';}
+async function joinServer(v,host){if(NET.state==='joining')return;NET.state='joining';$('sbnet').textContent='Joining '+v.name+'…';
+ let R;try{R=await NET.lobby.join(v.id);}catch(e){NET.state='off';$('sbnet').textContent='Couldn\'t join that server — try another.';return;}
+ NET.room=R;NET.host=host;NET.srv={id:v.id,name:v.name,mode:v.mode,map:v.map,max:v.max};NET.state='match';NET.match={players:[],teams:{}};
+ if(v.map!==curMap)buildMap(v.map);
+ gmode=v.mode;matchOver=false;teamScore={A:0,B:0};zoneOwner=null;$('end').style.display='none';$('feed').innerHTML='';
+ for(const b of bots.slice())removeBot(b);
+ R.on('shot',onNetShot);R.on('hit',onNetHit);R.on('kill',onNetKill);
+ R.onPeers(ch=>{for(const p of ch.left){const pp=NET.puppets.get(p.peer);if(pp)removePuppet(pp);}});
+ NET.me=myPeer(R)||myPeer();
+ // join the smaller team (look at who's here for a moment first)
+ if(GM[gmode].team){await new Promise(res=>setTimeout(res,host?0:900));const c={A:0,B:0};for(const p of R.peers()){const t=p.presence&&p.presence.t;if(!p.sameTab&&(t==='A'||t==='B'))c[t]++;}player.team=c.A<=c.B?'A':'B';}
+ else player.team=null;
+ use(player);player.kills=player.deaths=player.gl=0;NET.on=true;
+ setupZone();if(gmode==='gungame')equipCur(GG[0]);
+ respawnAt(safestSpawn(player));hideBrowser();mmShow(false);
+ NET.lobby.presence(host?{br:null,srv:{...NET.srv,n:1}}:{br:null,srv:null}).catch(()=>{});
+ $('mLeave').style.display='block';
+ if(!mode)startGame(pendMode);$('score').style.display='block';updateHUD();}
+function createServer(){const nm=($('sbnick').value||NET.name).trim().slice(0,24)||NET.name;
+ joinServer({id:'s-'+Math.random().toString(36).slice(2,10),name:nm+'\'s server',mode:gmode,map:curMap,max:gmode==='duel'?2:8},true);}
+function quickMatch(){const v=sbList().filter(x=>!x.mine&&x.mode===gmode&&x.n<x.max)[0];if(v)joinServer(v,false);else createServer();}
+async function leaveServer(){if(NET.lobby)NET.lobby.presence({srv:null}).catch(()=>{});NET.host=false;await netLeave();$('mLeave').style.display='none';$('end').style.display='none';matchOver=false;
+ if(menuOpen)toggleMenu();showBrowser();}
+// after a match ends online: reset my own score and carry on in the same server (everyone resets the same way)
+function netAgain(){matchOver=false;$('end').style.display='none';player.kills=player.deaths=player.gl=0;teamScore={A:0,B:0};zoneOwner=null;
+ use(player);respawnAt(safestSpawn(player));if(gmode==='gungame')equipCur(GG[0]);updateHUD();
+ if(mode==='kb'&&!plFail){try{const r=lockEl.requestPointerLock();if(r&&r.catch)r.catch(()=>{});}catch(e){}}}
+$('sbnick').addEventListener('change',()=>{const v=$('sbnick').value.trim().slice(0,24);if(v){NET.name=v;settings.nick=v;try{localStorage.setItem('ragdollSettings',JSON.stringify(settings));}catch(e){}if(NET.lobby)NET.lobby.presence({nm:v}).catch(()=>{});}});
+$('sbcreate').onclick=createServer;$('sbquick').onclick=quickMatch;
+$('sbback').onclick=()=>{$('sb').style.display='none';NET.want=false;if(NET.lobby)NET.lobby.presence({br:null}).catch(()=>{});
+ if(!mode){use(player);player.team='A';setupZone();syncBots();respawnAt(MAPS[curMap||'tester'].start);startGame(pendMode);$('score').style.display='block';}};
+$('mLeave').onclick=()=>leaveServer();
 // ---------- combat HUD ----------
 function updateHUD(){$('hpf').style.width=player.hp+'%';$('hpf').style.background=player.hp>50?'#4cd06a':player.hp>25?'#e8b23a':'#e04a3a';
  $('hpt').textContent=Math.max(0,player.hp|0);{const pw=cur===player?wpn:player.wpn;$('wn').textContent=pw?pw.name:'';}$('kd').textContent=`K ${player.kills}  ·  D ${player.deaths}`;}
