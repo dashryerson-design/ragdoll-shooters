@@ -32,7 +32,7 @@
 .chips{display:flex;flex-wrap:wrap;gap:8px}.chip{padding:8px 14px;border-radius:20px;background:#1b1d23;border:2px solid #33363d;cursor:pointer;font:500 13px system-ui;color:#fff}.chip.sel{border-color:#ff5a1f;background:#2a1a14}
 #deploy{margin-top:22px;font:400 26px 'Black Ops One',Impact,sans-serif;letter-spacing:3px;color:#fff;background:#ff5a1f;border:0;border-radius:10px;padding:14px 48px;cursor:pointer;box-shadow:0 0 24px #ff5a1f77}.tb.on{background:#ff5a1fbb;border-color:#ffb08f}.tb.sm{width:54px;height:54px;font-size:12px}
 #h{position:absolute;left:12px;top:calc(12px + env(safe-area-inset-top,0px));color:#ddd;font-size:13px;line-height:1.55;background:#000a;padding:8px 12px;border-radius:8px;pointer-events:none}</style></head><body>
-<div id="h" style="display:none"><b>Physics Ragdoll</b><br>WASD move &nbsp; Shift run &nbsp; Space jump<br>F go limp / recover &nbsp; R reset<br>Mouse = look &nbsp; LMB shoot &nbsp; RMB (hold) aim<br>Wheel = camera distance<br>I first person &nbsp; P menu</div>
+<div id="h" style="display:none"><b>Physics Ragdoll</b><br>WASD move &nbsp; Shift run &nbsp; Space jump<br>F go limp / recover &nbsp; R reset<br>Mouse = look &nbsp; LMB shoot &nbsp; RMB (hold) aim<br>Wheel = camera distance<br>I first person &nbsp; C crouch &nbsp; P menu</div>
 <div id="mm"><div id="logo"><span class="a">RAGDOLL</span><span class="b">SHOOTERS</span><span class="tag">PHYSICS · COMBAT</span></div>
 <div class="btns"><button id="bKey">KEYBOARD<small>Keyboard + mouse</small></button><button id="bTouch">TOUCH<small>iPad / tablet</small></button></div></div>
 <div id="tc"><div id="joy"><div id="knob"></div></div>
@@ -42,7 +42,7 @@
 <div class="tb" id="tRun" style="right:150px;bottom:140px">RUN</div>
 <div class="tb sm" id="tLimp" style="right:30px;top:30px">LIMP</div>
 <div class="tb sm" id="tReset" style="right:96px;top:30px">RESET</div>
-<div class="tb sm" id="tMenu" style="right:162px;top:30px">MENU</div><div class="tb sm" id="tView" style="right:228px;top:30px">VIEW</div></div>
+<div class="tb sm" id="tMenu" style="right:162px;top:30px">MENU</div><div class="tb sm" id="tView" style="right:228px;top:30px">VIEW</div><div class="tb" id="tCrouch" style="right:250px;bottom:40px">CROUCH</div></div>
 <div id="hud" style="position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:none;flex-direction:column;align-items:center;gap:6px;pointer-events:none;z-index:4;font:600 13px system-ui;color:#fff;text-shadow:0 1px 2px #000">
 <div id="wn" style="font:400 15px 'Black Ops One',Impact,sans-serif;letter-spacing:1px;opacity:.9"></div><div id="kd"></div><div style="width:240px;height:14px;background:#0009;border:1px solid #fff4;border-radius:7px;overflow:hidden;position:relative"><div id="hpf" style="height:100%;width:100%;background:#4cd06a;transition:width .15s"></div><span id="hpt" style="position:absolute;inset:0;text-align:center;font-size:11px;line-height:14px">100</span></div></div>
 <div id="feed" style="position:absolute;right:14px;top:calc(14px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-end;gap:4px;pointer-events:none;z-index:4;font:600 13px system-ui;color:#fff"></div>
@@ -154,7 +154,7 @@ const PAIN={
  leg:  {lean:.35,bend:.15,drop:.16,aim:.3,speed:.8,hold:.6,hand:[-.35,0,-.1,-.5],knee:1},
  arm:  {lean:.08,bend:0,  drop:0,  aim:.8,speed:.15,hold:.35,hand:null}};
 const PART_PAIN={abdomen:'gut',pelvis:'gut',chest:'chest',head:'head',neck:'neck',thigh:'leg',shin:'leg',foot:'leg',toe:'leg',uarm:'arm',farm:'arm',hand:'arm'};
-let pain=null,painK=0,gdir=1,wpn=null;   // gdir: +1 stepping forwards, -1 stepping backwards
+let pain=null,painK=0,gdir=1,wpn=null,crK=0;   // crK: 0 standing .. 1 fully crouched   // gdir: +1 stepping forwards, -1 stepping backwards
 function pd(c,p,s,react,KP=600,KD=30){
  c.quaternion.inverse(inv);des.mult(inv,er);
  const sg=er.w<0?-1:1,sc=(limp?limpTone:1)*(c.boost||1)*(c.wk||1)*(c.flinch>simT?.12:1),Ie=p?c.I*p.I/(c.I+p.I):c.I,kp=18000*Ie*Math.min(1,s*.45)*sc,kd=Math.max(limp?.06*Ie/DT:0,Math.min(1.8*Math.sqrt(kp*Ie),.9*Ie/DT)),I=1;   // limp joints still have friction
@@ -351,9 +351,95 @@ function buildHouse(){const H=30,WALL=0xd8d2c4,FENCE=0x8a6a45;
  for(const[x,z,sc]of[[-24,-4,1.1],[24,4,1],[-15,-21,1],[10,24,1.1],[-6,22,1],[26,-20,1],[-26,6,1],[0,-24,1.2],[14,-22,.9]])tree(x,z,sc);
  // spawn corners, each behind a low garden wall
  for(const sx of[-1,1])for(const sz of[-1,1]){seg(sx*22,sz*23,sx*27,sz*23,1.3,.3,0x9a8a7a);spawnPad(sx*26,sz*26.5);}}
+// rooms: four walls with doors/windows. ops per side: s (z=z0), n (z=z1), w (x=x0), e (x=x1); D(centre,width) door, Wn(centre,width) window
+const D=(c,w=1.6)=>[c,w,'door'],Wn=(c,w=1.6)=>[c,w,'window'];
+function room(x0,z0,x1,z1,o={}){const h=o.h||2.7,t=o.t||.22,c=o.c||0xd8d2c4,a=Math.min(x0,x1),b=Math.max(x0,x1),e=Math.min(z0,z1),f=Math.max(z0,z1);
+ wallLine(a,e,b,e,o.s||[],h,t,c);wallLine(a,f,b,f,o.n||[],h,t,c);wallLine(a,e,a,f,o.w||[],h,t,c);wallLine(b,e,b,f,o.e||[],h,t,c);}
+function lamp(x,y,z,col=0xfff2c0){deco(new THREE.BoxGeometry(.9,.08,.25),col,x,y,z,{mat:new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.6})});}
+// ===== WAREHOUSE: a big storage hall — rack aisles, a forklift, crate stacks, offices in the corners =====
+function buildWarehouse(){const H=28,CON=0x7c7f84,STEEL=0x3f5a7a,ORG=0xd08a2a,OFF=0xb8b4a8;
+ texFlat(56,56,0,0,tileFloor('#73736e','#6b6b66'),[14,14]);
+ seg(-H,-H,H,-H,5,.6,CON);seg(-H,H,H,H,5,.6,CON);seg(-H,-H,-H,H,5,.6,CON);seg(H,-H,H,H,5,.6,CON);
+ for(const z of[-27.6,27.6])for(const x of[-14,0,14])deco(new THREE.BoxGeometry(5,4,.1),0x9a7a3a,x,2,z);   // roller doors (painted on)
+ // storage racks: long shelving with goods; 2.8 m aisles between them
+ const goods=[0xc8a064,0x8a5a3a,0x5a7a9a,0xb04040,0xd0c070];
+ const rack=(x,z,len)=>{solid(.6,1.7,len/2,x,1.7,z,{c:STEEL});for(let lv=0;lv<3;lv++)for(let k=-len/2+.8;k<len/2-.5;k+=1.5)if(Math.random()<.75)deco(new THREE.BoxGeometry(1.1,.7,1.1),goods[(Math.random()*5)|0],x,.45+lv*1.15,z+k);};
+ for(const sx of[-1,1])for(const x of[9,13,17])for(const z of[-8,8])rack(sx*x,z,11);
+ // centre floor: forklift, crate stacks, pallets
+ solid(.6,.7,1.1,3,.7,-3,{c:ORG});solid(.5,.45,.4,3,1.85,-3.5,{c:0x333333});for(const x of[2.6,3.4])deco(new THREE.BoxGeometry(.08,2.6,.1),0x333333,x,1.3,-1.95);
+ for(const[x,z,h2]of[[-3,-7,1],[-3.85,-7,0],[2.5,7,1],[3.35,7.8,0],[-2,10.5,1],[2,-11,0],[-4,3,0],[4.5,2.5,1]]){solid(.42,.42,.42,x,.42,z,{c:0xc8a064});if(h2)solid(.42,.42,.42,x,1.26,z,{c:0xb89054});}
+ for(const[x,z]of[[0,-9],[-1,13],[5.5,-12]])solid(.6,.07,.5,x,.07,z,{c:0x8a6a45});
+ for(const[x,z]of[[-5.5,-1],[5.8,6],[-5,12]])solid(.32,.45,.32,x,.45,z,{c:0x2f5a8a});                 // barrels
+ // corner offices (spawn rooms): door and window facing the hall
+ for(const sx of[-1,1])for(const sz of[-1,1]){room(sx*20,sz*21,sx*28,sz*28,{h:2.8,t:.2,c:OFF,[sz<0?'n':'s']:[D(sx*24,1.6)],[sx<0?'e':'w']:[Wn(sz*24.5,2)]});
+  solid(.7,.38,.4,sx*26,.38,sz*26.6,{c:0x5e4128});spawnPad(sx*23.5,sz*24.5);}
+ for(const x of[-14,0,14])for(const z of[-14,0,14])lamp(x,4.7,z);}
+// ===== VILLAGE: desert adobe houses you can enter, a market square around a well, palms, narrow alleys =====
+function buildVillage(){const H=30,AD=0xc9a46b,AD2=0xb8925a;
+ seg(-H,-H,H,-H,3.2,1,AD2);seg(-H,H,H,H,3.2,1,AD2);seg(-H,-H,-H,H,3.2,1,AD2);seg(H,-H,H,H,3.2,1,AD2);
+ floorPatch(16,16,0,0,0xcbb27e);floorPatch(4,60,0,0,0xc4a874);floorPatch(60,4,0,0,0xc4a874);
+ const hut=(cx,cz,side)=>{const w=7,d=6,o={h:2.8,t:.3,c:AD};const dc=side==='s'||side==='n'?cx:cz;o[side]=[D(dc,1.4)];
+  if(side==='s'||side==='n'){o.w=[Wn(cz,1.2)];o.e=[Wn(cz,1.2)];}else{o.s=[Wn(cx,1.2)];o.n=[Wn(cx,1.2)];}
+  room(cx-w/2,cz-d/2,cx+w/2,cz+d/2,o);solid(.5,.35,.35,cx+(side==='w'?1.6:-1.6),.35,cz+(side==='s'?1.4:-1.4),{c:0x7a5230});
+  if(side==='s'||side==='n')deco(new THREE.BoxGeometry(2.4,.12,.9),0x8a6a45,cx,2.6,cz+(side==='s'?-d/2-.45:d/2+.45));};   // awning over the door
+ hut(-16,-14,'e');hut(-6,-15,'n');hut(6,-15,'n');hut(16,-13,'w');hut(-16,13,'e');hut(-6,15,'s');hut(6,15,'s');hut(16,13,'w');hut(-17,0,'e');hut(17,0,'w');
+ // the well (zone) and market stalls around the square
+ for(let i=0;i<8;i++){const a=i*Math.PI/4;solid(.5,.45,.15,1.25*Math.cos(a),.45,1.25*Math.sin(a),{ry:-a-Math.PI/2,c:0x9a8a70});}
+ solid(1,.35,1,0,.35,0,{c:0x2c5a7a});   // the well shaft (water) — nobody stands inside it
+ for(const x of[-.9,.9])solid(.07,1.1,.07,x,1.1,0,{c:0x5a3d22});deco(new THREE.BoxGeometry(2,.12,.3),0x5a3d22,0,2.2,0);
+ const cloth=[0xb03030,0x2f6aa0,0xd0a030,0x3a8a50];
+ [[-5,-5],[5,-5],[-5,5],[5,5]].forEach(([x,z],i)=>{solid(1.1,.45,.5,x,.45,z,{c:0x7a5230});for(const[a,b2]of[[-1,-.45],[1,-.45],[-1,.45],[1,.45]])deco(new THREE.BoxGeometry(.06,2.2,.06),0x5a3d22,x+a,1.1,z+b2);
+  deco(new THREE.BoxGeometry(2.4,.05,1.4),cloth[i],x,2.25,z);for(let k=0;k<3;k++)deco(new THREE.BoxGeometry(.3,.25,.3),[0xd06030,0xe0c040,0x70a040][k],x-.6+k*.6,1.05,z);});
+ // palms, barrels, carts
+ const palm=(x,z)=>{solid(.16,1.8,.16,x,1.8,z,{c:0x7a5a3a});for(let i=0;i<6;i++){const a=i*Math.PI/3;deco(new THREE.BoxGeometry(2.2,.06,.5),0x3f8a3a,x+Math.cos(a)*.9,3.5-.2,z+Math.sin(a)*.9,{ry:-a});}};
+ for(const[x,z]of[[-10,-6],[10,6],[-10,8],[10,-8],[0,-22],[0,22],[-24,-6],[24,6],[-11,22],[11,-22]])palm(x,z);
+ for(const[x,z]of[[-9,0],[9,1],[-2,-9],[2,9],[-22,10],[22,-10],[12,22],[-12,-22]])solid(.32,.45,.32,x,.45,z,{c:0x6a4a2a});
+ solid(.7,.45,1.2,-3,.45,-23,{c:0x8a6a45});solid(.7,.45,1.2,3,.45,23,{c:0x8a6a45});
+ for(const sx of[-1,1])for(const sz of[-1,1]){seg(sx*21,sz*23,sx*27,sz*23,1.3,.5,AD2);spawnPad(sx*25,sz*26.5);}}
+// ===== FACILITY: an underground lab complex — central atrium, four labs, server-rack wings, a ring corridor =====
+function buildFacility(){const H=26,FW=0x9aa0a8,FD=0x55606a,LAB=0xb9c0c8;
+ texFlat(52,52,0,0,tileFloor('#4a5058','#444a52'),[13,13]);
+ seg(-H,-H,H,-H,3.4,.5,FD);seg(-H,H,H,H,3.4,.5,FD);seg(-H,-H,-H,H,3.4,.5,FD);seg(H,-H,H,H,3.4,.5,FD);
+ // atrium with four doorways and pillars for cover
+ room(-5,-5,5,5,{h:3,t:.3,c:FW,s:[D(0,2.4)],n:[D(0,2.4)],w:[D(0,2.4)],e:[D(0,2.4)]});
+ for(const x of[-2.5,2.5])for(const z of[-2.5,2.5])solid(.35,1.5,.35,x,1.5,z,{c:FD});
+ // four labs: doors to both wings, an inner partition, desks and servers
+ for(const sx of[-1,1])for(const sz of[-1,1]){
+  room(sx*9,sz*9,sx*23,sz*23,{h:3,t:.25,c:LAB,[sz>0?'s':'n']:[D(sx*12,1.8)],[sx>0?'w':'e']:[D(sz*12,1.8)],[sz>0?'n':'s']:[D(sx*20,1.8)]});   // doors on whole-metre lines so bots' 1 m route grid passes through them
+  wallLine(sx*16,Math.min(sz*9,sz*23),sx*16,Math.max(sz*9,sz*23),[D(sz*13,1.8),Wn(sz*19.5,2)],3,.18,LAB);
+  for(const z of[11.5,14.5])solid(1.1,.38,.4,sx*12.5,.38,sz*z+sz*2.5,{c:0xd0d4d8});
+  for(const z of[11,15])solid(.4,1.1,1.2,sx*21.6,1.1,sz*z,{c:0x22262c});
+  spawnPad(sx*19.5,sz*20.5);}
+ // wings between the labs: server rows and low barriers
+ for(const[ax,az]of[[0,1],[0,-1],[1,0],[-1,0]]){const along=ax!==0;
+  for(const o of[-5.5,5.5])for(const t of[11,18]){const x=along?ax*t:o,z=along?o:az*t;solid(along?1.4:.4,1.1,along?.4:1.4,x,1.1,z,{c:0x22262c});}
+  solid(along?.25:1.1,.5,along?1.1:.25,along?ax*14.5:0,.5,along?0:az*14.5,{c:FD});}
+ for(const x of[-15,0,15])for(const z of[-15,0,15])lamp(x,3.3,z,0xcfe8ff);}
+// ===== DOCKS: a shipping-container maze beside the water, cranes, a dockside warehouse =====
+function buildDocks(){const H=32,RAIL=0x55595e;
+ seg(-H,-H,H,-H,4,1,0x55595e);seg(-H,H,H,H,4,1,0x55595e);seg(-H,-H,-H,H,4,1,0x55595e);seg(H,-H,H,H,4,1,0x55595e);
+ // the water and the dock edge (railing you can't climb), a ship moored alongside
+ deco(new THREE.PlaneGeometry(64,10),0x2c5a7a,0,.03,-27,{rx:-Math.PI/2,flat:1,rough:.1});seg(-H,-22,H,-22,1.1,.25,RAIL);
+ for(let x=-28;x<=28;x+=7)solid(.25,.4,.25,x,.4,-21.4,{c:0x222222});
+ deco(new THREE.BoxGeometry(40,5,7),0x8a2a2a,2,1.5,-28.5);deco(new THREE.BoxGeometry(10,4,6),0xe8e4dc,-10,5.5,-28.5);
+ // containers in rows with lanes between them (some stacked two high)
+ const cc=[0x9a3b2e,0x2e5a9a,0x3d7a3d,0xc07a2a,0x7a3d7a,0x2e8a8a,0x8a8a2e];let ci=0;
+ const cont=(x,z,two)=>{const c=cc[(ci++)%cc.length];solid(3,1.3,1.2,x,1.3,z,{c});if(two)solid(3,1.3,1.2,x,3.9,z,{c:cc[(ci++)%cc.length]});};
+ for(const[z,xs]of[[-14,[-25,-17,-9,9,17,25]],[-6,[-24,-16,-8,8,16,24]],[2,[-25,-17,-9,9,17,25]],[10,[-24,-16,-8,8,16,24]],[18,[-9,9,17]]])xs.forEach((x,i)=>cont(x,z,(i+Math.round(z))%3===0));
+ // cranes on the quay
+ for(const x of[-14,14]){for(const dx of[-2,2])for(const z of[-20.6,-16.2])solid(.25,4,.25,x+dx,4,z,{c:0xd0a020});deco(new THREE.BoxGeometry(5,.6,12),0xd0a020,x,8.2,-21);}
+ // dockside warehouse (north-west) with a wide door and windows
+ room(-30,20,-18,30,{h:4,t:.3,c:0x8a8a84,s:[D(-24,3)],e:[Wn(25,2.4)]});solid(.6,.6,.6,-26,.6,27,{c:0xc8a064});solid(.6,.6,.6,-22,.6,26,{c:0xc8a064});
+ // crates and barrels on the quay for cover
+ for(const[x,z]of[[-4,-18],[4,-19],[-20,-18],[20,-17],[-27,-17],[27,-18]])solid(.6,.6,.6,x,.6,z,{c:0xc8a064});
+ spawnPad(-24,25);spawnPad(26,26);spawnPad(-27,-19.5);spawnPad(27,-19.5);}
 const MAPS={
  tester:{name:'Tester',desc:'Concrete arena with containers, lookout towers and ruined buildings.',build:buildTester,start:{x:0,z:0},half:32,step:2,bg:0x000000,ground:['#7d7a73','#716e68'],card:'linear-gradient(135deg,#55524c,#2a2926)'},
  park:{name:'Park',desc:'Open grass, fountain, playground, bandstand and a pond. Long sightlines between the trees.',build:buildPark,start:{x:0,z:-6.8},half:36,step:2,bg:0x9cc8ec,ground:['#55803e','#4e783a'],card:'linear-gradient(135deg,#6aa84f,#2e5a24)'},
+ warehouse:{name:'Warehouse',desc:'A storage hall: tight rack aisles, crate stacks and a forklift, offices in the corners.',build:buildWarehouse,start:{x:-1.5,z:-4},half:28,step:1,bg:0x15171c,ground:['#6e6e6a','#686864'],card:'linear-gradient(135deg,#d08a2a,#3a2a14)'},
+ village:{name:'Village',desc:'Desert village: houses to clear, narrow alleys, a market square around the well.',build:buildVillage,start:{x:0,z:-3},half:30,step:1,bg:0xf0c890,ground:['#d4b984','#cdb27c'],card:'linear-gradient(135deg,#e0b070,#7a4a20)'},
+ facility:{name:'Facility',desc:'Underground labs: a pillared atrium, four labs, server-rack wings and a ring corridor.',build:buildFacility,start:{x:0,z:-2.5},half:26,step:1,bg:0x05070a,ground:['#40464e','#3b4149'],card:'linear-gradient(135deg,#4a6a8a,#0a1018)'},
+ docks:{name:'Docks',desc:'A shipping-container maze on the quay — cranes, a moored ship and a dockside warehouse.',build:buildDocks,start:{x:0,z:-1.5},half:32,step:1,bg:0x8fb8d8,ground:['#6a6a66','#626260'],card:'linear-gradient(135deg,#2e5a9a,#0a1a2a)'},
  house:{name:'House',desc:'Close quarters through a family home — rooms, doors and windows — plus garden, shed and garage.',build:buildHouse,start:{x:-4.5,z:-4.2},half:30,step:1,bg:0x9cc8ec,ground:['#5f8a44','#58823f'],card:'linear-gradient(135deg,#c9a77a,#6b4a2e)'}};
 let curMap=null;
 function clearMap(){for(const o of mapObjs){if(o.b)world.removeBody(o.b);scene.remove(o.m);}mapObjs.length=0;terr.length=0;dyn.length=0;spawnPoints.length=0;breakWalls.length=0;NAV=null;}
@@ -363,9 +449,16 @@ function buildMap(id,nav=true){if(!MAPS[id])id='tester';clearMap();const M=MAPS[
 // ---------- AI navigation: a walkable grid over the map (cells clear of obstacles, links where a body can walk straight between) + A* ----------
 let NAV=null;
 function walkRay(ax,az,bx,bz){const dx=bx-ax,dz=bz-az,l=Math.hypot(dx,dz)||1;return!castRay({x:ax,y:.9,z:az},{x:dx/l,y:0,z:dz/l},l,null,1).hit;}
+// is there room for a whole body to walk straight from a to b? (centre line plus both shoulders, at knee and chest height)
+function walkClear(ax,az,bx,bz,w=.28){const dx=bx-ax,dz=bz-az,l=Math.hypot(dx,dz);if(l<.05)return true;const ux=dx/l,uz=dz/l,px=-uz*w,pz=ux*w;
+ for(const[ox,oz]of[[0,0],[px,pz],[-px,-pz]])for(const y of[.45,1.2])if(castRay({x:ax+ox,y,z:az+oz},{x:ux,y:0,z:uz},l,null,1).hit)return false;return true;}
+// is this spot blocked at body height? (things overhead, like the beam above a doorway, don't count; nor do rugs and kerbs)
+function bodyBlocked(x,z,m=.32){for(const t of terr){const b=t.b,p=b.position,dx=x-p.x,dz=z-p.z;if(dx*dx+dz*dz>(t.r+m)*(t.r+m))continue;
+  if(p.y-t.hy>1.75||p.y+t.hy<.3)continue;                                           // entirely overhead / entirely underfoot
+  b.quaternion.inverse(iq);tvv.set(dx,0,dz);iq.vmult(tvv,lo);if(Math.abs(lo.x)<=t.hx+m&&Math.abs(lo.z)<=t.hz+m)return true;}return false;}
 const NDIR=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
 function buildNav(M){const st=M.step,h=M.half-1,n=Math.floor(2*h/st)+1,x0=-h,ok=new Uint8Array(n*n),ed=new Uint8Array(n*n);
- const free=(x,z)=>groundH(x,z)<.3&&groundH(x+.35,z)<.3&&groundH(x-.35,z)<.3&&groundH(x,z+.35)<.3&&groundH(x,z-.35)<.3;
+ const free=(x,z)=>!bodyBlocked(x,z);
  for(let i=0;i<n;i++)for(let j=0;j<n;j++)ok[i*n+j]=free(x0+i*st,x0+j*st)?1:0;
  for(let i=0;i<n;i++)for(let j=0;j<n;j++){if(!ok[i*n+j])continue;
   for(let k=0;k<8;k++){const a=i+NDIR[k][0],b=j+NDIR[k][1];if(a<0||b<0||a>=n||b>=n||!ok[a*n+b])continue;
@@ -384,12 +477,12 @@ function astar(s,t){if(s<0||t<0)return null;if(s===t)return[t];const{n,ed}=NAV,g
   for(let k=0;k<8;k++){if(!(ed[c]&(1<<k)))continue;const nb=(ci+NDIR[k][0])*n+cj+NDIR[k][1],ng=g[c]+(k<4?1:1.414);if(ng<g[nb]){g[nb]=ng;from[nb]=c;push(ng+H(nb),nb);}}}
  if(from[t]<0)return null;const path=[];for(let c=t;c!==s&&c>=0;c=from[c])path.push(c);return path.reverse();}
 // where a hunting bot should head next: straight at the target if the way is clear, otherwise along an A* path (re-planned every ~0.7 s)
-function navStep(d,P,q){if(!NAV||walkRay(P.x,P.z,q.x,q.z)){d.path=null;d.navF=false;return q;}
- if(!d.path||simT>d.pathT){d.path=astar(navCell(P.x,P.z),navCell(q.x,q.z));d.pathT=simT+700;d.pi=0;}
+function navStep(d,P,q){if(!NAV||walkClear(P.x,P.z,q.x,q.z)){d.path=null;d.navF=false;return q;}
+ if(!d.path||simT>d.pathT||d.stuck>.6){d.path=astar(navCell(P.x,P.z),navCell(q.x,q.z));d.pathT=simT+700;d.pi=0;}
  if(!d.path||!d.path.length){d.navF=false;return q;}
  d.navF=true;let w=navPos(d.path[d.pi]);
- while(d.pi<d.path.length-1&&Math.hypot(w.x-P.x,w.z-P.z)<.7){d.pi++;w=navPos(d.path[d.pi]);}
- for(let k=Math.min(d.path.length-1,d.pi+5);k>d.pi;k--){const v=navPos(d.path[k]);if(walkRay(P.x,P.z,v.x,v.z)){d.pi=k;w=v;break;}}   // cut corners when the way is clear
+ while(d.pi<d.path.length-1&&Math.hypot(w.x-P.x,w.z-P.z)<.6){d.pi++;w=navPos(d.path[d.pi]);}
+ d.navLong=false;for(let k=Math.min(d.path.length-1,d.pi+6);k>d.pi;k--){const v=navPos(d.path[k]);if(walkClear(P.x,P.z,v.x,v.z)){d.navLong=k-d.pi>=4;d.pi=k;w=v;break;}}   // cut corners only when a whole body fits
  return w;}
 buildMap('tester',false);   // default scenery behind the menus (bot navigation is built when a map is chosen)
 // ---------- foot planting: a planted foot is pinned to the floor so it cannot slide ----------
@@ -472,6 +565,7 @@ document.getElementById('mLo').onclick=()=>{toggleMenu();showLoadout(true);};
  btn('tReset',()=>{key('r',true);key('r',false);});
  btn('tMenu',()=>toggleMenu());
  btn('tView',el=>{fpOn=!fpOn;el.classList.toggle('on',fpOn);});
+ btn('tCrouch',el=>{keys.c=!keys.c;el.classList.toggle('on',!!keys.c);});
  const setJoy=t=>{const b=jb.getBoundingClientRect(),cx=b.left+b.width/2,cy=b.top+b.height/2,R=b.width/2;
   let x=(t.clientX-cx)/R,y=(t.clientY-cy)/R;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l;}joy.x=x;joy.y=y;kn.style.transform=`translate(${x*R}px,${y*R}px)`;};
  tc.addEventListener('touchstart',e=>{e.preventDefault();if(menuOpen)return;const b=jb.getBoundingClientRect();
@@ -612,6 +706,7 @@ function control(dt){
  let f=(keys.w?1:0)-(keys.s?1:0),r=(keys.d?1:0)-(keys.a?1:0);if(isPlayer&&joy.on&&Math.hypot(joy.x,joy.y)>.25){f=-joy.y;r=joy.x;}
  let dx=-s*f+c*r,dz=-c*f-s*r;const len=Math.hypot(dx,dz);
  const moving=len>0&&!limp&&js===0;let run=!!keys.shift;
+ const crouchOn=(keys.c||keys.control)&&!limp&&js===0&&cs===0;crK+=((crouchOn?1:0)-crK)*Math.min(1,dt*8);if(crK>.3)run=false;   // crouch: C (or Ctrl)
  if(ccool>0)ccool-=dt;
  if(cs===0&&keys[' ']&&!limp&&js===0&&jp<2&&ccool<=0&&contact()){cscan-=dt;if(cscan<=0){cscan=.06;const L=findLedge();if(L)startClimb(L);}}
  if(cs>0){climb(dt);if(cs>0)return;}
@@ -626,14 +721,14 @@ function control(dt){
  mv+=((moving?1:0)-mv)*Math.min(1,dt*6);
  const legW={1:Math.min(parts.thigh1.wk||1,parts.shin1.wk||1,parts.foot1.wk||1),'-1':Math.min(parts['thigh-1'].wk||1,parts['shin-1'].wk||1,parts['foot-1'].wk||1)};
  const legF=.45+.55*Math.min(legW[1],legW[-1]);
- const speed=(run?4.8:1.7)*(gdir<0?.75:1)*legF*(1-(PP?PP.speed:0)*painK),A=run?.95:.5,S=run?.6:.37,w=Math.PI*(run?.38:.5)*speed/S;
+ const speed=(run?4.8:1.7)*(1-.55*crK)*(gdir<0?.75:1)*legF*(1-(PP?PP.speed:0)*painK),A=run?.95:.5,S=run?.6:.37,w=Math.PI*(run?.38:.5)*speed/S;
  const airN=js===0&&!contact();airT=airN?airT+dt:0;const aw=airT>.1?1:0;ab+=(aw-ab)*Math.min(1,dt*(aw?14:20));const gm=mv*(1-ab);
  phase+=w*dt*gm;
  for(const sd of[-1,1]){
   const k=sd+'',ph=phase+(sd>0?0:Math.PI);
   const t=tnorm(ph);let fx,lift=0;
   let rel=0;if(t<.5){const sw=t*2,sm=sw*sw*sw*(10-15*sw+6*sw*sw);fx=-S+2*S*sm;lift=Math.sin(Math.PI*sw);rel=((fh[sd]-fh[-sd])*(1-sm)+LH[sd]*sm)*gm;}else{fx=S-4*S*(t-.5);}
-  fx=(fx*gm+(run?.22:.03)*gm)*gdir;const L0=.87-gm*(run?.15:.07),fy=L0-(run?.26:.13)*lift*gm-rel-Math.max(0,rel)*.6*lift,dd=Math.min(.868,Math.max(.35,Math.hypot(fx,fy)));
+  fx=(fx*gm+(run?.22:.03)*gm)*gdir;const L0=.87-gm*(run?.15:.07)-.33*crK,fy=L0-(run?.26:.13)*lift*gm-rel-Math.max(0,rel)*.6*lift,dd=Math.min(.868,Math.max(.35,Math.hypot(fx,fy)));
   const hip=-(Math.atan2(fx,fy)+Math.acos(Math.min(1,dd/.88))),knee=Math.PI-Math.acos(Math.max(-1,Math.min(1,(.3872-dd*dd)/.3872)));
   const PM=run?.6:.35,RR=(a,b,x)=>Math.min(1,Math.max(0,(x-a)/(b-a)));
   const adj=Math.max(0,gdir)*gm*(PM*RR(.78,1,t)+PM*(1-RR(0,.12,t))*(t<.5?1:0)-.16*(t<.5?RR(.35,.5,t):(1-RR(.5,.6,t))));
@@ -672,7 +767,7 @@ function control(dt){
   else if(js===3&&jt>.08&&contact()){js=4;jt=0;}
   else if(js===4&&jt>.15){js=0;}
  }
- const lean=(PP?PP.lean*painK:0)+mv*(run?.28:.1)*(gdir<0?-.6:1)+(js===1?(.2+(jdx||jdz?.12:0))*Math.min(1,jt/.13):0)+((js===2||js===5)&&(jdx||jdz)?.28:0);
+ const lean=(PP?PP.lean*painK:0)+.18*crK+mv*(run?.28:.1)*(gdir<0?-.6:1)+(js===1?(.2+(jdx||jdz?.12:0))*Math.min(1,jt/.13):0)+((js===2||js===5)&&(jdx||jdz)?.28:0);
  if(!limp){
   // balance: keep pelvis and chest facing the heading, upright
   const tw=.12*Math.sin(phase)*mv;
@@ -685,7 +780,7 @@ function control(dt){
   // support + drive while feet are on the ground
   if(contact()&&(js===0||js===1||js===4)){
    const y=pel.position.y,uu=Math.min(1,jt/.13),dip=js===0?Math.max(...[-1,1].map(sd=>tnorm(phase+(sd>0?0:Math.PI))>=.5?(1-legW[sd])*.2*Math.max(.35,mv):0)):0,   // body sags onto the hurt leg
-    hy=gs-dip-(PP?PP.drop*painK:0)+(js===1?1.07-.14*uu*uu*(3-2*uu):js===4?.8:1.07-mv*(run?.16:.07)),fy=totalMass*(25*(hy-y)-6*pel.velocity.y)+totalMass*9.82*.55;
+    hy=gs-dip-(PP?PP.drop*painK:0)-.36*crK+(js===1?1.07-.14*uu*uu*(3-2*uu):js===4?.8:1.07-mv*(run?.16:.07)),fy=totalMass*(25*(hy-y)-6*pel.velocity.y)+totalMass*9.82*.55;
    pel.force.y+=Math.max(0,Math.min(fy,totalMass*9.82*1.0));
    const vd=speed*mv;if(moving){const bf=Math.max(0,Math.min(totalMass*3,totalMass*4*(vd-(pel.velocity.x*dx+pel.velocity.z*dz))));pel.force.x+=dx*bf;pel.force.z+=dz*bf;}
    const tau=gdir*(moving?Math.max(0,Math.min(420,totalMass*8*(vd-(pel.velocity.x*dx+pel.velocity.z*dz)))):0);
@@ -901,7 +996,7 @@ function fire(now){
  {const pp=player.pel.position,dd=Math.hypot(pel.position.x-pp.x,pel.position.z-pp.z);shotSound(isPlayer?1:Math.min(.8,5/(dd+2)),wpn.snd);}
  gun.group.updateMatrixWorld(true);gun.muzzle.getWorldPosition(_mp);gun.muzzle.getWorldQuaternion(_q);_d0.set(0,0,1).applyQuaternion(_q);
  if(aimK>.5){_t.copy(aimT).sub(_mp);if(_t.length()>1.5)_d0.copy(_t.normalize());}      // aimed: shoot at the crosshair
- const sp=wpn.sp[aimK>.5?1:0]*(g2?.7:1);
+ const sp=wpn.sp[aimK>.5?1:0]*(g2?.7:1)*(1-.35*crK);   // crouching steadies your aim
  for(let k=0;k<wpn.pel;k++){                                                          // shotguns fire several pellets
   _d.copy(_d0);_d.x+=(Math.random()-.5)*sp;_d.y+=(Math.random()-.5)*sp;_d.z+=(Math.random()-.5)*sp;_d.normalize();
   const r=castRay(_mp,_d,120,cur),len=Math.hypot(r.p.x-_mp.x,r.p.y-_mp.y,r.p.z-_mp.z);
@@ -934,11 +1029,11 @@ const CH_Y=.4;let chY=CH_Y;   // the sniper's scope pulls the crosshair to the t
 {const ch=document.createElement('div');ch.style.cssText='position:fixed;left:50%;top:'+(CH_Y*100)+'%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#fff;opacity:.6;pointer-events:none;box-shadow:0 0 0 1px #0008';document.body.appendChild(ch);window.__ch=ch;}
 // ---------- dolls: the player and every AI run the exact same ragdoll + controller ----------
 // the controller code works on globals, so each doll's state is swapped in (use(d)) before it runs
-function saveTo(d){d.parts=parts;d.list=list;d.joints=joints;d.totalMass=totalMass;d.pel=pel;d.abd=abd;d.chest=chest;d.neck=neck;d.head=head;d.gun=gun;d.cons=cons;d.limp=limp;d.keys=keys;d.camYaw=camYaw;d.aiming=aiming;d.aimK=aimK;d.recoil=recoil;d.aimT=aimT;d.lastShot=lastShot;d.shellAt=shellAt;d.flashUntil=flashUntil;d.yaw=yaw;d.phase=phase;d.mv=mv;d.airT=airT;d.ab=ab;d.js=js;d.jt=jt;d.jdx=jdx;d.jdz=jdz;d.jp=jp;d.jpt=jpt;d.bsd=bsd;d.bchg=bchg;d.fh=fh;d.LH=LH;d.gs=gs;d.pins=pins;d.cs=cs;d.ct=ct;d.ctt=ctt;d.ccool=ccool;d.cscan=cscan;d.cH=cH;d.cdx=cdx;d.cdz=cdz;d.cex=cex;d.cez=cez;d.cl0=cl0;d.cs0=cs0;d.cy0=cy0;d.cyL=cyL;d.csL=csL;d.cT=cT;d.pain=pain;d.gdir=gdir;d.wpn=wpn;}
-function loadFrom(d){parts=d.parts;list=d.list;joints=d.joints;totalMass=d.totalMass;pel=d.pel;abd=d.abd;chest=d.chest;neck=d.neck;head=d.head;gun=d.gun;cons=d.cons;limp=d.limp;keys=d.keys;camYaw=d.camYaw;aiming=d.aiming;aimK=d.aimK;recoil=d.recoil;aimT=d.aimT;lastShot=d.lastShot;shellAt=d.shellAt;flashUntil=d.flashUntil;yaw=d.yaw;phase=d.phase;mv=d.mv;airT=d.airT;ab=d.ab;js=d.js;jt=d.jt;jdx=d.jdx;jdz=d.jdz;jp=d.jp;jpt=d.jpt;bsd=d.bsd;bchg=d.bchg;fh=d.fh;LH=d.LH;gs=d.gs;pins=d.pins;cs=d.cs;ct=d.ct;ctt=d.ctt;ccool=d.ccool;cscan=d.cscan;cH=d.cH;cdx=d.cdx;cdz=d.cdz;cex=d.cex;cez=d.cez;cl0=d.cl0;cs0=d.cs0;cy0=d.cy0;cyL=d.cyL;csL=d.csL;cT=d.cT;pain=d.pain;gdir=d.gdir;wpn=d.wpn;}
+function saveTo(d){d.parts=parts;d.list=list;d.joints=joints;d.totalMass=totalMass;d.pel=pel;d.abd=abd;d.chest=chest;d.neck=neck;d.head=head;d.gun=gun;d.cons=cons;d.limp=limp;d.keys=keys;d.camYaw=camYaw;d.aiming=aiming;d.aimK=aimK;d.recoil=recoil;d.aimT=aimT;d.lastShot=lastShot;d.shellAt=shellAt;d.flashUntil=flashUntil;d.yaw=yaw;d.phase=phase;d.mv=mv;d.airT=airT;d.ab=ab;d.js=js;d.jt=jt;d.jdx=jdx;d.jdz=jdz;d.jp=jp;d.jpt=jpt;d.bsd=bsd;d.bchg=bchg;d.fh=fh;d.LH=LH;d.gs=gs;d.pins=pins;d.cs=cs;d.ct=ct;d.ctt=ctt;d.ccool=ccool;d.cscan=cscan;d.cH=cH;d.cdx=cdx;d.cdz=cdz;d.cex=cex;d.cez=cez;d.cl0=cl0;d.cs0=cs0;d.cy0=cy0;d.cyL=cyL;d.csL=csL;d.cT=cT;d.pain=pain;d.gdir=gdir;d.wpn=wpn;d.crK=crK;}
+function loadFrom(d){parts=d.parts;list=d.list;joints=d.joints;totalMass=d.totalMass;pel=d.pel;abd=d.abd;chest=d.chest;neck=d.neck;head=d.head;gun=d.gun;cons=d.cons;limp=d.limp;keys=d.keys;camYaw=d.camYaw;aiming=d.aiming;aimK=d.aimK;recoil=d.recoil;aimT=d.aimT;lastShot=d.lastShot;shellAt=d.shellAt;flashUntil=d.flashUntil;yaw=d.yaw;phase=d.phase;mv=d.mv;airT=d.airT;ab=d.ab;js=d.js;jt=d.jt;jdx=d.jdx;jdz=d.jdz;jp=d.jp;jpt=d.jpt;bsd=d.bsd;bchg=d.bchg;fh=d.fh;LH=d.LH;gs=d.gs;pins=d.pins;cs=d.cs;ct=d.ct;ctt=d.ctt;ccool=d.ccool;cscan=d.cscan;cH=d.cH;cdx=d.cdx;cdz=d.cdz;cex=d.cex;cez=d.cez;cl0=d.cl0;cs0=d.cs0;cy0=d.cy0;cyL=d.cyL;csL=d.csL;cT=d.cT;pain=d.pain;gdir=d.gdir;wpn=d.wpn;crK=d.crK;}
 let cur=null,isPlayer=true;
 function use(d){if(cur===d)return;saveTo(cur);loadFrom(d);cur=d;isPlayer=d===player;}
-function freshState(){pain=null;gdir=1;wpn=W.pistol;limp=false;keys={};camYaw=Math.PI;aiming=false;aimK=0;recoil=0;aimT=new THREE.Vector3();lastShot=-1e9;shellAt=0;flashUntil=0;
+function freshState(){pain=null;gdir=1;crK=0;wpn=W.pistol;limp=false;keys={};camYaw=Math.PI;aiming=false;aimK=0;recoil=0;aimT=new THREE.Vector3();lastShot=-1e9;shellAt=0;flashUntil=0;
  yaw=0;phase=0;mv=0;airT=0;ab=0;js=0;jt=0;jdx=0;jdz=0;jp=0;jpt=0;bsd=1;bchg=0;fh={1:0,'-1':0};LH={1:0,'-1':0};gs=0;pins={};cs=0;ct=0;ctt=0;ccool=0;cscan=0;}
 const player={name:'You',hp:100,dead:false,kills:0,deaths:0};saveTo(player);cur=player;for(const b of player.list)b.doll=player;
 const bots=[];let botSeq=0;
@@ -982,23 +1077,30 @@ function aiThink(d,dt,now){
   for(const o of[player,...bots]){if(o===d||o.dead||!isEnemy(d,o))continue;const q=o.chest.position,dd=Math.hypot(q.x-P.x,q.z-P.z);
    const v=dd<D.range+8&&los(eye,q),sc=dd-(v?100:0);if(sc<bd){bd=sc;best=o;bv=v;}}
   if(bv&&(!d.vis||d.target!==best))d.seen=now;d.vis=bv;d.target=best;
-  d.moving=false;keys.shift=false;
+  d.moving=false;keys.shift=false;keys.c=false;
   if(best){const q=best.pel.position,dx=q.x-P.x,dz=q.z-P.z,dist=Math.hypot(dx,dz)||1,ux=dx/dist,uz=dz/dist;let mx,mz;
-   if(bv){if(now>d.strafeT){d.strafe=Math.random()<.5?-1:1;d.strafeT=now+700+Math.random()*1800;}   // in sight: hold range and strafe
-    const f=dist>D.range*.7*wpn.pref?1:dist<(wpn.pref<.5?2.5:6)?-1:0;mx=ux*f+uz*d.strafe*.9;mz=uz*f-ux*d.strafe*.9;}
+   if(bv&&NAV&&!walkClear(P.x,P.z,q.x,q.z)&&!ZONE){const g=navStep(d,P,q);mx=g.x-P.x;mz=g.z-P.z;const gl=Math.hypot(mx,mz)||1;mx/=gl;mz/=gl;}   // in sight through a window/gap: close in by the path, shooting as it goes
+   else if(bv){if(now>d.strafeT){d.strafe=Math.random()<.5?-1:1;d.strafeT=now+700+Math.random()*1800;}   // in sight: hold range and strafe
+    const f=dist>D.range*.7*wpn.pref?1:dist<(wpn.pref<.5?2.5:6)?-1:0;mx=ux*f+uz*d.strafe*.9;mz=uz*f-ux*d.strafe*.9;
+    if(now>(d.crT||0)){d.cr=Math.random()<.4;d.crT=now+1500+Math.random()*2500;}keys.c=d.cr&&f===0;if(keys.c){mx*=.5;mz*=.5;}}
    else if(ZONE&&Math.hypot(ZONE.x-P.x,ZONE.z-P.z)<ZONE.r*.8){mx=0;mz=0;}                                // zone mode: already holding the zone
-   else{const goal=ZONE?{x:ZONE.x,z:ZONE.z}:q,gdist=Math.hypot(goal.x-P.x,goal.z-P.z);const g=navStep(d,P,goal);mx=g.x-P.x;mz=g.z-P.z;const gl=Math.hypot(mx,mz)||1;mx/=gl;mz/=gl;keys.shift=gdist>8;}   // hunting (or heading for the zone): follow the path
+   else{const goal=ZONE?{x:ZONE.x,z:ZONE.z}:q,gdist=Math.hypot(goal.x-P.x,goal.z-P.z);const g=navStep(d,P,goal);mx=g.x-P.x;mz=g.z-P.z;const gl=Math.hypot(mx,mz)||1;mx/=gl;mz/=gl;keys.shift=gdist>8&&(!d.navF||d.navLong);}   // hunting (or heading for the zone): follow the path
    const a0=Math.atan2(mx,mz);d.moveA=a0;
-   if(!(d.navF&&!bv))for(const o of[0,.5,-.5,1,-1,1.6,-1.6,2.4,-2.4])if(clearDir(P,a0+o*d.side)){d.moveA=a0+o*d.side;break;}
+   if(!d.navF)for(const o of[0,.5,-.5,1,-1,1.6,-1.6,2.4,-2.4])if(clearDir(P,a0+o*d.side)){d.moveA=a0+o*d.side;break;}
    d.moving=Math.hypot(mx,mz)>.1;}
+  if(now<(d.unstickT||0)){d.moveA=d.unstickA;d.moving=true;}                         // backing off a snag
   // stuck against something: try to climb it, otherwise jump and go round the other way
   if(d.moving&&Math.hypot(pel.velocity.x,pel.velocity.z)<.3)d.stuck+=.12;else d.stuck=Math.max(0,d.stuck-.06);
-  if(d.stuck>1.1&&js===0&&cs===0&&contact()){const L=findLedge();if(L)startClimb(L);else startJump();d.side*=-1;d.stuck=0;}}
- const T=d.target,face=d.vis&&T?Math.atan2(T.chest.position.x-P.x,T.chest.position.z-P.z):d.moving?d.moveA:yaw;
+  if(d.stuck<.2&&d.moving)d.unstickN=0;
+  if(d.stuck>1.1&&js===0&&cs===0&&contact()){
+   if(d.navF&&(d.unstickN|0)<2){d.unstickN=(d.unstickN|0)+1;d.unstickA=d.moveA+Math.PI*(Math.random()<.5?.65:-.65)+(d.unstickN>1?Math.PI*.35:0);d.unstickT=now+700;d.path=null;d.stuck=0;}
+   else{const L=findLedge();if(L)startClimb(L);else startJump();d.side*=-1;d.stuck=0;d.unstickN=0;}}}
+ const T=d.target,tClose=T&&Math.hypot(T.chest.position.x-P.x,T.chest.position.z-P.z)<14,lookT=d.vis&&T&&(!d.navF||tClose)&&now>=(d.unstickT||0),
+  face=lookT?Math.atan2(T.chest.position.x-P.x,T.chest.position.z-P.z):d.moving?d.moveA:yaw;
  camYaw=face-Math.PI;
  const rel=d.moveA-face,f=d.moving?Math.cos(rel):0,rr2=d.moving?-Math.sin(rel):0;
  keys.w=f>.38;keys.s=f<-.38;keys.d=rr2>.38;keys.a=rr2<-.38;
- if(d.vis&&T){aiming=true;const q=T.chest.position;aimT.set(q.x+d.err.x,q.y+d.err.y,q.z+d.err.z);
+ if(lookT){aiming=true;const q=T.chest.position;aimT.set(q.x+d.err.x,q.y+d.err.y,q.z+d.err.z);
   if(aimK>.8&&now-d.seen>D.react&&now-lastShot>Math.max(wpn.rate,wpn.auto?D.rate*.3:D.rate)*(.75+Math.random()*.5)){fire(now);
    const sc=D.err*cl(Math.hypot(q.x-P.x,q.z-P.z)/15,.5,2);d.err.set((Math.random()-.5)*2*sc,(Math.random()-.5)*1.6*sc,(Math.random()-.5)*2*sc);}}
  else{aiming=false;const h=head.position;aimT.set(h.x+Math.sin(yaw)*10,h.y-.3,h.z+Math.cos(yaw)*10);}}
@@ -1221,7 +1323,7 @@ const GM={
  gungame:{name:'Gun Game',desc:'Every kill swaps you to the next gun. First to get a kill with the final gun wins.',team:false,limit:0,card:'linear-gradient(135deg,#5a2a8a,#1a0a2a)'}};
 const GG=['smg','ar','lmg','shotgun','revolver','sniper','pistol'];
 let gmode='ffa',matchOver=false,teamScore={A:0,B:0},zoneOwner=null,ZONE=null,zoneMesh=null,zoneRing=null;
-const ZONES={tester:{x:0,z:0,r:4.5},park:{x:0,z:0,r:6},house:{x:-5,z:-4.6,r:3.4}};
+const ZONES={tester:{x:0,z:0,r:4.5},park:{x:0,z:0,r:6},house:{x:-5,z:-4.6,r:3.4},warehouse:{x:0,z:0,r:4},village:{x:0,z:0,r:4},facility:{x:0,z:0,r:3.6},docks:{x:0,z:-18.5,r:3.2}};
 const teamOf=d=>GM[gmode].team?d.team:null;
 const isEnemy=(a,b)=>a!==b&&(!GM[gmode].team||a.team!==b.team);
 // team spawns: blue gets the half of the spawn points with lower z, red the other half

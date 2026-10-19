@@ -8,7 +8,7 @@ Every character is a fully simulated ragdoll: real muscles and joints, limping w
 
 ### Features
 - 7 weapons (pistol, magnum, SMG, M4, shotgun, sniper, LMG), each with its own damage and wound style
-- 3 maps: **Tester**, **Park** and **House**
+- 7 maps: **Tester**, **Park**, **House**, **Warehouse**, **Village**, **Facility** and **Docks**
 - 5 modes vs AI bots: Free For All, Team Deathmatch, Zone Hold, 1v1 and Gun Game
 - Per-limb damage, blood, dismemberment and pain reactions
 - Keyboard + mouse or touch (iPad) controls, first-person view, cosmetic armour
@@ -23,6 +23,7 @@ Every character is a fully simulated ragdoll: real muscles and joints, limping w
 | Left click | Shoot |
 | Right click (hold) | Aim |
 | I | First / third person |
+| C (hold) | Crouch |
 | F | Go limp |
 | P | Menu (volume, sensitivity, bots, difficulty, loadout) |
 
