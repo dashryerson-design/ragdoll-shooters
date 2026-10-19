@@ -66,7 +66,7 @@
 <div class="gh">MATCH SETTINGS</div><div id="msmode" style="font:600 13px system-ui;letter-spacing:3px;opacity:.75;margin:-8px 0 16px"></div>
 <div id="msform" style="width:min(460px,100%);display:flex;flex-direction:column;gap:12px;font:600 14px system-ui"></div>
 <button id="msgo" class="ebtn" style="margin-top:22px">CONTINUE</button></div>
-<div id="kc" style="position:fixed;left:0;right:0;top:calc(70px + env(safe-area-inset-top,0px));display:none;text-align:center;pointer-events:none;z-index:7;color:#fff;text-shadow:0 2px 6px #000"><div style="display:inline-block;background:#b0201acc;padding:6px 18px;border-radius:6px;font:400 22px 'Black Ops One',Impact,sans-serif;letter-spacing:4px">KILLCAM</div><div id="kcwho" style="font:600 15px system-ui;margin-top:6px"></div></div>
+<div id="kc" style="position:fixed;left:0;right:0;top:calc(70px + env(safe-area-inset-top,0px));display:none;text-align:center;pointer-events:none;z-index:7;color:#fff;text-shadow:0 2px 6px #000"><div style="display:inline-block;background:#b0201acc;padding:6px 18px;border-radius:6px;font:400 22px 'Black Ops One',Impact,sans-serif;letter-spacing:4px">KILLCAM</div><div id="kcwho" style="font:600 15px system-ui;margin-top:6px"></div><div id="kcang" style="font:italic 600 13px system-ui;margin-top:4px;letter-spacing:2px;opacity:.85"></div></div><div id="kcsk" style="position:fixed;left:0;right:0;bottom:calc(36px + env(safe-area-inset-bottom,0px));display:none;text-align:center;pointer-events:none;z-index:7;color:#fff;text-shadow:0 2px 6px #000;font:600 16px system-ui"></div>
 <div id="lo"><h2>LOADOUT</h2>
 <div class="lsec">WEAPON <span id="ggnote" style="letter-spacing:1px;color:#ff9a6b"></span></div><div class="wg" id="lw"></div>
 <div class="lsec">ARMOUR (COSMETIC)</div>
@@ -588,7 +588,7 @@ let keys={};let camYaw=Math.PI,camPitch=.12,camDist=3.6;let js=0,jt=0,jdx=0,jdz=
 function startJump(){js=1;jt=0;const sp=Math.hypot(pel.velocity.x,pel.velocity.z);if(sp>1){jdx=pel.velocity.x/sp;jdz=pel.velocity.z/sp;}else{jdx=jdz=0;}}
 function startBound(){bchg=Math.min(1,jpt/.35);const sp=Math.hypot(pel.velocity.x,pel.velocity.z);if(sp>.5){jdx=pel.velocity.x/sp;jdz=pel.velocity.z/sp;}else{jdx=Math.sin(yaw);jdz=Math.cos(yaw);}
  let best=1,bd=1e9;for(const sd of[-1,1]){const f=parts['foot'+sd],d=(f.position.x-pel.position.x)*jdx+(f.position.z-pel.position.z)*jdz;if(d<bd){bd=d;best=sd;}}bsd=best;js=5;jt=0;}
-addEventListener('keydown',e=>{if(!mode||loOpen||matchOver)return;const k=e.key.toLowerCase();if(k==='p'&&!e.repeat){toggleMenu();return;}if(menuOpen)return;if(player.dead){if(k===' '){if(KC.on)KC.done=true;else if(KC.cdT)player.skip=true;}return;}if(keys[k])return;keys[k]=true;
+addEventListener('keydown',e=>{if(!mode||loOpen||matchOver)return;const k=e.key.toLowerCase();if(k==='p'&&!e.repeat){toggleMenu();return;}if(menuOpen)return;if(player.dead){if(k===' '){if(KC.on||KC.cdT)player.skip=true;}return;}if(keys[k])return;keys[k]=true;
  if(k==='i')fpOn=!fpOn;
  if(k==='f'){limp=!limp;js=0;}if(k==='r')reset();
  if(k===' '&&!limp&&js===0&&contact()){if(ccool<=0&&cs===0){const L=findLedge();if(L){startClimb(L);return;}}if(mv>.3&&jp===0){jp=1;jpt=0;}else startJump();}});
@@ -1660,7 +1660,7 @@ function addFeed(by,T,hs){const e=document.createElement('div');e.className='fe'
  e.innerHTML=`<b style="color:${by===player?'#7fb2ff':'#ff8a7a'}">${by?by.name:'?'}</b> ${hs?'🎯':'🔫'} <b style="color:${T===player?'#7fb2ff':'#ff8a7a'}">${T.name}</b>`;
  $('feed').prepend(e);setTimeout(()=>e.remove(),5000);while($('feed').children.length>5)$('feed').lastChild.remove();}
 function deathScreen(now){const el=$('dead');if(!player.dead){el.style.display='none';KC.done=false;KC.cdT=0;return;}
- if(KC.on){el.style.display='none';return;}
+ if(KC.on){el.style.display='none';$('kcsk').textContent=mode==='touch'?'Tap JUMP to respawn':'Press SPACE to respawn';return;}
  if(!KC.cdT&&(KC.done||!player.killer||player.killer===player||now-player.deadAt>6500))KC.cdT=now;   // countdown starts once the killcam is over
  el.style.display='flex';$('dk').textContent=player.killer?'Killed by '+player.killer.name:'';
  if(!KC.cdT){$('dc').textContent='';$('ds').textContent='';}
@@ -1668,18 +1668,30 @@ function deathScreen(now){const el=$('dead');if(!player.dead){el.style.display='
 // ---------- killcam: the last few seconds are recorded (every body section of every doll, plus shots) and replayed from the killer's side ----------
 const KCO={name:'replay'};   // owner of everything the replay spills (removed when it ends)
 const KC={ev:[],rep:false,lastRt:0,hidden:null,buf:[],shots:[],on:false,t0:0,start:0,rt:0,killer:null,pool:[]};
-function kcRecord(now){if(!mode)return;const snap={t:now,d:[]};
+function kcRecord(now){if(!mode||KC.on)return;const snap={t:now,d:[]};
  for(const d of[player,...bots,...NET.puppets.values()]){if(!d.list)continue;const a=new Float32Array(d.list.length*7);d.list.forEach((b,i)=>{const p=b.mesh.position,q=b.mesh.quaternion,o=i*7;a[o]=p.x;a[o+1]=p.y;a[o+2]=p.z;a[o+3]=q.x;a[o+4]=q.y;a[o+5]=q.z;a[o+6]=q.w;});snap.d.push([d,a]);}
  KC.buf.push(snap);while(KC.buf.length&&now-KC.buf[0].t>4500)KC.buf.shift();while(KC.shots.length&&now-KC.shots[0].t>4500)KC.shots.shift();if(!KC.on)while(KC.ev.length&&now-KC.ev[0].t>6000)KC.ev.shift();}
-function kcShot(m,e,now){KC.shots.push({t:now,m:m.clone(),e:new THREE.Vector3(e.x,e.y,e.z)});}
+function kcShot(m,e,now){if(KC.on)return;KC.shots.push({t:now,m:m.clone(),e:new THREE.Vector3(e.x,e.y,e.z)});}
 // replay clock: 1x up to just before the kill, then slow motion through it
 function kcTime(el){const pre=2200;return el<pre?KC.t0-2600+el:KC.t0-400+(el-pre)*.3;}
+// killcam camera shots. f(killerHead, victimChest, dir killer->victim, right, distance, progress 0..1)
+const KC_LEN=2200+850/.3,E3=(x,y,z)=>new THREE.Vector3(x,y,z),ease=u=>u*u*(3-2*u);
+const KC_SHOTS=[
+ {n:'OVER THE SHOULDER',f:(kh,vc,d,r,L,u)=>({p:kh.clone().addScaledVector(d,-1.1-u*.4).addScaledVector(r,-.45).add(E3(0,.3,0)),fov:50-u*12,anchor:kh})},
+ {n:'ORBIT',f:(kh,vc,d,r,L,u)=>{const a=Math.atan2(d.z,d.x)+Math.PI*.35+ease(u)*Math.PI*1.1;return{p:vc.clone().add(E3(Math.cos(a)*3.2,.7-u*.3,Math.sin(a)*3.2)),fov:45};}},
+ {n:'LOW ANGLE',f:(kh,vc,d,r,L,u)=>({p:E3(vc.x,groundH(vc.x,vc.z)+.2,vc.z).addScaledVector(r,1.9).addScaledVector(d,.9-u*1.6),look:vc.clone().add(E3(0,.25,0)),fov:62,roll:.18})},
+ {n:"BULLET'S EYE",f:(kh,vc,d,r,L,u)=>{const k=Math.min(1,ease(Math.min(1,u*1.25)))*Math.max(0,L-1.4);return{p:kh.clone().addScaledVector(d,.4+k).add(E3(0,-.12,0)).addScaledVector(r,-.15),fov:72-u*20,anchor:kh};}},
+ {n:'CRANE',f:(kh,vc,d,r,L,u)=>({p:vc.clone().addScaledVector(r,-2).addScaledVector(d,1.2).add(E3(0,6.5-ease(u)*4.2,0)),fov:48,roll:-.06})},
+ {n:'WIDE',f:(kh,vc,d,r,L,u)=>{const m=kh.clone().lerp(vc,.5),w=Math.max(4,L*.75);return{p:m.addScaledVector(r,w).addScaledVector(d,(u-.5)*2.5).add(E3(0,1.1,0)),look:kh.clone().lerp(vc,.55+u*.3),fov:40,anchor:kh.clone().lerp(vc,.5)};}},
+ {n:'REVERSE ANGLE',f:(kh,vc,d,r,L,u)=>({p:vc.clone().addScaledVector(d,1.7-u*.6).addScaledVector(r,.35).add(E3(0,.35,0)),look:vc.clone().add(E3(0,.2,0)),fov:55,roll:-.12})},
+];
 function kcHideBlood(from){const h={splats:splats.splice(0),meshes:[]};splatsDirty=true;
  for(let i=0;i<BMAX;i++){bLife[i]=0;bPos[i*3+1]=-50;}bGeo.attributes.position.needsUpdate=true;
  for(const o of[...wallSplats,...gibs,...pools])if(o.m.visible){o.m.visible=false;h.meshes.push(o.m);}
  for(const o of decals)if(o.t>=from&&o.m.visible){o.m.visible=false;h.meshes.push(o.m);}
  return h;}
-function kcRestoreBlood(){clearBlood(KCO);for(let i=wounds.length-1;i>=0;i--)if(wounds[i].rp)wounds.splice(i,1);
+function kcWipeReplay(){clearBlood(KCO);for(let i=wounds.length-1;i>=0;i--)if(wounds[i].rp)wounds.splice(i,1);for(let i=0;i<BMAX;i++){bLife[i]=0;bPos[i*3+1]=-50;}bGeo.attributes.position.needsUpdate=true;KC.lastRt=KC.t0-2600;}
+function kcRestoreBlood(){kcWipeReplay();
  const h=KC.hidden;KC.hidden=null;if(!h)return;splats.push(...h.splats);splatsDirty=true;for(const m of h.meshes)m.visible=true;}
 // replay the blood/gore that happened between the last replay frame and this one, on the bodies as they're posed now
 function kcReplayEvents(rt){KC.rep=true;
@@ -1691,9 +1703,9 @@ function kcReplayEvents(rt){KC.rep=true;
  KC.lastRt=rt;KC.rep=false;}
 function kcFrame(now){const t=now-player.deadAt;
  const want=player.dead&&player.killer&&player.killer!==player&&t>800&&!KC.done&&KC.buf.length>10;
- if(!want){if(KC.on){KC.on=false;$('kc').style.display='none';for(const m of KC.pool)m.visible=false;kcRestoreBlood();}return false;}
- if(!KC.on){KC.on=true;KC.t0=player.deadAt;KC.start=now;KC.killer=player.killer;$('kc').style.display='block';$('kcwho').textContent=`${KC.killer.name} · ${KC.killer.wpn?KC.killer.wpn.name:''}`;KC.lastRt=KC.t0-2600;KC.hidden=kcHideBlood(KC.t0-2600);}
- const rt=kcTime(now-KC.start);if(rt>KC.t0+450){KC.done=true;return false;}
+ if(!want){if(KC.on){KC.on=false;$('kc').style.display='none';for(const m of KC.pool)m.visible=false;$('kcsk').style.display='none';kcRestoreBlood();}return false;}
+ if(!KC.on){KC.on=true;KC.t0=player.deadAt;KC.start=now;KC.killer=player.killer;$('kc').style.display='block';$('kcwho').textContent=`${KC.killer.name} · ${KC.killer.wpn?KC.killer.wpn.name:''}`;KC.lastRt=KC.t0-2600;KC.hidden=kcHideBlood(KC.t0-2600);KC.loop=0;KC.ang=Math.random()*KC_SHOTS.length|0;$('kcsk').style.display='block';$('kcang').textContent=KC_SHOTS[KC.ang].n;}
+ let rt=kcTime(now-KC.start);if(rt>KC.t0+450){KC.start=now;KC.loop++;KC.ang=(KC.ang+1)%KC_SHOTS.length;$('kcang').textContent=KC_SHOTS[KC.ang].n;kcWipeReplay();rt=kcTime(0);}
  // pose every doll as it was at time rt
  let snap=KC.buf[0];for(const sn of KC.buf){if(sn.t>rt)break;snap=sn;}
  for(const[d,a]of snap.d){if(!d.list)continue;d.list.forEach((b,i)=>{const o=i*7;if(o+6>=a.length)return;b.mesh.position.set(a[o],a[o+1],a[o+2]);b.mesh.quaternion.set(a[o+3],a[o+4],a[o+5],a[o+6]);});}
@@ -1701,12 +1713,14 @@ function kcFrame(now){const t=now-player.deadAt;
  // tracers fired around that moment
  let k=0;for(const sh of KC.shots){if(rt>=sh.t&&rt<sh.t+90){let m=KC.pool[k];if(!m){m=new THREE.Mesh(tracerGeo,tracerMat);scene.add(m);KC.pool.push(m);}m.visible=true;
   m.position.copy(sh.m).add(sh.e).multiplyScalar(.5);m.scale.z=sh.m.distanceTo(sh.e);m.lookAt(sh.e);k++;}}for(let i=k;i<KC.pool.length;i++)KC.pool[i].visible=false;
- // camera over the killer's shoulder, looking at the victim
+ // dramatic camera: a different shot every time the replay loops
  const K=snap.d.find(x=>x[0]===KC.killer),Vv=snap.d.find(x=>x[0]===player);if(!K||!Vv)return true;
  const hi=KC.killer.list.indexOf(KC.killer.parts.head),ci=player.list.indexOf(player.parts.chest),kh=new THREE.Vector3(K[1][hi*7],K[1][hi*7+1],K[1][hi*7+2]),vc=new THREE.Vector3(Vv[1][ci*7],Vv[1][ci*7+1],Vv[1][ci*7+2]);
- const dir=vc.clone().sub(kh);dir.y=0;dir.normalize();const right=new THREE.Vector3(-dir.z,0,dir.x);
- cam.position.copy(kh).addScaledVector(dir,-1.1).addScaledVector(right,-.45).add(new THREE.Vector3(0,.3,0));
- if(cam.fov!==50){cam.fov=50;cam.updateProjectionMatrix();}cam.lookAt(vc);cam.updateMatrixWorld();return true;}
+ const dir=vc.clone().sub(kh);dir.y=0;const L=Math.max(.5,dir.length());dir.normalize();const right=new THREE.Vector3(-dir.z,0,dir.x);
+ const u=Math.min(1,(now-KC.start)/KC_LEN),sh=KC_SHOTS[KC.ang],o=sh.f(kh,vc,dir,right,L,u);
+ // keep the camera out of walls: pull it in towards what it's looking at
+ const an=o.anchor||vc,dv=o.p.clone().sub(an),dl=dv.length();if(dl>.3){dv.divideScalar(dl);const h=castRay(an,dv,dl,null,1);if(h.hit)o.p.copy(an).addScaledVector(dv,Math.max(.25,an.distanceTo(h.p)-.2));}
+ cam.position.copy(o.p);if(cam.fov!==o.fov){cam.fov=o.fov;cam.updateProjectionMatrix();}cam.up.set(0,1,0);cam.lookAt(o.look||vc);if(o.roll)cam.rotateZ(o.roll);cam.updateMatrixWorld();return true;}
 // ---------- loop ----------
 let cullTick=0;const DT=1/400;let acc=0,last=performance.now();
 const tgt=new THREE.Vector3(0,1,0);const _fpS=new THREE.Vector3();let fpOn=false,fpWas=false,camCD=3.6,cqTick=0,cqT=0,cqK=0;
