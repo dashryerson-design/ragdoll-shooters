@@ -1,4 +1,4 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Ragdoll Shooters</title>
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Physics Ragdoll Walker</title>
 <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:system-ui,sans-serif}canvas{display:block}#m{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#0009;color:#eee;z-index:10}#m>div{background:#15171c;padding:20px 26px;border-radius:12px;min-width:260px}#m h3{margin:0 0 14px}#m label{display:block;margin:12px 0 4px;font-size:13px}#m input{width:100%}#m small{opacity:.6}#mm{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;background:radial-gradient(ellipse at 50% 30%,#2a1010cc,#000e 70%);color:#fff;user-select:none;-webkit-user-select:none}
 #logo{margin-top:12vh;text-align:center;font-family:'Black Ops One',Impact,sans-serif;line-height:.9;transform:rotate(-3deg)}
 #logo .a,#logo .b{display:block;font-size:min(15vw,110px);letter-spacing:4px;background:linear-gradient(180deg,#fff 0%,#ffd36b 45%,#ff5a1f 55%,#a3120a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 #000) drop-shadow(0 0 18px #ff3a0066)}
@@ -1214,7 +1214,7 @@ const decalGeo=new THREE.PlaneGeometry(1,1),_zA=new THREE.Vector3(0,0,1),_dq=new
 // stick a flat decal onto a face of a body section (lp = local point on the face, nl = local face normal)
 function addDecal(d,b,lp,nl,size,mat){const m=new THREE.Mesh(decalGeo,mat),n=new THREE.Vector3(nl.x,nl.y,nl.z);
  _dq.setFromUnitVectors(_zA,n);_dq2.setFromAxisAngle(_zA,Math.random()*6.3);m.quaternion.copy(_dq).multiply(_dq2);
- m.position.set(lp.x+nl.x*.002,lp.y+nl.y*.002,lp.z+nl.z*.002);m.scale.set(size,size,1);b.mesh.add(m);decals.push({d,m});return m;}
+ m.position.set(lp.x+nl.x*.002,lp.y+nl.y*.002,lp.z+nl.z*.002);m.scale.set(size,size,1);b.mesh.add(m);decals.push({d,m,t:simT});return m;}
 // a trickle of blood running down the body from the wound (direction = gravity at the moment of the hit, along that face)
 function addStreak(d,b,lp,nl){const g=new V();b.vectorToLocalFrame(new V(0,-1,0),g);const n=new THREE.Vector3(nl.x,nl.y,nl.z),gv=new THREE.Vector3(g.x,g.y,g.z);
  gv.addScaledVector(n,-gv.dot(n));if(gv.length()<.35)return null;gv.normalize();
@@ -1223,7 +1223,8 @@ function addStreak(d,b,lp,nl){const g=new V();b.vectorToLocalFrame(new V(0,-1,0)
  return{m,lp:new THREE.Vector3(lp.x+nl.x*.0025,lp.y+nl.y*.0025,lp.z+nl.z*.0025),gv,len:.07+Math.random()*.16,w:.018+Math.random()*.01};}
 const poolMat=new THREE.MeshStandardMaterial({color:0x4d0000,roughness:.15,metalness:.2,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3}),poolGeo=new THREE.CircleGeometry(1,24);
 const BLEED={head:1.3,neck:1.6,chest:1.2,abdomen:1.1,pelvis:1,thigh:1,shin:.7,foot:.4,toe:.3,uarm:.8,farm:.6,hand:.45};
-function bloodHit(T,b,p,dir,wt='small'){const S=WT[wt]||WT.small,own=T,k=(BLEED[b.pn]||1)*S.blood,R=()=>Math.random()-.5;
+function bloodHit(T,b,p,dir,wt='small',lpG=null,dlG=null){const S=WT[wt]||WT.small,own=T,k=(BLEED[b.pn]||1)*S.blood,R=()=>Math.random()-.5;
+ if(!KC.rep){const l=new V(),dd=new V();b.pointToLocalFrame(new V(p.x,p.y,p.z),l);b.vectorToLocalFrame(new V(dir.x,dir.y,dir.z),dd);KC.ev.push({t:simT,ty:'hit',b,lp:l,dl:dd,wt});}
  wallSplat(p,dir,k,own);if(S.blood>=1.4)spawnGibs(p,dir,Math.round(S.blood*2+Math.random()*3),own);
  for(let i=0;i<30*k;i++){const sp=.5+Math.random()*1.5;drop(p.x,p.y,p.z,R()*2*sp,Math.random()*2*sp,R()*2*sp,own);}   // mist bursting out in every direction
  for(let i=0;i<16*k;i++){const sp=6+Math.random()*4;drop(p.x,p.y,p.z,dir.x*sp+R()*.5,dir.y*sp+R()*.5+.4,dir.z*sp+R()*.5,own);}   // fast jet straight through
@@ -1231,7 +1232,7 @@ function bloodHit(T,b,p,dir,wt='small'){const S=WT[wt]||WT.small,own=T,k=(BLEED[
   drop(p.x,p.y,p.z,dir.x*sp+R()*1.6,dir.y*sp+R()*1.6+.6,dir.z*sp+R()*1.6,own);}
  for(let i=0;i<n*.55;i++){const sp=.8+Math.random()*2.2;drop(p.x,p.y,p.z,-dir.x*sp+R(),-dir.y*sp+R()+.5,-dir.z*sp+R(),own);}   // entry back-spatter
  // wound: a dark mark stuck to that body section, which keeps pumping blood
- const lp=new V();b.pointToLocalFrame(new V(p.x,p.y,p.z),lp);const he=b.shapes[0].halfExtents;
+ const lp=lpG?new V(lpG.x,lpG.y,lpG.z):new V();if(!lpG)b.pointToLocalFrame(new V(p.x,p.y,p.z),lp);const he=b.shapes[0].halfExtents;
  const nx=lp.x/he.x,ny=lp.y/he.y,nz=lp.z/he.z,ax=Math.abs(nx),ay=Math.abs(ny),az=Math.abs(nz);   // snap to the nearest face
  const nl=new V(ax>=ay&&ax>=az?Math.sign(nx):0,ay>ax&&ay>=az?Math.sign(ny):0,az>ax&&az>ay?Math.sign(nz):0);
  if(nl.x)lp.x=nl.x*he.x;if(nl.y)lp.y=nl.y*he.y;if(nl.z)lp.z=nl.z*he.z;
@@ -1239,10 +1240,10 @@ function bloodHit(T,b,p,dir,wt='small'){const S=WT[wt]||WT.small,own=T,k=(BLEED[
  addDecal(T,b,lp,nl,S.es*big*(.85+Math.random()*.3),S.en[Math.random()*S.en.length|0]);
  const st=wt==='pellet'&&Math.random()<.6?null:addStreak(T,b,lp,nl);
  // exit wound: follow the bullet through the box to the face it leaves by
- const dl=new V();b.vectorToLocalFrame(new V(dir.x,dir.y,dir.z),dl);let te=1e9,ax2=-1;
+ const dl=dlG?new V(dlG.x,dlG.y,dlG.z):new V();if(!dlG)b.vectorToLocalFrame(new V(dir.x,dir.y,dir.z),dl);let te=1e9,ax2=-1;
  for(const[i,c]of[['x',0],['y',1],['z',2]].map(([a,i])=>[i,a])){const v=dl[c];if(Math.abs(v)<1e-6)continue;const tt=(Math.sign(v)*he[c]-lp[c])/v;if(tt>1e-4&&tt<te){te=tt;ax2=c;}}
  if(S.ex&&ax2!==-1&&te<1){const ep=new V(lp.x+dl.x*te,lp.y+dl.y*te,lp.z+dl.z*te),en=new V(0,0,0);en[ax2]=Math.sign(dl[ax2]);addDecal(T,b,ep,en,S.xs*big*(.85+Math.random()*.3),S.ex[Math.random()*S.ex.length|0]);}
- wounds.push({d:T,b,lp,nl,t:0,k,acc:0,st});}
+ wounds.push({d:T,b,lp,nl,t:0,k,acc:0,st,rp:KC.rep});}
 function clearBlood(d){
  for(let i=wounds.length-1;i>=0;i--)if(wounds[i].d===d)wounds.splice(i,1);
  for(let i=decals.length-1;i>=0;i--)if(decals[i].d===d){decals[i].m.parent&&decals[i].m.parent.remove(decals[i].m);decals.splice(i,1);}
@@ -1254,12 +1255,13 @@ function clearBlood(d){
 const _wv=new V(),_wn=new V();
 function bloodFrame(dt,now){if(dt<=0)return;
  // wounds: strong pulsing spurts at first, fading to nothing over ~8 s
- for(let i=wounds.length-1;i>=0;i--){const w=wounds[i];w.t+=dt;const fade=Math.exp(-w.t/2.4);
+ for(let i=wounds.length-1;i>=0;i--){const w=wounds[i];if(KC.on&&!w.rp)continue;w.t+=dt;const fade=Math.exp(-w.t/2.4);
   if(w.st){const L=w.st.len*Math.min(1,w.t/3.5);w.st.m.scale.set(w.st.w,Math.max(.001,L),1);w.st.m.position.copy(w.st.lp).addScaledVector(w.st.gv,L/2);}
   if(fade<.04){wounds.splice(i,1);continue;}
   const beat=Math.pow(Math.max(0,Math.sin(w.t*Math.PI*2*1.4)),3),rate=w.k*fade*(16+160*beat)*(w.d.dead?.6:1);
   w.acc+=rate*dt;
-  if(w.acc>=1){w.b.pointToWorldFrame(w.lp,_wv);w.b.vectorToWorldFrame(w.nl,_wn);const bv=w.b.velocity;
+  if(w.acc>=1){let bv=w.b.velocity;if(w.rp){const mm=w.b.mesh;mm.updateMatrixWorld(true);const a=new THREE.Vector3(w.lp.x,w.lp.y,w.lp.z).applyMatrix4(mm.matrixWorld),n=new THREE.Vector3(w.nl.x,w.nl.y,w.nl.z).applyQuaternion(mm.quaternion);_wv.set(a.x,a.y,a.z);_wn.set(n.x,n.y,n.z);bv={x:0,y:0,z:0};}
+   else{w.b.pointToWorldFrame(w.lp,_wv);w.b.vectorToWorldFrame(w.nl,_wn);}
    while(w.acc>=1){w.acc--;const sp=(.6+2.8*beat)*fade+.15;
     drop(_wv.x,_wv.y,_wv.z,bv.x+_wn.x*sp+(Math.random()-.5)*.4,bv.y+_wn.y*sp+(Math.random()-.5)*.4,bv.z+_wn.z*sp+(Math.random()-.5)*.4,w.d);}}}
  // droplets: gravity, then splat on the ground
@@ -1314,7 +1316,7 @@ function wallSplat(p,dir,amt,own){const r=castRay({x:p.x+dir.x*.25,y:p.y+dir.y*.
  while(wallSplats.length>60){const o=wallSplats.shift();scene.remove(o.m);}}
 // gibs: little chunks of flesh and bone that fly out of big wounds
 const gibs=[],gibGeo=new THREE.BoxGeometry(1,1,1),gibMats=[0x7a0f0f,0x9a2222,0x5a0606,0xb04040,0xe0d6c6].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:.35}));
-function spawnGibs(p,dir,n,own){for(let i=0;i<n;i++){const m=new THREE.Mesh(gibGeo,gibMats[i%7===0?4:Math.random()*4|0]);const s=.015+Math.random()*.035;m.scale.set(s,s*(.6+Math.random()*.8),s);
+function spawnGibs(p,dir,n,own){if(!KC.rep)KC.ev.push({t:simT,ty:'gibs',p:{x:p.x,y:p.y,z:p.z},dir:{x:dir.x,y:dir.y,z:dir.z},n});for(let i=0;i<n;i++){const m=new THREE.Mesh(gibGeo,gibMats[i%7===0?4:Math.random()*4|0]);const s=.015+Math.random()*.035;m.scale.set(s,s*(.6+Math.random()*.8),s);
  m.position.set(p.x,p.y,p.z);m.castShadow=true;scene.add(m);const sp=1.5+Math.random()*4;
  gibs.push({m,own,t0:simT,vx:dir.x*sp+(Math.random()-.5)*3,vy:dir.y*sp+Math.random()*3,vz:dir.z*sp+(Math.random()-.5)*3,wx:(Math.random()-.5)*20,wz:(Math.random()-.5)*20,gy:groundH(p.x,p.z)+s/2,rest:false});}
  while(gibs.length>120){const o=gibs.shift();scene.remove(o.m);}}
@@ -1325,7 +1327,8 @@ function sever(T,b,dir,by,now){const sv=SEVER[b.pn];if(!sv)return;const side=(Ob
  {const h=T.parts.hand1;if(h.grip){h.grip=null;for(const n of['uarm1','farm1','hand1'])T.parts[n].boost=1;}}
  for(const[body,piv]of[[j.p,j.pp],[j.c,j.cp]]){const he=body.shapes[0].halfExtents,lp=new V(...piv),ax=[Math.abs(lp.x/he.x),Math.abs(lp.y/he.y),Math.abs(lp.z/he.z)];
   const i=ax.indexOf(Math.max(...ax)),nl=new V(0,0,0),key='xyz'[i];nl[key]=Math.sign(lp[key])||1;lp.x=cl(lp.x,-he.x,he.x);lp.y=cl(lp.y,-he.y,he.y);lp.z=cl(lp.z,-he.z,he.z);lp[key]=nl[key]*he[key];
-  const big=Math.min(he.x,he.z)*2.6;addDecal(T,body,lp,nl,Math.max(.09,big),goreMats[Math.random()*3|0]);
+  const big=Math.min(he.x,he.z)*2.6,gm2=goreMats[Math.random()*3|0];addDecal(T,body,lp,nl,Math.max(.09,big),gm2);
+  KC.ev.push({t:simT,ty:'stump',b:body,lp:lp.clone(),nl:nl.clone(),size:Math.max(.09,big),mat:gm2,k:body===j.p?3.2:1.6});
   wounds.push({d:T,b:body,lp,nl,t:0,k:body===j.p?3.2:1.6,acc:0,st:null});                 // arterial spurting from the stump
   const wp=new V();body.pointToWorldFrame(lp,wp);spawnGibs(wp,dir,6+Math.random()*6|0,T);
   for(let k=0;k<50;k++){const sp=1+Math.random()*4;drop(wp.x,wp.y,wp.z,dir.x*sp+(Math.random()-.5)*3,dir.y*sp+Math.random()*2.5,dir.z*sp+(Math.random()-.5)*3,T);}}
@@ -1663,21 +1666,38 @@ function deathScreen(now){const el=$('dead');if(!player.dead){el.style.display='
  if(!KC.cdT){$('dc').textContent='';$('ds').textContent='';}
  else{$('dc').textContent='Respawning in '+Math.max(1,Math.ceil((5000-(now-KC.cdT))/1000));$('ds').textContent=mode==='touch'?'Tap JUMP to skip':'Press SPACE to skip';}}
 // ---------- killcam: the last few seconds are recorded (every body section of every doll, plus shots) and replayed from the killer's side ----------
-const KC={buf:[],shots:[],on:false,t0:0,start:0,rt:0,killer:null,pool:[]};
+const KCO={name:'replay'};   // owner of everything the replay spills (removed when it ends)
+const KC={ev:[],rep:false,lastRt:0,hidden:null,buf:[],shots:[],on:false,t0:0,start:0,rt:0,killer:null,pool:[]};
 function kcRecord(now){if(!mode)return;const snap={t:now,d:[]};
  for(const d of[player,...bots,...NET.puppets.values()]){if(!d.list)continue;const a=new Float32Array(d.list.length*7);d.list.forEach((b,i)=>{const p=b.mesh.position,q=b.mesh.quaternion,o=i*7;a[o]=p.x;a[o+1]=p.y;a[o+2]=p.z;a[o+3]=q.x;a[o+4]=q.y;a[o+5]=q.z;a[o+6]=q.w;});snap.d.push([d,a]);}
- KC.buf.push(snap);while(KC.buf.length&&now-KC.buf[0].t>4500)KC.buf.shift();while(KC.shots.length&&now-KC.shots[0].t>4500)KC.shots.shift();}
+ KC.buf.push(snap);while(KC.buf.length&&now-KC.buf[0].t>4500)KC.buf.shift();while(KC.shots.length&&now-KC.shots[0].t>4500)KC.shots.shift();if(!KC.on)while(KC.ev.length&&now-KC.ev[0].t>6000)KC.ev.shift();}
 function kcShot(m,e,now){KC.shots.push({t:now,m:m.clone(),e:new THREE.Vector3(e.x,e.y,e.z)});}
 // replay clock: 1x up to just before the kill, then slow motion through it
 function kcTime(el){const pre=2200;return el<pre?KC.t0-2600+el:KC.t0-400+(el-pre)*.3;}
+function kcHideBlood(from){const h={splats:splats.splice(0),meshes:[]};splatsDirty=true;
+ for(let i=0;i<BMAX;i++){bLife[i]=0;bPos[i*3+1]=-50;}bGeo.attributes.position.needsUpdate=true;
+ for(const o of[...wallSplats,...gibs,...pools])if(o.m.visible){o.m.visible=false;h.meshes.push(o.m);}
+ for(const o of decals)if(o.t>=from&&o.m.visible){o.m.visible=false;h.meshes.push(o.m);}
+ return h;}
+function kcRestoreBlood(){clearBlood(KCO);for(let i=wounds.length-1;i>=0;i--)if(wounds[i].rp)wounds.splice(i,1);
+ const h=KC.hidden;KC.hidden=null;if(!h)return;splats.push(...h.splats);splatsDirty=true;for(const m of h.meshes)m.visible=true;}
+// replay the blood/gore that happened between the last replay frame and this one, on the bodies as they're posed now
+function kcReplayEvents(rt){KC.rep=true;
+ for(const e of KC.ev){if(e.t<=KC.lastRt||e.t>rt)continue;const mm=e.b&&e.b.mesh;
+  if(e.ty==='gibs')spawnGibs(e.p,e.dir,e.n,KCO);
+  else if(mm){mm.updateMatrixWorld(true);
+   if(e.ty==='hit'){const p=new THREE.Vector3(e.lp.x,e.lp.y,e.lp.z).applyMatrix4(mm.matrixWorld),d=new THREE.Vector3(e.dl.x,e.dl.y,e.dl.z).applyQuaternion(mm.quaternion);bloodHit(KCO,e.b,p,d,e.wt,e.lp,e.dl);}
+   else if(e.ty==='stump'){addDecal(KCO,e.b,e.lp,e.nl,e.size,e.mat);wounds.push({d:KCO,b:e.b,lp:e.lp,nl:e.nl,t:0,k:e.k,acc:0,st:null,rp:true});}}}
+ KC.lastRt=rt;KC.rep=false;}
 function kcFrame(now){const t=now-player.deadAt;
  const want=player.dead&&player.killer&&player.killer!==player&&t>800&&!KC.done&&KC.buf.length>10;
- if(!want){if(KC.on){KC.on=false;$('kc').style.display='none';for(const m of KC.pool)m.visible=false;}return false;}
- if(!KC.on){KC.on=true;KC.t0=player.deadAt;KC.start=now;KC.killer=player.killer;$('kc').style.display='block';$('kcwho').textContent=`${KC.killer.name} · ${KC.killer.wpn?KC.killer.wpn.name:''}`;}
+ if(!want){if(KC.on){KC.on=false;$('kc').style.display='none';for(const m of KC.pool)m.visible=false;kcRestoreBlood();}return false;}
+ if(!KC.on){KC.on=true;KC.t0=player.deadAt;KC.start=now;KC.killer=player.killer;$('kc').style.display='block';$('kcwho').textContent=`${KC.killer.name} · ${KC.killer.wpn?KC.killer.wpn.name:''}`;KC.lastRt=KC.t0-2600;KC.hidden=kcHideBlood(KC.t0-2600);}
  const rt=kcTime(now-KC.start);if(rt>KC.t0+450){KC.done=true;return false;}
  // pose every doll as it was at time rt
  let snap=KC.buf[0];for(const sn of KC.buf){if(sn.t>rt)break;snap=sn;}
  for(const[d,a]of snap.d){if(!d.list)continue;d.list.forEach((b,i)=>{const o=i*7;if(o+6>=a.length)return;b.mesh.position.set(a[o],a[o+1],a[o+2]);b.mesh.quaternion.set(a[o+3],a[o+4],a[o+5],a[o+6]);});}
+ kcReplayEvents(rt);
  // tracers fired around that moment
  let k=0;for(const sh of KC.shots){if(rt>=sh.t&&rt<sh.t+90){let m=KC.pool[k];if(!m){m=new THREE.Mesh(tracerGeo,tracerMat);scene.add(m);KC.pool.push(m);}m.visible=true;
   m.position.copy(sh.m).add(sh.e).multiplyScalar(.5);m.scale.z=sh.m.distanceTo(sh.e);m.lookAt(sh.e);k++;}}for(let i=k;i<KC.pool.length;i++)KC.pool[i].visible=false;
