@@ -33,4 +33,4 @@ Pick **ONLINE** on the game mode screen, choose your loadout, then use the **ser
 - **Quick match** — joins the fullest open server of your mode, or creates one
 - The browser shows how many players are online right now. Up to 8 players per server.
 
-No server is needed: players' browsers connect directly to each other (WebRTC), finding each other through public Nostr relays via the open-source [Trystero](https://github.com/dmotz/trystero) library. A free public TURN relay is used for players whose networks block direct connections; a few very strict networks (some schools/workplaces) may still block it.
+No game server to run: every player connects to free public MQTT message brokers (EMQX and HiveMQ) over secure websockets, the same way a web page loads, so it works on almost any network. Players on the GitHub page and on the claude.ai version share the same lobby.

@@ -1276,13 +1276,58 @@ const NET={p2p:false,want:false,on:false,lobby:null,user:null,room:null,me:null,
 const R3=v=>Math.round(v*1000)/1000;
 if(!settings.nick){settings.nick='Player '+(1000+Math.floor(Math.random()*9000));try{localStorage.setItem('ragdollSettings',JSON.stringify(settings));}catch(e){}}
 NET.name=settings.nick;
-async function netConnect(){if(NET.lobby)return NET.lobby;
- // on claude.ai: the platform's live room
- try{if(window.claude&&claude.use){NET.user=await claude.use('user');NET.lobby=await claude.use('room');}}catch(e){NET.lobby=null;}
- if(NET.user){try{const me=await NET.user.me();if(me.name)NET.name=me.name;}catch(e){}}
- // anywhere else (e.g. GitHub Pages): browsers connect straight to each other
- if(!NET.lobby){NET.lobby=await p2pLobby();NET.p2p=!!NET.lobby;}
- return NET.lobby;}
+async function netConnect(){if(NET.lobby)return NET.lobby;if(NET.connecting)return NET.connecting;
+ NET.connecting=(async()=>{
+  // 1) the public game network: every copy of the game (GitHub, claude.ai, a saved file) meets here, through public MQTT message brokers
+  NET.lobby=await mqttLobby();NET.p2p=!!NET.lobby;
+  // 2) if those servers can't be reached (e.g. this page isn't allowed to contact them), the claude.ai live room
+  if(!NET.lobby){try{if(window.claude&&claude.use){NET.user=await claude.use('user');NET.lobby=await claude.use('room');}}catch(e){NET.lobby=null;}
+   if(NET.user){try{const me=await NET.user.me();if(me.name&&settings.nick.startsWith('Player '))NET.name=me.name;}catch(e){}}}
+  return NET.lobby;})();
+ return NET.connecting;}
+// ---------- public game network: MQTT message brokers over secure websockets ----------
+// Every player connects OUT to the same free public brokers (like loading a web page), so it works on networks that block direct connections.
+// We use two brokers at once and send everything to both; whatever arrives twice is ignored. Wrapped to look exactly like the claude.ai room.
+const MQ_BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'],MQ_ROOT='ragdollshooters/v1/';
+function loadScript(u){return new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=u;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
+async function mqttLobby(){
+ if(!window.mqtt)for(const u of['https://cdn.jsdelivr.net/npm/mqtt@5.15.1/dist/mqtt.min.js','https://unpkg.com/mqtt@5.15.1/dist/mqtt.min.js']){try{await loadScript(u);if(window.mqtt)break;}catch(e){}}
+ const M=window.mqtt;if(!M||!M.connect)return null;
+ const me='m'+Math.random().toString(36).slice(2,10),clients=[],rooms=new Map();
+ await Promise.all(MQ_BROKERS.map(u=>new Promise(res=>{let c,done=false;const fin=ok=>{if(done)return;done=true;if(ok)clients.push(c);else{try{c&&c.end(true);}catch(e){}}res();};
+  try{c=M.connect(u,{clientId:'rs_'+me+'_'+Math.random().toString(36).slice(2,6),clean:true,keepalive:30,reconnectPeriod:3000,connectTimeout:8000});}catch(e){return fin(false);}
+  c.on('connect',()=>{fin(true);for(const R of rooms.values())c.subscribe(R.pre+'#');});c.on('error',()=>{});setTimeout(()=>fin(false),9000);
+  c.on('message',(topic,buf)=>{if(!topic.startsWith(MQ_ROOT))return;const rest=topic.slice(MQ_ROOT.length),i=rest.indexOf('/'),R=rooms.get(rest.slice(0,i));if(!R)return;
+   let m;try{m=JSON.parse(typeof buf==='string'?buf:new TextDecoder().decode(buf));}catch(e){return;}R.recv(rest.slice(i+1),m);});})));
+ if(!clients.length)return null;
+ const pub=(t,o)=>{const sx=JSON.stringify(o);for(const c of clients){try{c.publish(t,sx,{qos:0});}catch(e){}}};
+ const who=(id,mine)=>({peer:id,by:null,isMe:mine,sameTab:mine,kind:'viewer',guest:false});
+ const mk=name=>{const pre=MQ_ROOT+name+'/',peers=new Map(),handlers={},ph=[],seenEv=new Map();let myPres={},q=0,eq=0,cache=[],alive=true;
+  const self=()=>({...who(me,true),presence:myPres,updatedAt:Date.now()});
+  peers.set(me,{...self(),_t:Infinity});cache=[...peers.values()];
+  const changed=(j,l,u)=>{cache=[...peers.values()];for(const f of ph)f({peers:cache,joined:j,left:l,updated:u});};
+  const sendPres=()=>{if(alive)pub(pre+'p',{id:me,q:++q,p:myPres});};
+  const R={pre,name,
+   recv(kind,m){if(!m||typeof m.id!=='string'||m.id===me)return;
+    if(kind==='p'){const old=peers.get(m.id);if(old&&(m.q|0)<=(old._q|0))return;            // older or duplicate (second broker)
+     if(m.gone){if(old){peers.delete(m.id);changed([],[old],[]);}return;}
+     if(!m.p||typeof m.p!=='object')return;const p={...who(m.id,false),presence:m.p,updatedAt:Date.now(),_q:m.q|0,_t:Date.now()};peers.set(m.id,p);
+     if(!old)sendPres();changed(old?[]:[p],[],old?[p]:[]);}                                      // greet newcomers with my state
+    else if(kind==='e'){const k=m.id+':'+m.q;if(seenEv.has(k)||typeof m.t!=='string')return;seenEv.set(k,1);if(seenEv.size>500)seenEv.delete(seenEv.keys().next().value);
+     for(const f of handlers[m.t]||[])f({topic:m.t,data:m.d,...who(m.id,false)});}},
+   emit(t,d){pub(pre+'e',{id:me,q:++eq,t,d});for(const f of handlers[t]||[])f({topic:t,data:d,...who(me,true)});return Promise.resolve();},
+   on(t,f){(handlers[t]=handlers[t]||[]).push(f);return()=>{const a=handlers[t],i=a.indexOf(f);if(i>=0)a.splice(i,1);};},
+   presence(patch){myPres={...myPres};for(const k in patch){if(patch[k]===null)delete myPres[k];else myPres[k]=patch[k];}peers.set(me,{...self(),_t:Infinity});cache=[...peers.values()];sendPres();return Promise.resolve();},
+   peers:()=>cache,
+   onPeers(f){ph.push(f);setTimeout(()=>f({peers:cache,joined:cache,left:[],updated:[]}),0);return()=>{const i=ph.indexOf(f);if(i>=0)ph.splice(i,1);};},
+   connected:()=>clients.some(c=>c.connected),onConnection(f){setTimeout(()=>f(true),0);return()=>{};},
+   join:async n=>mk(n),
+   leave(){if(!alive)return Promise.resolve();pub(pre+'p',{id:me,q:++q,gone:1});alive=false;clearInterval(hb);rooms.delete(name);for(const c of clients){try{c.unsubscribe(pre+'#');}catch(e){}}return Promise.resolve();}};
+  // heartbeat: re-announce every 2 s (newcomers learn about us); anyone silent for 7 s has left
+  const hb=setInterval(()=>{sendPres();const now=Date.now(),gone=[];for(const[id,p]of peers)if(id!==me&&now-p._t>7000){peers.delete(id);gone.push(p);}if(gone.length)changed([],gone,[]);},2000);
+  rooms.set(name,R);for(const c of clients){try{c.subscribe(pre+'#');}catch(e){}}sendPres();return R;};
+ addEventListener('pagehide',()=>{for(const R of rooms.values())R.leave();});
+ return mk('lobby');}
 // ---------- serverless online play (any website): browsers connect directly to each other over WebRTC, introduced to each other through
 // public Nostr relays by the open-source Trystero library. Wrapped to look exactly like the claude.ai room the rest of the netcode uses.
 const P2P_APP='ragdoll-shooters-v1';
@@ -1326,7 +1371,7 @@ async function netSearch(){mmShow(true);$('mmmode').textContent=(GM[gmode].name+
 function mmTick(){if(NET.state!=='search'||!NET.lobby)return;NET.me=myPeer();if(!NET.me){$('mmstat').textContent='Connecting…';return;}
  const ps=NET.lobby.peers().filter(p=>p.kind==='viewer'&&p.presence&&p.presence.mm&&p.presence.mm.st==='search'&&p.presence.mm.mode===gmode);
  const max=gmode==='duel'?2:8,ids=ps.map(p=>p.peer).sort();
- $('mmstat').textContent=ps.length<2?'Searching for players…'+(NET.p2p?' (direct connection)':''):`${ps.length} player${ps.length>1?'s':''} found — starting soon`;
+ $('mmstat').textContent=ps.length<2?'Searching for players…'+'':`${ps.length} player${ps.length>1?'s':''} found — starting soon`;
  $('mmlist').innerHTML='';for(const p of ps){const d=document.createElement('div');d.textContent=(p.presence.mm.nm||'Player')+(p.sameTab?' (you)':'');$('mmlist').appendChild(d);}
  if(ps.length>=2&&ids[0]===NET.me){if(!NET.readyT)NET.readyT=Date.now();
   if(Date.now()-NET.readyT>4000||ps.length>=max){const pl=ids.slice(0,max),teams={};pl.forEach((id,i)=>teams[id]=GM[gmode].team?(i%2?'B':'A'):null);
@@ -1358,7 +1403,7 @@ function removePuppet(d){for(const b of d.list){world.removeBody(b);scene.remove
 const _pq=new THREE.Quaternion(),_pq2=new THREE.Quaternion();
 function netFrame(now,dt){if(!NET.on||!NET.room)return;const R=NET.room;
  // send my state ~15 times a second
- if(now-NET.sendT>66){NET.sendT=now;use(player);const st=[];for(const b of list){const p=b.position,q=b.quaternion;st.push(R3(p.x),R3(p.y),R3(p.z),R3(q.x),R3(q.y),R3(q.z),R3(q.w));}
+ if(now-NET.sendT>83){NET.sendT=now;use(player);const st=[];for(const b of list){const p=b.position,q=b.quaternion;st.push(R3(p.x),R3(p.y),R3(p.z),R3(q.x),R3(q.y),R3(q.z),R3(q.w));}
   R.presence({s:st,hp:Math.max(0,player.hp|0),dead:player.dead?1:0,w:wpn.id,c:[settings.head,settings.body,settings.knee?1:0,settings.gloves?1:0].join(','),nm:NET.name.slice(0,40),t:player.team||'',gl:player.gl||0,k:player.kills|0,d:player.deaths|0,h:NET.host?1:0,zs:NET.host&&gmode==='zone'?[R3(teamScore.A),R3(teamScore.B),zoneOwner||'']:null}).catch(()=>{});
   if(NET.host&&now-(NET.advT||0)>1000){NET.advT=now;NET.lobby.presence({srv:{...NET.srv,n:R.peers().filter(p=>p.presence&&Array.isArray(p.presence.s)).length||1}}).catch(()=>{});}}   // keep the server listing's player count current
  // everyone else: make or update their puppet from their latest state
@@ -1406,10 +1451,10 @@ function sbList(){if(!NET.lobby)return[];const out=[];
  return out.sort((a,b)=>b.n-a.n);}
 function sbRender(){if($('sb').style.display==='none')return;const L=NET.lobby;
  if(!L){$('sbnet').textContent='Connecting to the game network…';return;}
- const n=L.peers().length,net=NET.p2p?'public network (direct connection)':'claude.ai network';
+ const n=L.peers().length,net=NET.p2p?'public game network':'claude.ai network';
  $('sbnet').textContent=`${n} player${n===1?'':'s'} online on the ${net}`+(n===1?' — just you so far':'');
- $('sbhint').textContent=NET.connFail?`${NET.connFail} connection attempt(s) were blocked by a network. If nobody shows up, try a different Wi-Fi or mobile data.`:
-  (NET.p2p?'Players on the claude.ai version are on a different network and won\'t appear here.':'Players on the GitHub version are on a different network and won\'t appear here.');
+ $('sbhint').textContent=
+  (NET.p2p?'Everyone playing the game anywhere (GitHub or claude.ai) shows up here.':'The public game network couldn\'t be reached from this page, so only claude.ai players appear here.');
  const list=sbList(),el=$('sblist'),key=JSON.stringify(list);if(key===NET.sbKey&&el.children.length)return;NET.sbKey=key;el.innerHTML='';   // only rebuild when the list changes (keeps buttons clickable)
  if(!list.length){const d=document.createElement('div');d.style.cssText='text-align:center;opacity:.6;font:500 14px system-ui;padding:22px';d.textContent='No servers yet — create one and others can join you.';el.appendChild(d);return;}
  for(const v of list){const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:12px;background:#1b1d23;border:2px solid #33363d;border-radius:10px;padding:10px 14px';
