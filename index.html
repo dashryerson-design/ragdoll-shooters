@@ -2078,8 +2078,9 @@ function bloodHit(T,b,p,dir,wt='small',lpG=null,dlG=null){if(KC.on&&!KC.rep)retu
  let ep=null,en=null;if(S.ex&&ax2!==-1&&te<1){ep=new V(lp.x+dl.x*te,lp.y+dl.y*te,lp.z+dl.z*te);en=new V(0,0,0);en[ax2]=Math.sign(dl[ax2]);addDecal(T,b,ep,en,S.xs*big*(.85+Math.random()*.3),S.ex[Math.random()*S.ex.length|0]);}
  goreHit(T,b,S,lp,nl,ep,en,dir,p);
  const art=!!ART[b.pn]&&S.blood>=1;   // neck, thigh and upper arm: an artery is hit, it pumps hard and long
- wounds.push({d:T,b,lp,nl,t:0,k:art?k*1.6:k,acc:0,st,rp:KC.rep,art});}
-function clearBlood(d){d.gutted=false;
+ wounds.push({d:T,b,lp,nl,t:0,k:art?k*1.6:k,acc:0,st,rp:KC.rep,art});
+ spotDamage(T,b,lp,nl,S.blood);}
+function clearBlood(d){d.gutted=false;d.spots=null;for(const b of d.flayed||[])if(b.mesh.userData.skin){b.mesh.material=b.mesh.userData.skin;b.mesh.userData.skin=null;}d.flayed=null;
  for(let i=wounds.length-1;i>=0;i--)if(wounds[i].d===d)wounds.splice(i,1);
  for(let i=decals.length-1;i>=0;i--)if(decals[i].d===d){decals[i].m.parent&&decals[i].m.parent.remove(decals[i].m);decals.splice(i,1);}
  for(let i=pools.length-1;i>=0;i--)if(pools[i].d===d){scene.remove(pools[i].m);pools.splice(i,1);}
@@ -2176,7 +2177,7 @@ const goreSway=[],_gq=new THREE.Quaternion(),_gy=new THREE.Vector3(0,1,0);
 function goreMesh(geo,mat,par,x,y,z,sx,sy,sz){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.scale.set(sx,sy??sx,sz??sx);par.add(m);return m;}
 function sway(m,amp){goreSway.push({m,ph:Math.random()*6,amp,b:m.rotation.clone()});}
 // a group stuck to a body section at local point lp, its +y pointing out along the face normal nl (cleared with the body's other blood)
-function goreAnchor(T,b,lp,nl){if(KC.on&&!KC.rep)return null;const g=new THREE.Group();_gq.setFromUnitVectors(_gy,new THREE.Vector3(nl.x,nl.y,nl.z));g.quaternion.copy(_gq);g.rotateY(Math.random()*6.3);
+function goreAnchor(T,b,lp,nl,fixed){if(KC.on&&!KC.rep)return null;const g=new THREE.Group();_gq.setFromUnitVectors(_gy,new THREE.Vector3(nl.x,nl.y,nl.z));g.quaternion.copy(_gq);if(!fixed)g.rotateY(Math.random()*6.3);
  g.position.set(lp.x,lp.y,lp.z);b.mesh.add(g);decals.push({d:T,m:g,t:simT});return g;}
 // raw stump: muscle cap with a fat rim, splintered bone with marrow, dangling arteries and sinew; the neck stump shows vertebrae and the windpipe instead
 function stump3D(T,b,lp,nl,size,spine,main){const g=goreAnchor(T,b,lp,nl);if(!g)return;const s=Math.min(size,.15)*.5,R=Math.random;
@@ -2202,6 +2203,48 @@ function goreHit(T,b,S,lp,nl,ep,en,dir,p){if(KC.on&&!KC.rep)return;
  if(GLIMB[pn]||pn==="chest"){const n=pn==="chest"?3:1+(R()<.5);for(let i=0;i<n;i++){const sh=goreMesh(SHARD,GORE.bone,g,(R()-.5)*s*.3,s*.12,(R()-.5)*s*.3,.006,.03+R()*.03,.006);sh.rotation.set((R()-.5)*1.2,0,(R()-.5)*1.2);}}
  if(pn==='abdomen'&&!T.gutted&&(S.blood>=2||R()<.5)){T.gutted=true;sway(goreMesh(GUTS[R()*3|0],GORE.gut,g,0,0,0,1.2),.5);const m2=goreMesh(GUTS[R()*3|0],GORE.gut2,g,.02,0,.01,1);m2.rotation.y=2;sway(m2,.5);}
  if(pn==='head')spawnGibs(p,dir,6,T,'head');}
+// ---------- local damage: repeated hits on the same spot first strip the skin (raw patch, flaps peeling and hanging off, fresh dripping),
+// then blow a chunk out (deep crater, bone showing in limbs, ribs in the chest, guts in the belly; on the head the jaw / cheek is torn open to the teeth with the jaw hanging) ----------
+const SPOT_R=.1;
+// raw striated muscle: what a limb looks like once the skin has been torn away
+const MUSCLE=(()=>{const c=document.createElement('canvas');c.width=64;c.height=128;const g=c.getContext('2d'),R=Math.random;g.fillStyle='#7a1010';g.fillRect(0,0,64,128);
+ for(let i=0;i<26;i++){g.strokeStyle=['#a32a24','#5a0606','#c0453c','#8a1a16'][R()*4|0];g.lineWidth=1+R()*3;const x=R()*64;g.beginPath();g.moveTo(x,0);g.bezierCurveTo(x+R()*8-4,40,x+R()*8-4,90,x+R()*6-3,128);g.stroke();}
+ for(let i=0;i<14;i++){g.fillStyle='rgba(235,205,150,.8)';g.beginPath();g.ellipse(R()*64,R()*128,1+R()*3,2+R()*5,0,0,6.3);g.fill();}
+ for(let i=0;i<10;i++){g.fillStyle='rgba(40,0,0,.6)';g.beginPath();g.ellipse(R()*64,R()*128,2+R()*4,3+R()*6,0,0,6.3);g.fill();}
+ const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return new THREE.MeshStandardMaterial({map:t,roughness:.28,metalness:.05});})();
+function spotDamage(T,b,lp,nl,amt){if(KC.on&&!KC.rep)return;const M=T.spots||(T.spots=new Map());let L=M.get(b);if(!L)M.set(b,L=[]);
+ let o=L.find(q=>Math.hypot(q.lp.x-lp.x,q.lp.y-lp.y,q.lp.z-lp.z)<SPOT_R);if(!o){if(L.length>5)return;o={lp:new V(lp.x,lp.y,lp.z),nl:new V(nl.x,nl.y,nl.z),d:0,lv:0};L.push(o);}
+ o.d+=amt;if(o.lv<1&&o.d>=.9){o.lv=1;skinTear(T,b,o);}if(o.lv<2&&o.d>=2.6){o.lv=2;chunkOut(T,b,o);if(GLIMB[b.pn]||b.pn==='hand'||b.pn==='foot')flayLimb(T,b);}}
+function skinMat(b){const m=b.mesh.material;return Array.isArray(m)?m[0]:m;}
+// stage 2 on an arm or leg: the skin over the whole section is torn away - raw muscle, bone laid bare along its length, skin shreds hanging from both ends
+function flayLimb(T,b){if(KC.on&&!KC.rep)return;const m=b.mesh;if(!m.userData.skin){m.userData.skin=m.material;if(!KC.rep){m.material=MUSCLE;(T.flayed||(T.flayed=[])).push(b);}}
+ const he=b.shapes[0].halfExtents,ax=he.y>=he.x&&he.y>=he.z?'y':he.x>=he.z?'x':'z',L=he[ax]*2,sx=ax==='x'?'z':'x',g=new THREE.Group();g.position[sx]=he[sx]+.004;m.add(g);decals.push({d:T,m:g,t:simT});
+ const bn=goreMesh(BONEGEO,GORE.bone,g,0,0,0,Math.min(he.x,he.z)*.38,L*.92,Math.min(he.x,he.z)*.38);if(ax==='x')bn.rotation.z=Math.PI/2;if(ax==='z')bn.rotation.x=Math.PI/2;
+ const sk=m.userData.skin;for(const e of[-1,1])for(let i=0;i<3;i++){const f=new THREE.Group();f.position[ax]=e*he[ax]*.95;f.position.y+=(Math.random()-.5)*.01;f.rotation.y=i*2.1;m.add(f);decals.push({d:T,m:f,t:simT});
+  goreMesh(VERT,sk,f,he[sx]*1.1,0,0,.012,L*.32,.03);goreMesh(VERT,GORE.meat2,f,he[sx]*1.1-.004,0,0,.004,L*.3,.028);f.children.forEach(c=>c.position.y=-e*L*.14);sway(f,.3);}}
+function skinTear(T,b,o){const g=goreAnchor(T,b,o.lp,o.nl);if(!g)return;const R=Math.random,sk=skinMat(b);
+ goreMesh(LUMPS[R()*4|0],GORE.meat2,g,0,.002,0,.065,.01,.058);goreMesh(LUMPS[R()*4|0],GORE.meat,g,.01,.005,-.008,.036,.009,.03);goreMesh(LUMPS[R()*4|0],GORE.dark,g,-.012,.004,.01,.022,.007,.02);
+ for(let i=0;i<4;i++){const a=i*1.6+R()*.6,f=new THREE.Group();f.position.set(Math.cos(a)*.05,.003,Math.sin(a)*.05);f.rotation.y=-a;g.add(f);
+  const fl=goreMesh(VERT,sk,f,.022,0,0,.045,.004,.036);goreMesh(VERT,GORE.meat2,f,.022,-.0026,0,.042,.0015,.033);   // skin outside, raw underside
+  f.rotation.z=.6+R()*.9;sway(f,.3);}   // peel outward off the body
+ wounds.push({d:T,b,lp:o.lp,nl:o.nl,t:0,k:.7,acc:0,st:addStreak(T,b,o.lp,o.nl),rp:KC.rep});}   // the torn patch bleeds and drips afresh
+function chunkOut(T,b,o){const g=goreAnchor(T,b,o.lp,o.nl);if(!g)return;const R=Math.random,sk=skinMat(b),pn=b.pn;
+ goreMesh(LUMPS[R()*4|0],GORE.dark,g,0,.002,0,.095,.02,.085);goreMesh(LUMPS[R()*4|0],GORE.liver,g,0,.012,0,.05,.012,.045);
+ for(let i=0;i<10;i++){const a=i/10*6.3+R()*.4;goreMesh(LUMPS[i%4],i%2?GORE.meat:GORE.meat2,g,Math.cos(a)*.08,.008,Math.sin(a)*.08,.028,.018,.028);}
+ for(let i=0;i<6;i++){const a=i*1.05+R()*.4,f=new THREE.Group();f.position.set(Math.cos(a)*.1,.006,Math.sin(a)*.1);f.rotation.y=-a;g.add(f);goreMesh(VERT,sk,f,.03,0,0,.06,.005,.045);goreMesh(VERT,GORE.meat2,f,.03,-.003,0,.056,.002,.042);f.rotation.z=.9+R()*.9;sway(f,.35);}
+ if(pn==='head'&&(o.nl.z>.5||o.lp.y<0)){   // face / jaw hit: the mouth on the FRONT of the face is torn open - teeth along the gum, the jaw hanging loose
+  const he=b.shapes[0].halfExtents,g=goreAnchor(T,b,new V(cl(o.lp.x,-he.x*.35,he.x*.35),-he.y*.42,he.z),new V(0,0,1),true);if(!g)return;
+  goreMesh(LUMPS[0],GORE.dark,g,0,-.002,0,.07,.012,.06);goreMesh(VERT,GORE.meat2,g,0,.006,0,.07,.01,.016);for(let i=0;i<7;i++){const x=-.03+i*.01;if(R()<.18)continue;goreMesh(VERT,GORE.bone,g,x,.014,(i%2?.003:-.003),.008,.014,.009).rotation.z=(R()-.5)*.5;}
+  const j=new THREE.Group();j.position.set(0,.004,.04);g.add(j);goreMesh(VERT,sk,j,0,0,.035,.08,.012,.07);goreMesh(VERT,GORE.meat,j,0,.007,.035,.074,.003,.064);
+  for(let i=0;i<6;i++)goreMesh(VERT,GORE.bone,j,-.025+i*.01,.013,.008,.008,.012,.008);j.rotation.x=-(.9+R()*.4);sway(j,.25);   // swings out and hangs
+  for(let i=0;i<2;i++)sway(goreMesh(ARTS[i],GORE.artery,g,(i-.5)*.03,0,.02,.8),.4);}
+ else if(pn==='chest'){for(let i=0;i<4;i++)goreMesh(VERT,GORE.bone,g,0,.016,-.039+i*.026,.13,.012,.014).rotation.y=(R()-.5)*.2;goreMesh(LUMPS[1],GORE.lung,g,.02,.012,0,.04,.02,.035);}   // ribs across the hole
+ else if(pn==='abdomen'||pn==='pelvis'){sway(goreMesh(GUTS[R()*3|0],GORE.gut,g,0,0,0,1.1),.45);for(let i=0;i<3;i++)goreMesh(GUTBIT[i%2],i%2?GORE.gut2:GORE.gut,g,(i-1)*.03,.012,(R()-.5)*.03,1.6).rotation.x=Math.PI/2;}
+ else if(pn!=='neck'){const bn=goreMesh(BONEGEO,GORE.bone,g,0,.012,0,.018,.13,.018);bn.rotation.z=Math.PI/2;bn.rotation.y=R()*.4;   // bone laid bare along the limb
+  goreMesh(SHARD,GORE.bone,g,.03,.008,0,.005,.02,.005).rotation.z=-.8;}
+ wounds.push({d:T,b,lp:o.lp,nl:o.nl,t:0,k:1.4,acc:0,st:addStreak(T,b,o.lp,o.nl),rp:KC.rep,art:pn==='neck'});
+ if(!KC.rep){const wp=new V();b.pointToWorldFrame(o.lp,wp);const n=new V();b.vectorToWorldFrame(o.nl,n);spawnGibs(wp,n,6+(R()*4|0),T,pn==='head'?'head':undefined);
+  for(let i=0;i<60;i++){const sp=1+R()*3;drop(wp.x,wp.y,wp.z,n.x*sp+(R()-.5)*2,n.y*sp+R()*1.5,n.z*sp+(R()-.5)*2,T);}}}
 function gibPick(kind,i){const R=Math.random();
  if(kind==='head')return R<.5?[LUMPS[i%4],GORE.brain,.02]:R<.8?[SHARD,GORE.bone,.018]:[LUMPS[i%4],GORE.meat,.02];
  if(R<.42)return[LUMPS[i%4],R<.2?GORE.meat:GORE.meat2,.018+Math.random()*.02];if(R<.56)return[GUTBIT[i%2],GORE.gut,1];if(R<.66)return[LUMPS[i%4],R<.61?GORE.liver:GORE.lung,.022];
@@ -2847,6 +2890,9 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'0.7.6',n:['Torn-open mouth, teeth and hanging jaw now always sit on the front of the face (lower face), never on the sides or back of the head','Hits to the side or back of the head leave a crater without teeth']},
+ {v:'0.7.5',n:['Limb damage is far more extreme and kicks in sooner: skin tears open from the first hit, with big flaps hanging off','Repeated hits on an arm or leg flay it: the skin is torn away to raw muscle with the bone laid bare along its length and shreds of skin hanging from the ends','Much bigger craters: ribs and lung in the chest, coils of gut from the belly, a torn-open jaw with teeth on the head']},
+ {v:'0.7.4',n:['Localised damage: repeated hits on the same spot strip the skin - raw patches with flaps of skin peeling and hanging off, bleeding afresh','More hits blow a chunk out: a deep bloody crater with bone laid bare on limbs, ribs on the chest and guts in the belly','Head: the jaw / cheek gets torn open to the teeth with the jaw hanging loose']},
  {v:'0.7.3',n:['When you die you now watch your body fall for about 3 seconds before the killcam starts','Breathing / panting is cut as soon as the killcam begins, so it never plays over the replay']},
  {v:'0.7.2',n:['Your own injury breathing is much louder','Bloody red vignette when badly hurt: starts below 40 health and gets steadily stronger, pulsing with a heartbeat below 15']},
  {v:'0.7.1',n:['Post-injury voices: wounded fighters (below 65 health) now breathe heavily, pant and wince between hits','All breathing clips are levelled to the same quiet volume, and never play over screams or in the killcam']},
