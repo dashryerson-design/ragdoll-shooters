@@ -3558,10 +3558,11 @@ let cullTick=0;const DT=1/400;let acc=0,last=performance.now();
 const tgt=new THREE.Vector3(0,1,0);const _fpS=new THREE.Vector3();let fpOn=false,fpWas=false,camCD=3.6,cqTick=0,cqT=0,cqK=0;
 function frame(now){
  requestAnimationFrame(frame);
- const fdt=((menuOpen||loOpen)&&!NET.on)||matchOver?0:Math.min(.05,(now-last)/1000);simT=now;
+ const mFrz=matchOver&&!(FK.phase===1&&now-FK.t0<1600);   // the world keeps moving 1.6 s past the final kill, so its replay has the body falling, not frozen
+ const fdt=((menuOpen||loOpen)&&!NET.on)||mFrz?0:Math.min(.05,(now-last)/1000);simT=now;
  if(!mode&&!ATT.on&&!ATT.off&&$('mm').style.display!=='none')attractStart();
  acc+=Math.min(.05,(now-last)/1000)*(ATT.on&&now<ATT.slowUntil?.3:1);last=now;   // attract mode: kills play in slow motion
- if(((menuOpen||loOpen)&&!NET.on)||matchOver)acc=0;                                   // the pause menu pauses the game
+ if(((menuOpen||loOpen)&&!NET.on)||mFrz)acc=0;                                   // the pause menu pauses the game
  const all=[player,...bots];
  for(const d of all){use(d);sense();}
  while(acc>=DT){
@@ -3631,6 +3632,7 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.4.1',n:['FIX: the end-of-match final kill replay no longer freezes on the slow-motion kill shot - the victim now falls properly in the replay']},
  {v:'1.4.0',n:['Pause menu tidied into sub-menus (Audio, Graphics, Controls, AI enemies)','New Audio options: separate gunshot, effects/gore and voice volumes','New Graphics options: shadows on/off, render resolution, field of view and render distance (fog)']},
  {v:'1.3.3',n:['Menu cinematic: John Wick now fights on the smaller maps (Killhouse, Bunker, Office, Facility, Mall, Warehouse, Subway) so the action starts straight away','The cinematic map changes every time the main menu opens','Once John Wick has killed every enemy twice, the cinematic fades to black and moves on to the next map','Bullet tracers are much brighter, thicker and longer, with a glow, and travel slower so you can follow them','AI turns and tracks like a person: turning speed depends on difficulty, the aim lags behind a moving target, and bots only fire once they are actually facing you','Easier bots now simply miss some shots (Easy about half, Normal 30%, Hard 12%, Insane 3%)','FIX: gore sounds, vocals, footsteps and every other non-gunshot sound were silent in game - restored','FIX: losing your head or neck is now always fatal','The menu cinematic now runs on its own hidden game mode and rules, fully separate from the real game: starting a match always switches everything back to normal play','FIX: phantom screams all over the map - dead menu-cinematic bots kept screaming after the real game started','FIX: 1v1 rounds work again (the menu cinematic was leaving the game mode set to team deathmatch)','FIX: death screams and dying sounds stop the moment a fighter respawns','Bots squeeze through doorways: they feel for walls at each shoulder, tuck that arm in and turn their shoulders so they stop snagging on frames','Cinematic camera: loops bird\'s-eye, close over-the-shoulder and first person, 10 s each with a quick fade to black between them (long 7-10 s takes, no cut on kills), a new high three-quarter angle that keeps John and his target in frame, and a first-person angle through his eyes']},
  {v:'1.3.2',n:['Menus now use a cleaner Call of Duty-style typeface (Barlow / Barlow Semi Condensed) with tighter, cleaner spacing','Menu cinematic: the super killer is now dressed all in black; when he fires the camera frames him and his target together','Menu cinematic runs in its own smooth mode (lighter physics, smarter camera checks) without lowering the picture quality, at normal speed with slow motion only on kills','The super killer can no longer be killed by the other bots: 1000 health, a quarter of the damage, can\'t lose limbs, and recovers between fights']},
