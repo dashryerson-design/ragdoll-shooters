@@ -3651,6 +3651,7 @@ const _kq1=new THREE.Quaternion(),_kq2=new THREE.Quaternion(),KC_LEN=2200+850/.3
 const KC_SHOTS=[
  {n:'LOW ANGLE',f:(kh,vc,d,r,L,u)=>({p:E3(vc.x,groundH(vc.x,vc.z)+.2,vc.z).addScaledVector(r,1.9).addScaledVector(d,.9-u*1.6),look:vc.clone().add(E3(0,.25,0)),fov:62,roll:.18})},
  {n:'REVERSE ANGLE',f:(kh,vc,d,r,L,u)=>({p:vc.clone().addScaledVector(d,1.7-u*.6).addScaledVector(r,.35).add(E3(0,.35,0)),look:vc.clone().add(E3(0,.2,0)),fov:55,roll:-.12})},
+ {n:'LAST LOOK',f:(kh,vc,d,r,L,u)=>({p:E3(vc.x,0,vc.z).addScaledVector(d,1.25-u*.35).addScaledVector(r,.55).setY(groundH(vc.x,vc.z)+.28),look:vc.clone().lerp(kh,.5).add(E3(0,.45,0)),fov:50,roll:.1,anchor:vc.clone()})},   // low behind the victim: victim big in the foreground, killer framed behind
  {n:'KILLER VIEW',fp:true,f:()=>({p:E3(0,0,0),fov:78})},
 ];
 function kcHideBlood(from){const h={splats:splats.splice(0),meshes:[]};splatsDirty=true;
@@ -3919,6 +3920,7 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.10.4',n:['New death replay angle LAST LOOK: a dramatic low shot from just behind the victim, with the victim big in the foreground and the killer framed in the background']},
  {v:'1.10.3',n:['FIX: aim assist in third person pulled the target to the middle of the screen instead of onto the crosshair, dragging your aim above whoever you were shooting at']},
  {v:'1.10.2',n:['Loadout weapon display now shows the real 3D gun model live and in high quality: studio lighting, metal reflections, soft shadow, slow turntable (drag to spin it)']},
  {v:'1.10.1',n:['Custom Loadout screen now matches MW2019: weapon cards on the left (Primary + Gunsmith, Secondary, Perks, Lethal, Tactical) and your gun shown big on the right','Click a card to open its picker, pick to return; it opens straight after map, mode and match settings']},
