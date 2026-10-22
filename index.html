@@ -13,8 +13,8 @@ body.pdlive #pd{visibility:hidden}body.pdlive #hudL{background:#0c0d1066!importa
 #wn{font:700 17px 'Barlow Semi Condensed';letter-spacing:2px;text-transform:uppercase}#wty{font:600 10px 'Barlow Semi Condensed';letter-spacing:3px;opacity:.55;text-transform:uppercase}
 #ammo{font:700 34px/1 'Barlow Semi Condensed';letter-spacing:1px;margin-top:2px}#ammo small{font-size:16px;opacity:.6;margin-left:4px}
 #rlb{height:3px;background:#ffffff22;margin-top:5px;visibility:hidden}#rlb i{display:block;height:100%;width:0;background:#ffd36b}
-body.touchui #hudL{display:none}body.touchui #hudR{position:absolute;right:auto;left:50%;transform:translateX(-50%);bottom:64px;min-width:0;padding:4px 10px;display:flex;gap:10px;align-items:center}body.touchui #wgi{height:26px}body.touchui #ammo{font-size:22px;margin:0}body.touchui #wty{display:none}
-</style></head><body>
+body.touchui #hudC{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:min(300px,34vw)}body.touchui #hudL{position:fixed;left:calc(14px + env(safe-area-inset-left,0px));bottom:calc(210px + env(safe-area-inset-bottom,0px));width:auto;padding:5px 7px}body.touchui #hudL .hl{font-size:8px;letter-spacing:2px;margin-bottom:2px}body.touchui #pdbox{height:min(130px,24vh);width:calc(min(130px,24vh)*.62)}body.touchui #hudR{position:absolute;right:auto;left:50%;transform:translateX(-50%);bottom:64px;min-width:0;padding:4px 10px;display:flex;gap:10px;align-items:center}body.touchui #wgi{height:26px}body.touchui #ammo{font-size:22px;margin:0}body.touchui #wty{display:none}
+#tc,#tc *,.tb{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}</style></head><body>
 <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Physics Ragdoll Walker</title>
 <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:system-ui,sans-serif}canvas{display:block}#m{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#0009;color:#eee;z-index:10}#m>div{background:#15171c;padding:20px 26px;border-radius:12px;min-width:260px}#m h3{margin:0 0 14px}#m label{display:block;margin:12px 0 4px;font-size:13px}#m input{width:100%}#m small{opacity:.6}#m>div{width:min(340px,86vw)}#m .mp{display:flex;flex-direction:column}#m .mp[hidden]{display:none}.mbtn{width:100%;padding:11px 14px;margin:0 0 8px;font:600 15px 'Barlow Semi Condensed',system-ui;letter-spacing:1.5px;text-transform:uppercase;text-align:left;color:#fff;background:#22252c;border:1px solid #3a3d44;cursor:pointer}.mbtn:hover{border-color:#ff5a1f}.mbtn.pri{background:#ff5a1f;border-color:#ff5a1f}.mbtn.nav::after{content:'›';float:right;opacity:.7}.mbtn.back{margin-top:16px;text-align:center}#m .mchk{display:flex;align-items:center;gap:8px}#m .mchk input{width:auto}#mm{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;background:radial-gradient(ellipse at 50% 30%,#2a1010cc,#000e 70%);color:#fff;user-select:none;-webkit-user-select:none}
 #logo{margin-top:12vh;text-align:center;font-family:'Black Ops One',Impact,sans-serif;line-height:.9;transform:rotate(-3deg)}
@@ -1268,7 +1268,7 @@ const MX=['vgun','vfx','vvox'];
 function showSettings(){for(const k of MX){$(k).value=Math.round(settings[k]*100);$(k+'v').textContent=$(k).value+'%';}$('gshadow').checked=settings.shadow!==false;$('gpd').checked=!!settings.pdLive;$('gres').value=Math.round((settings.res||1)*100);$('gresv').textContent=$('gres').value+'%';$('gfov').value=settings.fov||60;$('grd').value=settings.rd||300;$('grdv').textContent=+$('grd').value>=300?'Max':$('grd').value+' m';$('gfovv').textContent=$('gfov').value+'°';botsEl.value=settings.bots;diffEl.value=settings.diff;document.getElementById('bv').textContent=settings.bots;optEl.checked=!!settings.opt;volEl.value=Math.round(settings.vol*100);sensEl.value=Math.round(settings.sens*100);document.getElementById('vv').textContent=volEl.value+'%';document.getElementById('sv').textContent=(settings.sens).toFixed(2)+'x';}
 function saveSettings(){for(const k of MX)settings[k]=$(k).value/100;settings.shadow=$('gshadow').checked;settings.pdLive=$('gpd').checked;settings.res=$('gres').value/100;settings.fov=+$('gfov').value;settings.rd=+$('grd').value;settings.vol=volEl.value/100;settings.sens=sensEl.value/100;settings.opt=optEl.checked;settings.bots=+botsEl.value;MS.enemies=Math.max(0,settings.bots-(GM[gmode].team?MS.allies:0));settings.diff=+diffEl.value;applyOpt();syncBots();if(master)master.gain.value=settings.vol;showSettings();try{localStorage.setItem('ragdollSettings',JSON.stringify(settings));}catch(e){}}
 for(const el of[volEl,sensEl,optEl,botsEl,diffEl,...MX.map($),$('gshadow'),$('gpd'),$('gres'),$('gfov'),$('grd')])for(const ev of['input','change'])el.addEventListener(ev,saveSettings);
-function toggleMenu(){menuOpen=!menuOpen;menuEl.style.display=menuOpen?'flex':'none';mPanel('main');{const lb=$('mLeave');lb.style.display=mode?'block':'none';lb.textContent=NET.on?'Leave server':'Leave game';}
+function toggleMenu(){menuOpen=!menuOpen;if(window.resetTouch)resetTouch();menuEl.style.display=menuOpen?'flex':'none';mPanel('main');{const lb=$('mLeave');lb.style.display=mode?'block':'none';lb.textContent=NET.on?'Leave server':'Leave game';}
  if(menuOpen){for(const k in keys)keys[k]=false;aiming=false;fireHeld=false;for(const id of['tRun','tAim'])document.getElementById(id).classList.remove('on');fireReq=false;showSettings();if(document.pointerLockElement)document.exitPointerLock();}}
 // optimised mode: lower render resolution, no shadows, faster collision broadphase, fewer solver passes, idle objects sleep
 let optOn=null;const OPT_FAR=60;   // optimised: anything further than this is hidden (fades into fog first)
@@ -1328,9 +1328,9 @@ document.getElementById('mLo').onclick=()=>{toggleMenu();showLoadout(true);};
 {const tc=document.getElementById('tc'),jb=document.getElementById('joy'),kn=document.getElementById('knob'),look={};
  const key=(k,down)=>dispatchEvent(new KeyboardEvent(down?'keydown':'keyup',{key:k}));
  const btn=(id,dn,up)=>{const el=document.getElementById(id);el.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();dn(el);},{passive:false});
-  el.addEventListener('touchend',e=>{e.preventDefault();e.stopPropagation();if(up)up(el);},{passive:false});};
+  for(const ev of['touchend','touchcancel'])el.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();if(up)up(el);},{passive:false});};   // a cancelled touch (iOS gesture, alert) releases the button too
  btn('tFire',()=>{fireReq=true;fireHeld=true;},()=>{fireHeld=false;});
- btn('tJump',()=>key(' ',true),()=>key(' ',false));
+ btn('tJump',()=>{if(keys[' '])key(' ',false);key(' ',true);},()=>key(' ',false));
  btn('tAim',el=>{aiming=!aiming;el.classList.toggle('on',aiming);});
  btn('tRun',el=>{keys.shift=!keys.shift;el.classList.toggle('on',keys.shift);});
  btn('tLimp',()=>{key('f',true);key('f',false);});
@@ -1340,7 +1340,12 @@ document.getElementById('mLo').onclick=()=>{toggleMenu();showLoadout(true);};
  btn('tCrouch',el=>{keys.c=!keys.c;el.classList.toggle('on',!!keys.c);});
  const setJoy=t=>{const b=jb.getBoundingClientRect(),cx=b.left+b.width/2,cy=b.top+b.height/2,R=b.width/2;
   let x=(t.clientX-cx)/R,y=(t.clientY-cy)/R;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l;}joy.x=x;joy.y=y;kn.style.transform=`translate(${x*R}px,${y*R}px)`;};
- tc.addEventListener('touchstart',e=>{e.preventDefault();if(menuOpen)return;const b=jb.getBoundingClientRect();
+ const live=e=>new Set([...e.touches].map(t=>t.identifier));
+ const joyReset=()=>{joy.id=null;joy.on=false;joy.x=joy.y=0;kn.style.transform='';};
+ window.resetTouch=()=>{joyReset();for(const k in look)delete look[k];fireHeld=false;if(keys[' '])key(' ',false);};   // drop every held touch (focus lost, menu opened...)
+ for(const ev of['blur','pagehide'])addEventListener(ev,resetTouch);document.addEventListener('visibilitychange',()=>{if(document.hidden)resetTouch();});
+ tc.addEventListener('touchstart',e=>{e.preventDefault();if(menuOpen)return;const b=jb.getBoundingClientRect(),L=live(e);
+  if(joy.id!==null&&!L.has(joy.id))joyReset();for(const k in look)if(!L.has(+k))delete look[k];   // a lift-off we never heard about: free the joystick again
   for(const t of e.changedTouches){const d=Math.hypot(t.clientX-(b.left+b.width/2),t.clientY-(b.top+b.height/2));
    if(joy.id===null&&d<b.width*.75){joy.id=t.identifier;joy.on=true;setJoy(t);}else look[t.identifier]={x:t.clientX,y:t.clientY};}},{passive:false});
  tc.addEventListener('touchmove',e=>{e.preventDefault();if(menuOpen)return;
@@ -1530,8 +1535,8 @@ function control(dt){if(cur.veh){vehRidePose();return;}   // riding: just sit
   if(js===5){const lk=(-bsd)+'',pk=bsd+'';
    joints['hip'+lk].x=-1.0;joints['knee'+lk].x=1.3;joints['ankle'+lk].x=-.3;
    joints['shoulder'+pk].x=-1.2;joints['shoulder'+lk].x=.8;
-   if(jt<.18&&contact()){const F=totalMass*9.82*JF*.6*(1+1.2*bchg);pel.force.y+=F;parts['foot'+pk].force.y-=F;pel.force.x+=jdx*totalMass*9.82*.45*(1+.3*bchg);pel.force.z+=jdz*totalMass*9.82*.45*(1+.3*bchg);}
-   if(cur.bndB&&jt>.04&&contact()){cur.bndB=0;const fx=Math.sin(yaw),fz=Math.cos(yaw),fs=pel.velocity.x*fx+pel.velocity.z*fz,add=Math.max(0,Math.min(.4,(cur.runV||fs)*1.06-fs));for(const b of list){b.velocity.x+=fx*add;b.velocity.z+=fz*add;b.velocity.y+=.4;}}   // smaller shove, and none once you're already near top bounding speed (8.5 m/s), so chains can't snowball   // bounding: a big shove the way he's facing
+   if(jt<.18&&contact()){const F=totalMass*9.82*JF*.6*(1+1.2*bchg);pel.force.y+=F;parts['foot'+pk].force.y-=F;pel.force.x+=jdx*totalMass*9.82*.75*(1+.4*bchg);pel.force.z+=jdz*totalMass*9.82*.75*(1+.4*bchg);}
+   if(cur.bndB&&jt>.04&&contact()){cur.bndB=0;const fx=Math.sin(yaw),fz=Math.cos(yaw),fs=pel.velocity.x*fx+pel.velocity.z*fz,add=Math.max(0,Math.min(1,(cur.runV||fs)*1.3-fs));for(const b of list){b.velocity.x+=fx*add;b.velocity.z+=fz*add;b.velocity.y+=.4;}}   // smaller shove, and none once you're already near top bounding speed (8.5 m/s), so chains can't snowball   // bounding: a big shove the way he's facing
    if(jt>.2||(jt>.07&&!contact())){js=3;jt=0;}}
   if(js===2&&jt<.2&&contact()){const F=totalMass*9.82*JF;pel.force.y+=F;pel.force.x+=jdx*totalMass*9.82*.55;pel.force.z+=jdz*totalMass*9.82*.55;parts.foot1.force.y-=F/2;parts['foot-1'].force.y-=F/2;}
   if(js===2&&jt<.24){const ax=Math.cos(yaw),az=-Math.sin(yaw);
@@ -1542,7 +1547,7 @@ function control(dt){if(cur.veh){vehRidePose();return;}   // riding: just sit
   else if(js===2&&(jt>.22||(jt>.08&&!contact()))){js=3;jt=0;}
   else if(js===3&&jt>.08&&contact()){js=4;jt=0;}
   else if(js===4&&jt>.15){js=0;}
-  if(js===5||js===3||js===4){const hs=Math.hypot(pel.velocity.x,pel.velocity.z),cap=Math.min(6,(cur.runV||4)*1.08+.25);if(hs>cap){const k=cap/hs;for(const b of list){b.velocity.x*=k;b.velocity.z*=k;}}}   // hard speed cap through the whole jump
+  if(js===5||js===3||js===4){const hs=Math.hypot(pel.velocity.x,pel.velocity.z),cap=Math.min(7,(cur.runV||4)*1.3+.2);if(hs>cap){const k=cap/hs;for(const b of list){b.velocity.x*=k;b.velocity.z*=k;}}}   // hard speed cap through the whole jump
   if(js===0&&mv>.3&&contact()){const f=pel.velocity.x*Math.sin(yaw)+pel.velocity.z*Math.cos(yaw);cur.runV=(cur.runV==null?f:cur.runV*.995+f*.005);}   // remember normal ground speed: a bound only beats it by ~20%
   if(cur.bufB&&(js===4||js===0)&&contact()&&!limp){if(performance.now()-cur.bufB<400){jpt=.2;startBound();}cur.bufB=0;}   // space pressed just before landing: chain straight into the next bound
  }
@@ -2491,7 +2496,7 @@ let pdT=0;function pdTick(now){if(now<pdT)return;pdT=now+150;const d=player;if(!
  const rb=$('rlb');if(rb){const on=!!d.rlT;rb.style.visibility=on?'visible':'hidden';if(on)rb.firstChild.style.width=Math.round(cl(1-(d.rlT-now)/(d.rlD||2000),0,1)*100)+'%';}}
 // live paper doll: the real ragdoll filmed from the front into the status box
 const pdCam=new THREE.PerspectiveCamera(26,118/190,.3,8);pdCam.layers.set(1);let pdRect=null,pdF=0;
-function pdLive(){if(!settings.pdLive||!mode||document.body.classList.contains('touchui')){document.body.classList.remove('pdlive');return;}document.body.classList.add('pdlive');
+function pdLive(){if(!settings.pdLive||!mode){document.body.classList.remove('pdlive');return;}document.body.classList.add('pdlive');
  if(pdF++%30===0){const el=$('pdbox');pdRect=el?el.getBoundingClientRect():null;scene.traverse(o=>{if(o.isLight)o.layers.enable(1);});for(const b of player.list)b.mesh.traverse(o=>o.layers.enable(1));}
  if(!pdRect||!pdRect.width)return;const c=player.parts.chest.mesh.position,y=player.yaw||0,fx=Math.sin(y),fz=Math.cos(y);
  pdCam.position.set(c.x+fx*3.3,c.y-.05,c.z+fz*3.3);pdCam.lookAt(c.x,c.y-.25,c.z);pdCam.aspect=pdRect.width/pdRect.height;pdCam.updateProjectionMatrix();
@@ -3092,7 +3097,8 @@ function markAlly(d){if(ATT.on)return;const sp=new THREE.Sprite(new THREE.Sprite
 function onKill(by,T){if(ATT.on){attractKill(T,by,performance.now());return;}if(by&&T&&by!==T&&!matchOver)FK.kill={vic:T,by,t:performance.now()};   // remember the latest kill: the last one before the match ends is the final kill
  if(!by||matchOver)return;const M=GM[gmode];
  if(gmode==='tdm'){if(NET.on)return;teamScore[by.team]++;if(teamScore[by.team]>=M.limit)endMatch(by.team===player.team,by.team==='A'?'Blue team wins':'Red team wins');}
- else if(gmode==='ffa'||gmode==='duel'){if(by.kills>=M.limit)endMatch(by===player,by===player?'You reached '+M.limit+' kills':by.name+' reached '+M.limit+' kills');else if(gmode==='duel')DUEL.at=performance.now()+5000;}
+ else if(gmode==='ffa'||gmode==='duel'){if(by.kills>=M.limit)endMatch(by===player,by===player?'You reached '+M.limit+' kills':by.name+' reached '+M.limit+' kills');else if(gmode==='duel')DUEL.at=performance.now()+3000+KC_LEN+900;
+}
  else if(gmode==='gungame'){by.gl=(by.gl||0)+1;if(by.gl>=GG.length)endMatch(by===player,by===player?'You finished the gun ladder':by.name+' finished the gun ladder');else by.pendW=GG[by.gl];}}
 // 1v1 rounds: after every kill a 5 s breather (nobody can shoot), then both fighters are put on the two spawns furthest apart, swapping sides each round
 const DUEL={at:0};
@@ -3724,6 +3730,7 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.7.1',n:['Touch screens: the body status diagram is now shown too, sitting just above the joystick (button layout unchanged)','FIX: touch controls getting stuck or ignoring input - cancelled touches now release buttons, a stuck joystick frees itself, and long-press popups are blocked','1v1: the break after a kill now lasts about 9 s, so the killed player sees their body fall and a full replay before the next round','Bounding rebalanced: a bound is now clearly faster than sprinting again (up to ~30% over your run speed), still hard-capped so chains cannot snowball']},
  {v:'1.7.0',n:['3 new 1v1 maps: Pit (concrete arena), Courtyard (sandstone yard with a fountain and colonnades) and Dojo (wooden halls split by paper screens)','1v1 maps carry a 1V1 tag on the map select screen']},
  {v:'1.6.2',n:['FIX: online, a joining player could end up in a different mode (e.g. Gun Game) from the host - everyone now always plays the mode set for the server']},
  {v:'1.6.1',n:['Jump/bound speed boost heavily nerfed and hard-capped (never more than ~8% over your running speed, 6 m/s max)']},
