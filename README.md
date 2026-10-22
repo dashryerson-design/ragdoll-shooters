@@ -7,7 +7,7 @@ A physics ragdoll shooter that runs right in your browser — no install.
 Every character is a fully simulated ragdoll: real muscles and joints, limping when shot in the leg, doubling over from gut shots, and full ragdoll deaths.
 
 ### Features
-- 7 weapons (pistol, magnum, SMG, M4, shotgun, sniper, LMG), each with its own damage and wound style
+- 100's of weapons each with its own damage and wound style
 - 7 maps: **Tester**, **Park**, **House**, **Warehouse**, **Village**, **Facility** and **Docks**
 - 5 modes vs AI bots: Free For All, Team Deathmatch, Zone Hold, 1v1 and Gun Game
 - Per-limb damage, blood, dismemberment and pain reactions
