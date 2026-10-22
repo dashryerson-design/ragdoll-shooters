@@ -1307,10 +1307,11 @@ document.getElementById('mLo').onclick=()=>{toggleMenu();showLoadout(true);};
 let keys={};let camYaw=Math.PI,camPitch=.12,camDist=3.6;let js=0,jt=0,jdx=0,jdz=0,jp=0,jpt=0,bsd=1,bchg=0;const JF=18;
 function startJump(){js=1;jt=0;const sp=Math.hypot(pel.velocity.x,pel.velocity.z);if(sp>1){jdx=pel.velocity.x/sp;jdz=pel.velocity.z/sp;}else{jdx=jdz=0;}}
 function startBound(){bchg=Math.min(1,jpt/.35);const sp=Math.hypot(pel.velocity.x,pel.velocity.z);if(sp>.5){jdx=pel.velocity.x/sp;jdz=pel.velocity.z/sp;}else{jdx=Math.sin(yaw);jdz=Math.cos(yaw);}
- let best=1,bd=1e9;for(const sd of[-1,1]){const f=parts['foot'+sd],d=(f.position.x-pel.position.x)*jdx+(f.position.z-pel.position.z)*jdz;if(d<bd){bd=d;best=sd;}}bsd=best;js=5;jt=0;}
+ let best=1,bd=1e9;for(const sd of[-1,1]){const f=parts['foot'+sd],d=(f.position.x-pel.position.x)*jdx+(f.position.z-pel.position.z)*jdz;if(d<bd){bd=d;best=sd;}}bsd=best;js=5;jt=0;cur.bndB=1;}
 addEventListener('keydown',e=>{if(!mode||loOpen||matchOver)return;const k=e.key.toLowerCase();if(k==='p'&&!e.repeat){toggleMenu();return;}if(menuOpen)return;if(player.dead){if(k===' '){if(KC.on||KC.cdT)player.skip=true;}return;}if(keys[k])return;keys[k]=true;
  if(k==='i')fpOn=!fpOn;
  if(k==='e')vehToggle();if(k==='f'&&!player.veh){limp=!limp;js=0;}if(k==='r')reset();
+ if(k===' '&&!limp&&(js===3||js===4||(js===5&&jt>.1)||(js===0&&!contact()))){cur.bufB=performance.now();return;}   // still in the air / landing: queue the next bound
  if(k===' '&&!limp&&js===0&&contact()){if(ccool<=0&&cs===0){const L=findLedge();if(L){startClimb(L);return;}}if(mv>.3&&jp===0){jp=1;jpt=0;}else startJump();}});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key===' '&&jp===1){jp=0;if(!limp&&js===0&&contact())startBound();}});
 let fireHeld=false,aiming=false,aimK=0,recoil=0,lastShot=-1e9,shellAt=0,flashUntil=0,fireReq=false,plFail=false,lookDrag=false;
@@ -1483,6 +1484,7 @@ function control(dt){if(cur.veh){vehRidePose();return;}   // riding: just sit
    joints['hip'+lk].x=-1.0;joints['knee'+lk].x=1.3;joints['ankle'+lk].x=-.3;
    joints['shoulder'+pk].x=-1.2;joints['shoulder'+lk].x=.8;
    if(jt<.18&&contact()){const F=totalMass*9.82*JF*.6*(1+1.2*bchg);pel.force.y+=F;parts['foot'+pk].force.y-=F;pel.force.x+=jdx*totalMass*9.82*1.1*(1+.8*bchg);pel.force.z+=jdz*totalMass*9.82*1.1*(1+.8*bchg);}
+   if(cur.bndB&&jt>.04&&contact()){cur.bndB=0;const fx=Math.sin(yaw),fz=Math.cos(yaw);for(const b of list){b.velocity.x+=fx*4.2;b.velocity.z+=fz*4.2;b.velocity.y+=.5;}}   // bounding: a big shove the way he's facing
    if(jt>.2||(jt>.07&&!contact())){js=3;jt=0;}}
   if(js===2&&jt<.2&&contact()){const F=totalMass*9.82*JF;pel.force.y+=F;pel.force.x+=jdx*totalMass*9.82*.55;pel.force.z+=jdz*totalMass*9.82*.55;parts.foot1.force.y-=F/2;parts['foot-1'].force.y-=F/2;}
   if(js===2&&jt<.24){const ax=Math.cos(yaw),az=-Math.sin(yaw);
@@ -1493,6 +1495,7 @@ function control(dt){if(cur.veh){vehRidePose();return;}   // riding: just sit
   else if(js===2&&(jt>.22||(jt>.08&&!contact()))){js=3;jt=0;}
   else if(js===3&&jt>.08&&contact()){js=4;jt=0;}
   else if(js===4&&jt>.15){js=0;}
+  if(cur.bufB&&(js===4||js===0)&&contact()&&!limp){if(performance.now()-cur.bufB<400){jpt=.2;startBound();}cur.bufB=0;}   // space pressed just before landing: chain straight into the next bound
  }
  const lean=(PP?PP.lean*painK:0)+.18*crK+mv*(run?.28:.1)*(gdir<0?-.6:1)+(js===1?(.2+(jdx||jdz?.12:0))*Math.min(1,jt/.13):0)+((js===2||js===5)&&(jdx||jdz)?.28:0);
  if(!limp){
@@ -3632,6 +3635,7 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.4.2',n:['Chain bounds: press jump just before you land (up to 0.4 s early) and you go straight into another bound instead of a standing jump','Bounding: jumping while running now launches you forward with a big burst of speed in the direction you are facing']},
  {v:'1.4.1',n:['FIX: the end-of-match final kill replay no longer freezes on the slow-motion kill shot - the victim now falls properly in the replay']},
  {v:'1.4.0',n:['Pause menu tidied into sub-menus (Audio, Graphics, Controls, AI enemies)','New Audio options: separate gunshot, effects/gore and voice volumes','New Graphics options: shadows on/off, render resolution, field of view and render distance (fog)']},
  {v:'1.3.3',n:['Menu cinematic: John Wick now fights on the smaller maps (Killhouse, Bunker, Office, Facility, Mall, Warehouse, Subway) so the action starts straight away','The cinematic map changes every time the main menu opens','Once John Wick has killed every enemy twice, the cinematic fades to black and moves on to the next map','Bullet tracers are much brighter, thicker and longer, with a glow, and travel slower so you can follow them','AI turns and tracks like a person: turning speed depends on difficulty, the aim lags behind a moving target, and bots only fire once they are actually facing you','Easier bots now simply miss some shots (Easy about half, Normal 30%, Hard 12%, Insane 3%)','FIX: gore sounds, vocals, footsteps and every other non-gunshot sound were silent in game - restored','FIX: losing your head or neck is now always fatal','The menu cinematic now runs on its own hidden game mode and rules, fully separate from the real game: starting a match always switches everything back to normal play','FIX: phantom screams all over the map - dead menu-cinematic bots kept screaming after the real game started','FIX: 1v1 rounds work again (the menu cinematic was leaving the game mode set to team deathmatch)','FIX: death screams and dying sounds stop the moment a fighter respawns','Bots squeeze through doorways: they feel for walls at each shoulder, tuck that arm in and turn their shoulders so they stop snagging on frames','Cinematic camera: loops bird\'s-eye, close over-the-shoulder and first person, 10 s each with a quick fade to black between them (long 7-10 s takes, no cut on kills), a new high three-quarter angle that keeps John and his target in frame, and a first-person angle through his eyes']},
