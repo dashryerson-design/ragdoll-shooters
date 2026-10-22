@@ -123,7 +123,7 @@ input[type=range],input[type=checkbox]{accent-color:var(--acc)}
 #msform>label:hover{box-shadow:inset 3px 0 0 var(--acc)}
 #msform input,#msform select,#sbnick{border-radius:0!important;background:rgba(0,0,0,.45)!important;border:1px solid var(--ln2)!important;color:#fff!important;font-family:'Barlow Semi Condensed',sans-serif!important;font-weight:700!important;font-size:16px!important}
 </style></head><body>
-<div id="h" style="display:none"><b>Physics Ragdoll</b><br>WASD move &nbsp; Shift run &nbsp; Space jump<br>F go limp / recover &nbsp; R reset<br>Mouse = look &nbsp; LMB shoot &nbsp; RMB (hold) aim<br>Wheel = camera distance<br>I first person &nbsp; C crouch &nbsp; P menu</div>
+<div id="h" style="display:none"><b>Physics Ragdoll</b><br>WASD move &nbsp; Shift run &nbsp; Space jump<br>F go limp / recover &nbsp; R reset<br>Mouse = look &nbsp; LMB shoot &nbsp; RMB or Q (hold) aim<br>Wheel = camera distance<br>I first person &nbsp; C crouch &nbsp; P menu</div>
 <div id="mm"><div id="mmver"></div><button id="bPatch">PATCH NOTES</button><div id="logo"><span class="a">RAGDOLL</span><span class="b">SHOOTERS</span><span class="tag">PHYSICS · COMBAT</span></div>
 <div class="btns"><button id="bKey">KEYBOARD<small>Keyboard + mouse</small></button><button id="bTouch">TOUCH<small>iPad / tablet</small></button></div></div>
 <div id="tc"><div id="joy"><div id="knob"></div></div>
@@ -1309,11 +1309,11 @@ function startJump(){js=1;jt=0;const sp=Math.hypot(pel.velocity.x,pel.velocity.z
 function startBound(){bchg=Math.min(1,jpt/.35);const sp=Math.hypot(pel.velocity.x,pel.velocity.z);if(sp>.5){jdx=pel.velocity.x/sp;jdz=pel.velocity.z/sp;}else{jdx=Math.sin(yaw);jdz=Math.cos(yaw);}
  let best=1,bd=1e9;for(const sd of[-1,1]){const f=parts['foot'+sd],d=(f.position.x-pel.position.x)*jdx+(f.position.z-pel.position.z)*jdz;if(d<bd){bd=d;best=sd;}}bsd=best;js=5;jt=0;cur.bndB=1;}
 addEventListener('keydown',e=>{if(!mode||loOpen||matchOver)return;const k=e.key.toLowerCase();if(k==='p'&&!e.repeat){toggleMenu();return;}if(menuOpen)return;if(player.dead){if(k===' '){if(KC.on||KC.cdT)player.skip=true;}return;}if(keys[k])return;keys[k]=true;
- if(k==='i')fpOn=!fpOn;
+ if(k==='i')fpOn=!fpOn;if(k==='q')aiming=true;   // Q aims, same as holding right click
  if(k==='e')vehToggle();if(k==='f'&&!player.veh){limp=!limp;js=0;}if(k==='r')reset();
  if(k===' '&&!limp&&(js===3||js===4||(js===5&&jt>.1)||(js===0&&!contact()))){cur.bufB=performance.now();return;}   // still in the air / landing: queue the next bound
  if(k===' '&&!limp&&js===0&&contact()){if(ccool<=0&&cs===0){const L=findLedge();if(L){startClimb(L);return;}}if(mv>.3&&jp===0){jp=1;jpt=0;}else startJump();}});
-addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key===' '&&jp===1){jp=0;if(!limp&&js===0&&contact())startBound();}});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key.toLowerCase()==='q')aiming=false;if(e.key===' '&&jp===1){jp=0;if(!limp&&js===0&&contact())startBound();}});
 let fireHeld=false,aiming=false,aimK=0,recoil=0,lastShot=-1e9,shellAt=0,flashUntil=0,fireReq=false,plFail=false,lookDrag=false;
 const lockEl=renderer.domElement,locked=()=>document.pointerLockElement===lockEl;
 addEventListener('contextmenu',e=>e.preventDefault());
@@ -3635,7 +3635,8 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
- {v:'1.4.2',n:['Chain bounds: press jump just before you land (up to 0.4 s early) and you go straight into another bound instead of a standing jump','Bounding: jumping while running now gives you a burst of speed (capped, so chained bounds can't snowball) in the direction you are facing']},
+ {v:'1.4.3',n:['Hold Q to aim down sights on keyboard (right click still works too)','FIX: patch notes and version label were broken by a typo in the last update']},
+ {v:'1.4.2',n:['Chain bounds: press jump just before you land (up to 0.4 s early) and you go straight into another bound instead of a standing jump','Bounding: jumping while running now gives you a burst of speed (capped, so chained bounds cannot snowball) in the direction you are facing']},
  {v:'1.4.1',n:['FIX: the end-of-match final kill replay no longer freezes on the slow-motion kill shot - the victim now falls properly in the replay']},
  {v:'1.4.0',n:['Pause menu tidied into sub-menus (Audio, Graphics, Controls, AI enemies)','New Audio options: separate gunshot, effects/gore and voice volumes','New Graphics options: shadows on/off, render resolution, field of view and render distance (fog)']},
  {v:'1.3.3',n:['Menu cinematic: John Wick now fights on the smaller maps (Killhouse, Bunker, Office, Facility, Mall, Warehouse, Subway) so the action starts straight away','The cinematic map changes every time the main menu opens','Once John Wick has killed every enemy twice, the cinematic fades to black and moves on to the next map','Bullet tracers are much brighter, thicker and longer, with a glow, and travel slower so you can follow them','AI turns and tracks like a person: turning speed depends on difficulty, the aim lags behind a moving target, and bots only fire once they are actually facing you','Easier bots now simply miss some shots (Easy about half, Normal 30%, Hard 12%, Insane 3%)','FIX: gore sounds, vocals, footsteps and every other non-gunshot sound were silent in game - restored','FIX: losing your head or neck is now always fatal','The menu cinematic now runs on its own hidden game mode and rules, fully separate from the real game: starting a match always switches everything back to normal play','FIX: phantom screams all over the map - dead menu-cinematic bots kept screaming after the real game started','FIX: 1v1 rounds work again (the menu cinematic was leaving the game mode set to team deathmatch)','FIX: death screams and dying sounds stop the moment a fighter respawns','Bots squeeze through doorways: they feel for walls at each shoulder, tuck that arm in and turn their shoulders so they stop snagging on frames','Cinematic camera: loops bird\'s-eye, close over-the-shoulder and first person, 10 s each with a quick fade to black between them (long 7-10 s takes, no cut on kills), a new high three-quarter angle that keeps John and his target in frame, and a first-person angle through his eyes']},
