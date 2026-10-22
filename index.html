@@ -1505,8 +1505,8 @@ function control(dt){if(cur.veh){vehRidePose();return;}   // riding: just sit
   if(js===5){const lk=(-bsd)+'',pk=bsd+'';
    joints['hip'+lk].x=-1.0;joints['knee'+lk].x=1.3;joints['ankle'+lk].x=-.3;
    joints['shoulder'+pk].x=-1.2;joints['shoulder'+lk].x=.8;
-   if(jt<.18&&contact()){const F=totalMass*9.82*JF*.6*(1+1.2*bchg);pel.force.y+=F;parts['foot'+pk].force.y-=F;pel.force.x+=jdx*totalMass*9.82*1.1*(1+.8*bchg);pel.force.z+=jdz*totalMass*9.82*1.1*(1+.8*bchg);}
-   if(cur.bndB&&jt>.04&&contact()){cur.bndB=0;const fx=Math.sin(yaw),fz=Math.cos(yaw),fs=pel.velocity.x*fx+pel.velocity.z*fz,add=Math.max(0,Math.min(1.2,(cur.runV||fs)*1.18+.2-fs));for(const b of list){b.velocity.x+=fx*add;b.velocity.z+=fz*add;b.velocity.y+=.4;}}   // smaller shove, and none once you're already near top bounding speed (8.5 m/s), so chains can't snowball   // bounding: a big shove the way he's facing
+   if(jt<.18&&contact()){const F=totalMass*9.82*JF*.6*(1+1.2*bchg);pel.force.y+=F;parts['foot'+pk].force.y-=F;pel.force.x+=jdx*totalMass*9.82*.45*(1+.3*bchg);pel.force.z+=jdz*totalMass*9.82*.45*(1+.3*bchg);}
+   if(cur.bndB&&jt>.04&&contact()){cur.bndB=0;const fx=Math.sin(yaw),fz=Math.cos(yaw),fs=pel.velocity.x*fx+pel.velocity.z*fz,add=Math.max(0,Math.min(.4,(cur.runV||fs)*1.06-fs));for(const b of list){b.velocity.x+=fx*add;b.velocity.z+=fz*add;b.velocity.y+=.4;}}   // smaller shove, and none once you're already near top bounding speed (8.5 m/s), so chains can't snowball   // bounding: a big shove the way he's facing
    if(jt>.2||(jt>.07&&!contact())){js=3;jt=0;}}
   if(js===2&&jt<.2&&contact()){const F=totalMass*9.82*JF;pel.force.y+=F;pel.force.x+=jdx*totalMass*9.82*.55;pel.force.z+=jdz*totalMass*9.82*.55;parts.foot1.force.y-=F/2;parts['foot-1'].force.y-=F/2;}
   if(js===2&&jt<.24){const ax=Math.cos(yaw),az=-Math.sin(yaw);
@@ -1517,6 +1517,7 @@ function control(dt){if(cur.veh){vehRidePose();return;}   // riding: just sit
   else if(js===2&&(jt>.22||(jt>.08&&!contact()))){js=3;jt=0;}
   else if(js===3&&jt>.08&&contact()){js=4;jt=0;}
   else if(js===4&&jt>.15){js=0;}
+  if(js===5||js===3||js===4){const hs=Math.hypot(pel.velocity.x,pel.velocity.z),cap=Math.min(6,(cur.runV||4)*1.08+.25);if(hs>cap){const k=cap/hs;for(const b of list){b.velocity.x*=k;b.velocity.z*=k;}}}   // hard speed cap through the whole jump
   if(js===0&&mv>.3&&contact()){const f=pel.velocity.x*Math.sin(yaw)+pel.velocity.z*Math.cos(yaw);cur.runV=(cur.runV==null?f:cur.runV*.995+f*.005);}   // remember normal ground speed: a bound only beats it by ~20%
   if(cur.bufB&&(js===4||js===0)&&contact()&&!limp){if(performance.now()-cur.bufB<400){jpt=.2;startBound();}cur.bufB=0;}   // space pressed just before landing: chain straight into the next bound
  }
@@ -3698,7 +3699,7 @@ requestAnimationFrame(frame);
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
  {v:'1.6.0',n:['New in-game HUD: health bar across the bottom middle, weapon panel bottom right (gun snapshot, name, type, big ammo count and a reload bar)','Paper doll in the bottom left: a front-view diagram of your body where every limb shifts from green to red as it takes damage, and shows as a dashed outline when it is blown off','Optional live 3D paper doll (Pause > Graphics): the status box films your actual ragdoll from the front, wounds and all']},
- {v:'1.5.1',n:['Loadout: every gun card now shows its MAGAZINE size','Bounding nerfed: a bound now only takes you a little faster than your normal sprint (about 20%)','Smoother first-person walking: the camera filters out the ragdoll\'s physics jiggle and uses a gentle, steady head bob instead']},
+ {v:'1.5.1',n:['Jump/bound speed boost heavily nerfed and hard-capped (never more than ~8% over your running speed, 6 m/s max)','Loadout: every gun card now shows its MAGAZINE size','Bounding nerfed: a bound now only takes you a little faster than your normal sprint (about 20%)','Smoother first-person walking: the camera filters out the ragdoll\'s physics jiggle and uses a gentle, steady head bob instead']},
  {v:'1.5.0',n:['Magazines and reloading: every gun has its real-world magazine size (Glock 17: 17, AK-47: 30, M249: 100, Minigun: 500...)','Press R to reload (the RESET button on touch screens is now RELOAD); an empty gun reloads by itself','Reload time depends on the weapon type: about 1.4 s for pistols up to 4-5 s for machine guns','Ammo counter under your weapon name, turning red when low','R no longer resets your ragdoll','Reload animation: the gun comes in and tilts over while the free hand goes to the belt for a fresh mag and slaps it in','Touch screens: the RELOAD button now sits bottom right with the other action buttons']},
  {v:'1.4.5',n:['Riders on quad bikes can now be shot and killed (bullets used to pass straight through them); a killed rider falls off']},
  {v:'1.4.4',n:['FIX: on Mac the mouse sometimes stayed free and hit the screen edge, limiting how far you could turn. Clicking in the game now always recaptures the mouse']},
