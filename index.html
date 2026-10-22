@@ -10,7 +10,7 @@
 .lslot{position:relative;background:rgba(20,24,30,.85);border:1px solid var(--ln);padding:10px 14px 12px;cursor:pointer;transition:background .15s,border-color .15s}.lslot:hover{border-color:var(--ln2)}
 .lslot.sel{background:linear-gradient(180deg,#1f4a6e,#163450);border-color:#6fb4ff;box-shadow:0 0 18px #3a8fd855}.lslot.off{cursor:default;opacity:.7}
 .lsh{display:flex;justify-content:space-between;font:600 16px 'Barlow Semi Condensed';color:#9fd2ff;letter-spacing:.03em}.lslot.off .lsh{color:var(--mut)}.lsh i{width:8px;height:8px;background:#4cd06a}
-.lsn{font:500 14px 'Barlow';margin-top:1px}.lslot img{display:block;height:64px;max-width:100%;margin:6px auto;object-fit:contain;filter:brightness(1.7) grayscale(1)}.lslot.sel img{filter:brightness(2.4) grayscale(1)}
+.lsn{font:500 14px 'Barlow';margin-top:1px}#lbc{width:100%;height:100%;display:block;cursor:grab;touch-action:none}.lslot img{display:block;height:64px;max-width:100%;margin:6px auto;object-fit:contain;filter:brightness(1.7) grayscale(1)}.lslot.sel img{filter:brightness(2.4) grayscale(1)}
 .lst{font:500 11px 'Barlow';opacity:.6;letter-spacing:.04em}.lpk{display:flex;justify-content:space-around;margin:8px 0}.lpk div{text-align:center;font:500 11px 'Barlow';opacity:.6}.lpk b{display:block;width:34px;height:34px;margin:0 auto 4px;border:1px dashed var(--ln2)}
 #lo #lcz,#lo #deploy{margin:6px 0 0;width:100%}#lo #deploy{font-size:24px;padding:12px}
 #lopick{flex:1;min-width:min(320px,100%);display:flex;flex-direction:column;gap:10px}#lobig{position:relative;height:min(30vh,220px);background:radial-gradient(ellipse at 50% 60%,rgba(255,255,255,.08),transparent 70%);border-bottom:1px solid var(--ln)}
@@ -218,7 +218,7 @@ body.touchui #hudC{position:absolute;left:50%;bottom:0;transform:translateX(-50%
 <div class="lslot" data-sl="s"><div class="lsh"><span>Secondary Weapon</span><i></i></div><div class="lsn" id="lsn"></div><img id="lsi" alt=""><div class="lst" id="lst"></div><div class="lxp"><i id="lsx"></i></div></div>
 <div class="lslot" data-sl="k"><div class="lsh"><span>Perks</span><i></i></div><div class="lpk" id="lpk"></div><div class="lst" id="lpkt"></div></div>
 <div class="lslot off"><div class="lsh"><span>Lethal</span></div><div class="lsn">Locked</div></div><div class="lslot off"><div class="lsh"><span>Tactical</span></div><div class="lsn">Locked</div></div><button id="lcz">CUSTOMISE LOOK &rsaquo;</button><button id="deploy">DEPLOY</button></div>
-<div id="lopick"><div id="lpkhd"><button id="lpback">&lsaquo; BACK</button><span id="lpttl"></span></div><div id="lobig"><img id="lbi" alt=""><div id="lbn"></div></div><div class="chips" id="lwc"></div><div class="wg" id="lw"></div></div></div><div id="lofoot"><span><b>Click</b> Select</span></div></div>
+<div id="lopick"><div id="lpkhd"><button id="lpback">&lsaquo; BACK</button><span id="lpttl"></span></div><div id="lobig"><canvas id="lbc"></canvas><div id="lbn"></div></div><div class="chips" id="lwc"></div><div class="wg" id="lw"></div></div></div><div id="lofoot"><span><b>Click</b> Select</span></div></div>
 <div id="m"><div>
 <div class="mp" data-p="main"><h3>PAUSED</h3>
 <button id="mClose" class="mbtn pri">Resume</button><button id="mLo" class="mbtn">Change loadout</button>
@@ -1334,7 +1334,7 @@ function renderLoadout(){$('ggnote').textContent=gmode==='gungame'?'Ignored in G
  for(const el of document.querySelectorAll('.lslot[data-sl]'))el.classList.toggle('sel',el.dataset.sl===sl);
  const pick=!!window.loPick;$('lo').classList.toggle('pick',pick);$('lpttl').textContent=pick?(sl==='k'?'PERKS':sl==='s'?'SECONDARY WEAPON':'PRIMARY WEAPON'):'';
  const xp=k=>{const w=W[settings[k]]||W.pistol;return Math.round(Math.min(1,(w.dmg*w.pel/3.3+(1000/w.rate)/14+(1-w.sp[1]/.09)+w.pref/1.5)/3)*100)+'%';};$('lpx').style.width=xp('wpn');$('lsx').style.width=xp('wpn2');
- $('lobig').style.display=pick?'none':'';if(!pick){$('lwc').style.display='none';$('lw').style.display='none';const bs=sl==='s'?settings.wpn2:settings.wpn,bk=W[bs]?bs:'pistol';try{$('lbi').src=gunImg(bk);}catch(e){}$('lbn').textContent=W[bk].name;return;}$('lw').style.display='';if(sl==='k'){$('lwc').style.display='none';$('lw').className='pkg';$('lw').innerHTML=Object.entries(PCAT).map(([c,[n,col]])=>`<div class="pkh" style="color:${col}">${n}</div>`+PERKS.filter(p=>p[2]===c).map(p=>`<div class="pkc${settings.perks.includes(p[0])?' sel':''}" data-pk="${p[0]}">${perkSvg(p)}<div><b>${p[1]}</b><small>${p[3]}</small></div></div>`).join('')).join('');return;}$('lw').className='wg';try{$('lbi').src=gunImg(sel);}catch(e){}$('lbn').textContent=W[sel].name;$('lwc').style.display=sl==='s'?'none':'';const mx={dmg:2.6*1,dps:0},bar=(t,v)=>`<div class="st">${t}</div><div class="bar"><i style="width:${Math.round(Math.max(.06,Math.min(1,v))*100)}%"></i></div>`;
+ $('lobig').style.display=pick?'none':'';if(!pick){$('lwc').style.display='none';$('lw').style.display='none';const bs=sl==='s'?settings.wpn2:settings.wpn,bk=W[bs]?bs:'pistol';try{lvSet(bk);}catch(e){console.error(e);}$('lbn').textContent=W[bk].name;return;}$('lw').style.display='';if(sl==='k'){$('lwc').style.display='none';$('lw').className='pkg';$('lw').innerHTML=Object.entries(PCAT).map(([c,[n,col]])=>`<div class="pkh" style="color:${col}">${n}</div>`+PERKS.filter(p=>p[2]===c).map(p=>`<div class="pkc${settings.perks.includes(p[0])?' sel':''}" data-pk="${p[0]}">${perkSvg(p)}<div><b>${p[1]}</b><small>${p[3]}</small></div></div>`).join('')).join('');return;}$('lw').className='wg';try{$('lbi').src=gunImg(sel);}catch(e){}$('lbn').textContent=W[sel].name;$('lwc').style.display=sl==='s'?'none':'';const mx={dmg:2.6*1,dps:0},bar=(t,v)=>`<div class="st">${t}</div><div class="bar"><i style="width:${Math.round(Math.max(.06,Math.min(1,v))*100)}%"></i></div>`;
  const cat=sl==='s'?'pistol':settings.wcat||'all',list=Object.values(W).filter(w=>cat==='all'||WCAT[cat][1].includes(w.type)).sort((a,b)=>WORD.indexOf(a.type)-WORD.indexOf(b.type));
  $('lwc').innerHTML=Object.entries(WCAT).map(([k,[t]])=>`<div class="chip${cat===k?' sel':''}" data-wc="${k}">${t}</div>`).join('');
  $('lw').innerHTML=list.map(w=>`<div class="wc${sel===w.id?' sel':''}" data-w="${w.id}"><b>${w.name}</b><div class="ty">${w.type}${w.auto?' · auto':w.burst?' · '+w.burst+'-round burst':''}</div>`+
@@ -2182,6 +2182,31 @@ function pkWarn(){if(!pkOn('threat')||!mode||player.dead){$('pkthr').style.displ
  for(const d of bots)if(!d.dead&&d.target===player&&d.vis&&d.mode==='fight'&&now-(d.seen||0)>(DIFF[d.diff??settings.diff]||DIFF[1]).react*.5){on=true;break;}$('pkthr').style.display=on?'block':'none';}
 function pkShot(shooter){if(!pkOn('sitaw')||!mode||shooter===player||!isEnemy(player,shooter)||!shooter.pel)return;const P=player.pel.position,q=shooter.pel.position,dx=q.x-P.x,dz=q.z-P.z;if(Math.hypot(dx,dz)>80)return;
  const a=Math.atan2(dx,dz)-camYaw+Math.PI,el=document.createElement('div');el.className='pkdir';el.style.transform=`translate(-50%,-50%) rotate(${-a}rad) translateY(-120px)`;document.body.appendChild(el);setTimeout(()=>el.remove(),900);}
+// ---------- loadout weapon viewer: the real 3D gun model, rendered live with studio lighting + reflections, slow turntable, drag to spin ----------
+const LV={r:null,id:null,yaw:-.5,drag:false,auto:true};
+function lvEnv(r){const s=new THREE.Scene(),bx=new THREE.Mesh(new THREE.BoxGeometry(10,10,10),new THREE.MeshBasicMaterial({color:0x0c0d10,side:THREE.BackSide}));s.add(bx);
+ for(const[x,y,z,w,h,c]of[[0,4.9,0,6,6,6],[-4.9,1,2,.1,3,4],[4.9,1,-2,.1,3,2.2],[0,1,4.9,4,2,1.5],[0,-4.9,0,10,10,.12]]){const m=new THREE.Mesh(new THREE.BoxGeometry(Math.max(w,.1),Math.max(h,.1),x?Math.max(w,3):.1),new THREE.MeshBasicMaterial({color:new THREE.Color(c,c,c*1.05)}));m.position.set(x,y,z);if(y>4)m.rotation.x=Math.PI/2;s.add(m);}
+ const pm=new THREE.PMREMGenerator(r);const t=pm.fromScene(s,.03).texture;pm.dispose();return t;}
+function lvInit(){const cv=$('lbc');const r=LV.r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});r.setPixelRatio(Math.min(2.5,(devicePixelRatio||1)*1.5));
+ r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.25;r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;r.physicallyCorrectLights=false;
+ const sc=LV.sc=new THREE.Scene();sc.environment=lvEnv(r);
+ const key=new THREE.DirectionalLight(0xfff2e0,1.5);key.position.set(-2,4,3);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.radius=6;Object.assign(key.shadow.camera,{left:-1,right:1,top:1,bottom:-1,near:.1,far:10});sc.add(key);
+ const rim=new THREE.DirectionalLight(0x9cc8ff,1.1);rim.position.set(3,1.5,-3);sc.add(rim);sc.add(new THREE.HemisphereLight(0xdde6ff,0x1a1612,.35));
+ const fl=new THREE.Mesh(new THREE.PlaneGeometry(6,6),new THREE.ShadowMaterial({opacity:.55}));fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;sc.add(fl);LV.floor=fl;
+ LV.piv=new THREE.Group();sc.add(LV.piv);LV.cam=new THREE.PerspectiveCamera(24,1,.05,30);
+ let px=0;cv.addEventListener('pointerdown',e=>{LV.drag=true;LV.auto=false;px=e.clientX;cv.setPointerCapture(e.pointerId);});cv.addEventListener('pointermove',e=>{if(LV.drag){LV.yaw+=(e.clientX-px)*.01;px=e.clientX;}});
+ for(const ev of['pointerup','pointercancel'])cv.addEventListener(ev,()=>{LV.drag=false;});}
+function lvSet(id){if(!LV.r)lvInit();if(LV.id===id)return;LV.id=id;LV.auto=true;
+ if(LV.g){LV.piv.remove(LV.g.group);LV.g.group.traverse(o=>{if(o.isMesh&&o.geometry)o.geometry.dispose();});}
+ const ip=isPlayer;isPlayer=true;const g=id==='pistol'?makePistol():buildGun(id);finishGun(g);isPlayer=ip;g.flash.visible=false;g.light.intensity=0;LV.g=g;
+ g.group.traverse(o=>{if(o.isMesh){o.castShadow=true;const m=o.material;if(m&&m.isMeshStandardMaterial)m.envMapIntensity=.55;}});
+ g.group.rotation.set(0,Math.PI/2,0);g.group.position.set(0,0,0);LV.piv.add(g.group);g.group.updateMatrixWorld(true);
+ const bb=new THREE.Box3();g.group.traverse(o=>{if(o.isMesh&&o.visible){o.geometry.computeBoundingBox();bb.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld));}});const c=bb.getCenter(new THREE.Vector3()),sz=bb.getSize(new THREE.Vector3());g.group.position.sub(c);
+ LV.len=Math.max(sz.x,sz.y*2,.15);LV.h=sz.y;LV.floor.position.y=-sz.y/2-.03;requestAnimationFrame(lvLoop);}
+function lvLoop(){if(!loOpen||window.loPick||!LV.r)return;requestAnimationFrame(lvLoop);const cv=$('lbc'),w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;
+ const pr=LV.r.getPixelRatio();if(cv.width!==(w*pr|0)||cv.height!==(h*pr|0)){LV.r.setSize(w,h,false);LV.cam.aspect=w/h;LV.cam.updateProjectionMatrix();}
+ if(LV.auto&&!LV.drag)LV.yaw+=.004;LV.piv.rotation.y=LV.yaw;LV.piv.rotation.z=.04*Math.sin(performance.now()/1400);
+ const fov=LV.cam.fov*Math.PI/180,d=Math.max(LV.len/2/Math.tan(fov/2)/Math.max(.5,LV.cam.aspect)*1.05,LV.len*.8);LV.cam.position.set(0,d*.32,d);LV.cam.lookAt(0,-LV.h*.1,0);LV.r.render(LV.sc,LV.cam);}
 // ---------- primary / secondary: the pistol rides on the right hip, the primary slings across the left of the back; E swaps (player only, bots carry one gun) ----------
 const SEC_T=['Sidearm','Revolver','Machine pistol'],SW_D=720;const swD=()=>SW_D*(pkOn('fhands')?.6:1);
 const HOLS={hip:g=>{g.group.position.set(-.2,-.02,.02);g.group.rotation.set(Math.PI/2,0,0);},back:g=>{g.group.position.set(.07,-.02,-.11);g.group.rotation.order='ZXY';g.group.rotation.set(-1.45,Math.PI,.6);}};
@@ -3587,7 +3612,7 @@ $('mLeave').onclick=()=>NET.on?leaveServer():location.reload();   // vs bots: ba
 const AA={t:0,T:null,vis:false,last:0};
 function aimAssist(now){const dt=Math.min(.05,(now-(AA.last||now))/1000);AA.last=now;AA.on=false;
  if(settings.aa===false||!mode||ATT.on||player.dead||menuOpen||loOpen||KC.on||matchOver||!dt)return;
- cam.updateMatrixWorld();const f=cam.getWorldDirection(new THREE.Vector3()),cp=cam.position;   // the real crosshair direction
+ cam.updateMatrixWorld();const f=new THREE.Vector3(0,1-2*chY,.5).unproject(cam).sub(cam.position).normalize(),cp=cam.position;   // the real crosshair direction (the crosshair sits above screen centre in third person)
  if(now>AA.t){AA.t=now+100;AA.T=null;let best=1e9;
   for(const d of others()){if(d.dead||!d.parts||!isEnemy(player,d))continue;const c=d.parts.chest.position,dx=c.x-cp.x,dy=c.y-cp.y,dz=c.z-cp.z,L=Math.hypot(dx,dy,dz);if(L>60||L<.8)continue;
    const a=Math.acos(Math.max(-1,Math.min(1,(dx*f.x+dy*f.y+dz*f.z)/L))),cone=Math.max(.16,Math.atan(.9/L));if(a<cone&&a<best){const r=castRay(cp,{x:dx/L,y:dy/L,z:dz/L},L-.4,null,1);if(!r.hit){best=a;AA.T=d;AA.cone=cone;}}}}
@@ -3894,6 +3919,8 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.10.3',n:['FIX: aim assist in third person pulled the target to the middle of the screen instead of onto the crosshair, dragging your aim above whoever you were shooting at']},
+ {v:'1.10.2',n:['Loadout weapon display now shows the real 3D gun model live and in high quality: studio lighting, metal reflections, soft shadow, slow turntable (drag to spin it)']},
  {v:'1.10.1',n:['Custom Loadout screen now matches MW2019: weapon cards on the left (Primary + Gunsmith, Secondary, Perks, Lethal, Tactical) and your gun shown big on the right','Click a card to open its picker, pick to return; it opens straight after map, mode and match settings']},
  {v:'1.10.0',n:['PERKS! Equip up to 3 of 24 perks from the Perks slot on the Custom Loadout screen, each with its own colour-coded badge','Blue: Lightweight, Combat Conditioning, Low Profile, Evasive. Red: Sleight of Hand, Quickdraw, Steady Aim, Focus, Fast Hands, Gunslinger','Yellow: Awareness, Recon, Situational Awareness (red arrow toward enemy gunfire), Threat Detection (warning when a bot is aiming at you)','Green: Dead Silence, Ghost, Cold-Blooded, Covert Movement. Purple: Reinforced, Toughness. Orange: Combat Reflexes, Quick Recovery, Target Focus, Last Stand','Aiming down sights now slows you a little, and firing on the move is less accurate (perks reduce both)']},
  {v:'1.9.1',n:['Customise screen rebuilt in the Custom Loadout style: categories on the left, your operator in the middle, options on the right','All gear swapped for realistic kit: Ops-Core FAST (with ComTac or PVS-31 NVGs), MICH, PASGT, boonie, chest rig, Crye JPC, AVS heavy carrier, IOTV, Avon M50, ESS goggles, shemagh, PRC-152 radio, rucksack, battle belt and more','Real camo patterns for clothes and gear: MultiCam, M81 Woodland and AOR1, plus Ranger Green, Coyote, Tan 499 and other issue colours','Gun finishes and skin tones trimmed to realistic options']},
