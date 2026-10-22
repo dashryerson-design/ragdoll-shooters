@@ -1260,7 +1260,7 @@ function renderLoadout(){$('ggnote').textContent=gmode==='gungame'?'· ignored i
  const cat=settings.wcat||'all',list=Object.values(W).filter(w=>cat==='all'||WCAT[cat][1].includes(w.type)).sort((a,b)=>WORD.indexOf(a.type)-WORD.indexOf(b.type));
  $('lwc').innerHTML=Object.entries(WCAT).map(([k,[t]])=>`<div class="chip${cat===k?' sel':''}" data-wc="${k}">${t}</div>`).join('');
  $('lw').innerHTML=list.map(w=>`<div class="wc${settings.wpn===w.id?' sel':''}" data-w="${w.id}"><b>${w.name}</b><div class="ty">${w.type}${w.auto?' · auto':w.burst?' · '+w.burst+'-round burst':''}</div>`+
-  bar('DAMAGE',w.dmg*w.pel/3.3)+bar('FIRE RATE',(1000/w.rate)/14)+bar('ACCURACY',1-w.sp[1]/.09)+bar('RANGE',w.pref/1.5)+`</div>`).join('');}
+  bar('DAMAGE',w.dmg*w.pel/3.3)+bar('FIRE RATE',(1000/w.rate)/14)+bar('ACCURACY',1-w.sp[1]/.09)+bar('RANGE',w.pref/1.5)+(()=>{let n=30;try{n=magOf(w);}catch(e){}return `<div class="st">MAGAZINE <b style="color:#fff;opacity:1;font-size:11px">${n}</b></div>`;})()+`</div>`).join('');}
 $('lo').addEventListener('click',e=>{const wc=e.target.closest('[data-wc]');if(wc){settings.wcat=wc.dataset.wc;saveLoadout();renderLoadout();return;}const w=e.target.closest('[data-w]'),c=e.target.closest('[data-k]'),t=e.target.closest('[data-t]');
  if(w)settings.wpn=w.dataset.w;else if(c)settings[c.dataset.k]=c.dataset.v;else if(t)settings[t.dataset.t]=!settings[t.dataset.t];else return;renderLoadout();});
 function showLoadout(inGame){loOpen=true;$('lo').style.display='flex';$('deploy').textContent=inGame?'APPLY':'DEPLOY';renderLoadout();if(document.pointerLockElement)document.exitPointerLock();}
@@ -1487,7 +1487,7 @@ function control(dt){if(cur.veh){vehRidePose();return;}   // riding: just sit
    joints['hip'+lk].x=-1.0;joints['knee'+lk].x=1.3;joints['ankle'+lk].x=-.3;
    joints['shoulder'+pk].x=-1.2;joints['shoulder'+lk].x=.8;
    if(jt<.18&&contact()){const F=totalMass*9.82*JF*.6*(1+1.2*bchg);pel.force.y+=F;parts['foot'+pk].force.y-=F;pel.force.x+=jdx*totalMass*9.82*1.1*(1+.8*bchg);pel.force.z+=jdz*totalMass*9.82*1.1*(1+.8*bchg);}
-   if(cur.bndB&&jt>.04&&contact()){cur.bndB=0;const fx=Math.sin(yaw),fz=Math.cos(yaw),add=Math.max(0,Math.min(2.2,8.5-(pel.velocity.x*fx+pel.velocity.z*fz)));for(const b of list){b.velocity.x+=fx*add;b.velocity.z+=fz*add;b.velocity.y+=.4;}}   // smaller shove, and none once you're already near top bounding speed (8.5 m/s), so chains can't snowball   // bounding: a big shove the way he's facing
+   if(cur.bndB&&jt>.04&&contact()){cur.bndB=0;const fx=Math.sin(yaw),fz=Math.cos(yaw),fs=pel.velocity.x*fx+pel.velocity.z*fz,add=Math.max(0,Math.min(1.2,(cur.runV||fs)*1.18+.2-fs));for(const b of list){b.velocity.x+=fx*add;b.velocity.z+=fz*add;b.velocity.y+=.4;}}   // smaller shove, and none once you're already near top bounding speed (8.5 m/s), so chains can't snowball   // bounding: a big shove the way he's facing
    if(jt>.2||(jt>.07&&!contact())){js=3;jt=0;}}
   if(js===2&&jt<.2&&contact()){const F=totalMass*9.82*JF;pel.force.y+=F;pel.force.x+=jdx*totalMass*9.82*.55;pel.force.z+=jdz*totalMass*9.82*.55;parts.foot1.force.y-=F/2;parts['foot-1'].force.y-=F/2;}
   if(js===2&&jt<.24){const ax=Math.cos(yaw),az=-Math.sin(yaw);
@@ -1498,6 +1498,7 @@ function control(dt){if(cur.veh){vehRidePose();return;}   // riding: just sit
   else if(js===2&&(jt>.22||(jt>.08&&!contact()))){js=3;jt=0;}
   else if(js===3&&jt>.08&&contact()){js=4;jt=0;}
   else if(js===4&&jt>.15){js=0;}
+  if(js===0&&mv>.3&&contact()){const f=pel.velocity.x*Math.sin(yaw)+pel.velocity.z*Math.cos(yaw);cur.runV=(cur.runV==null?f:cur.runV*.995+f*.005);}   // remember normal ground speed: a bound only beats it by ~20%
   if(cur.bufB&&(js===4||js===0)&&contact()&&!limp){if(performance.now()-cur.bufB<400){jpt=.2;startBound();}cur.bufB=0;}   // space pressed just before landing: chain straight into the next bound
  }
  const lean=(PP?PP.lean*painK:0)+.18*crK+mv*(run?.28:.1)*(gdir<0?-.6:1)+(js===1?(.2+(jdx||jdz?.12:0))*Math.min(1,jt/.13):0)+((js===2||js===5)&&(jdx||jdz)?.28:0);
@@ -3653,7 +3654,7 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
- {v:'1.5.1',n:['Smoother first-person walking: the camera filters out the ragdoll\'s physics jiggle and uses a gentle, steady head bob instead']},
+ {v:'1.5.1',n:['Loadout: every gun card now shows its MAGAZINE size','Bounding nerfed: a bound now only takes you a little faster than your normal sprint (about 20%)','Smoother first-person walking: the camera filters out the ragdoll\'s physics jiggle and uses a gentle, steady head bob instead']},
  {v:'1.5.0',n:['Magazines and reloading: every gun has its real-world magazine size (Glock 17: 17, AK-47: 30, M249: 100, Minigun: 500...)','Press R to reload (the RESET button on touch screens is now RELOAD); an empty gun reloads by itself','Reload time depends on the weapon type: about 1.4 s for pistols up to 4-5 s for machine guns','Ammo counter under your weapon name, turning red when low','R no longer resets your ragdoll','Reload animation: the gun comes in and tilts over while the free hand goes to the belt for a fresh mag and slaps it in','Touch screens: the RELOAD button now sits bottom right with the other action buttons']},
  {v:'1.4.5',n:['Riders on quad bikes can now be shot and killed (bullets used to pass straight through them); a killed rider falls off']},
  {v:'1.4.4',n:['FIX: on Mac the mouse sometimes stayed free and hit the screen edge, limiting how far you could turn. Clicking in the game now always recaptures the mouse']},
