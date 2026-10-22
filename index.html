@@ -123,7 +123,7 @@ input[type=range],input[type=checkbox]{accent-color:var(--acc)}
 #msform>label:hover{box-shadow:inset 3px 0 0 var(--acc)}
 #msform input,#msform select,#sbnick{border-radius:0!important;background:rgba(0,0,0,.45)!important;border:1px solid var(--ln2)!important;color:#fff!important;font-family:'Barlow Semi Condensed',sans-serif!important;font-weight:700!important;font-size:16px!important}
 </style></head><body>
-<div id="h" style="display:none"><b>Physics Ragdoll</b><br>WASD move &nbsp; Shift run &nbsp; Space jump<br>F go limp / recover &nbsp; R reset<br>Mouse = look &nbsp; LMB shoot &nbsp; RMB or Q (hold) aim<br>Wheel = camera distance<br>I first person &nbsp; C crouch &nbsp; P menu</div>
+<div id="h" style="display:none"><b>Physics Ragdoll</b><br>WASD move &nbsp; Shift run &nbsp; Space jump<br>F go limp / recover &nbsp; R reload<br>Mouse = look &nbsp; LMB shoot &nbsp; RMB or Q (hold) aim<br>Wheel = camera distance<br>I first person &nbsp; C crouch &nbsp; P menu</div>
 <div id="mm"><div id="mmver"></div><button id="bPatch">PATCH NOTES</button><div id="logo"><span class="a">RAGDOLL</span><span class="b">SHOOTERS</span><span class="tag">PHYSICS · COMBAT</span></div>
 <div class="btns"><button id="bKey">KEYBOARD<small>Keyboard + mouse</small></button><button id="bTouch">TOUCH<small>iPad / tablet</small></button></div></div>
 <div id="tc"><div id="joy"><div id="knob"></div></div>
@@ -132,10 +132,10 @@ input[type=range],input[type=checkbox]{accent-color:var(--acc)}
 <div class="tb" id="tAim" style="right:40px;bottom:40px">AIM</div>
 <div class="tb" id="tRun" style="right:150px;bottom:140px">RUN</div>
 <div class="tb sm" id="tLimp" style="right:30px;top:30px">LIMP</div>
-<div class="tb sm" id="tReset" style="right:96px;top:30px">RESET</div>
+<div class="tb" id="tReset" style="right:250px;bottom:140px">RELOAD</div>
 <div class="tb sm" id="tMenu" style="right:162px;top:30px">MENU</div><div class="tb sm" id="tView" style="right:228px;top:30px">VIEW</div><div class="tb" id="tCrouch" style="right:250px;bottom:40px">CROUCH</div></div>
 <div id="hud" style="position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:none;flex-direction:column;align-items:center;gap:6px;pointer-events:none;z-index:4;font:600 13px system-ui;color:#fff;text-shadow:0 1px 2px #000">
-<div id="wn" style="font:400 15px 'Black Ops One',Impact,sans-serif;letter-spacing:1px;opacity:.9"></div><div id="kd"></div><div style="width:240px;height:14px;background:#0009;border:1px solid #fff4;border-radius:7px;overflow:hidden;position:relative"><div id="hpf" style="height:100%;width:100%;background:#4cd06a;transition:width .15s"></div><span id="hpt" style="position:absolute;inset:0;text-align:center;font-size:11px;line-height:14px">100</span></div></div>
+<div id="wn" style="font:400 15px 'Black Ops One',Impact,sans-serif;letter-spacing:1px;opacity:.9"></div><div id="ammo" style="font:700 18px 'Barlow Semi Condensed',sans-serif;letter-spacing:2px"></div><div id="kd"></div><div style="width:240px;height:14px;background:#0009;border:1px solid #fff4;border-radius:7px;overflow:hidden;position:relative"><div id="hpf" style="height:100%;width:100%;background:#4cd06a;transition:width .15s"></div><span id="hpt" style="position:absolute;inset:0;text-align:center;font-size:11px;line-height:14px">100</span></div></div>
 <div id="feed" style="position:absolute;right:14px;top:calc(14px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-end;gap:4px;pointer-events:none;z-index:4;font:600 13px system-ui;color:#fff"></div>
 <div id="hm" style="position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font:700 22px system-ui;opacity:0;pointer-events:none;z-index:4;transition:opacity .12s;text-shadow:0 0 3px #000">✕</div>
 <div id="duelcd" style="position:fixed;left:50%;top:22%;transform:translateX(-50%);display:none;z-index:7;pointer-events:none;text-align:center;color:#fff;text-shadow:0 2px 6px #000"><div style="font:400 min(9vw,44px) 'Black Ops One',Impact,sans-serif;letter-spacing:3px;color:#ffd36b">ROUND OVER</div><div id="duelcdt" style="font:600 18px system-ui;margin-top:6px"></div></div>
@@ -1311,7 +1311,7 @@ function startBound(){bchg=Math.min(1,jpt/.35);const sp=Math.hypot(pel.velocity.
  let best=1,bd=1e9;for(const sd of[-1,1]){const f=parts['foot'+sd],d=(f.position.x-pel.position.x)*jdx+(f.position.z-pel.position.z)*jdz;if(d<bd){bd=d;best=sd;}}bsd=best;js=5;jt=0;cur.bndB=1;}
 addEventListener('keydown',e=>{if(!mode||loOpen||matchOver)return;const k=e.key.toLowerCase();if(k==='p'&&!e.repeat){toggleMenu();return;}if(menuOpen)return;if(player.dead){if(k===' '){if(KC.on||KC.cdT)player.skip=true;}return;}if(keys[k])return;keys[k]=true;
  if(k==='i')fpOn=!fpOn;if(k==='q')aiming=true;   // Q aims, same as holding right click
- if(k==='e')vehToggle();if(k==='f'&&!player.veh){limp=!limp;js=0;}if(k==='r')reset();
+ if(k==='e')vehToggle();if(k==='f'&&!player.veh){limp=!limp;js=0;}if(k==='r'){const c=cur;use(player);startReload(performance.now());use(c);}   // R reloads
  if(k===' '&&!limp&&(js===3||js===4||(js===5&&jt>.1)||(js===0&&!contact()))){cur.bufB=performance.now();return;}   // still in the air / landing: queue the next bound
  if(k===' '&&!limp&&js===0&&contact()){if(ccool<=0&&cs===0){const L=findLedge();if(L){startClimb(L);return;}}if(mv>.3&&jp===0){jp=1;jpt=0;}else startJump();}});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key.toLowerCase()==='q')aiming=false;if(e.key===' '&&jp===1){jp=0;if(!limp&&js===0&&contact())startBound();}});
@@ -2060,7 +2060,7 @@ function buildGun(id){
 // give the current doll a weapon / armour
 function equipCur(id){ungrip();if(!W[id])id='pistol';if(gun&&gun.group.parent)gun.group.parent.remove(gun.group);
  gun=id==='pistol'?makePistol():buildGun(id);if(isPlayer)finishGun(gun);
- gun.group.rotation.x=Math.PI/2;gun.group.scale.setScalar(1.15);gun.group.position.set(0,-.0518,.0598);parts['hand-1'].mesh.add(gun.group);wpn=W[id];}
+ gun.group.rotation.x=Math.PI/2;gun.group.scale.setScalar(1.15);gun.group.position.set(0,-.0518,.0598);parts['hand-1'].mesh.add(gun.group);wpn=W[id];cur.magN=cur.ammo=magOf(wpn);cur.rlT=0;if(cur===player){hudAmmo();const n=$('wn');if(n)n.textContent=wpn.name;}}
 const HEADS=[['none','None'],['combat','Combat helmet'],['nvg','NVG helmet'],['beanie','Beanie'],['beret','Beret'],['cap','Cap'],['bandana','Bandana'],['bucket','Bucket hat'],['headset','Headset'],['balaclava','Balaclava'],['hood','Hood'],['crown','Crown']],
  BODIES=[['none','None'],['vest','Tactical vest'],['plate','Plate carrier'],['hoodie','Hoodie'],['jacket','Leather jacket'],['bando','Bandolier'],['ghillie','Ghillie suit']],
  FACES=[['none','None'],['shades','Shades'],['aviators','Aviators'],['goggles','Goggles'],['mask','Tactical mask'],['skull','Skull mask'],['gas','Gas mask'],['scarf','Scarf'],['patch','Eye patch']],
@@ -2136,7 +2136,7 @@ const TWO={a:1.2,e:-2.1,z:.8,y:.7,ha:.5,he:-2.2};
 const H2={a:.1,e:-.25,z:.5,y:.3};
 function gunArm(dt){
  const PP=pain?PAIN[pain.kind]:null;
- aimK+=((aiming?1-(PP?PP.aim*painK:0)*(pain&&pain.kind==='arm'&&pain.side!==-1?.2:1):0)-aimK)*Math.min(1,dt*9);recoil*=Math.exp(-dt*13);
+ aimK+=((aiming&&!cur.rlT?1-(PP?PP.aim*painK:0)*(pain&&pain.kind==='arm'&&pain.side!==-1?.2:1):0)-aimK)*Math.min(1,dt*9);recoil*=Math.exp(-dt*13);
  const pc=pitchOf(chest);
  // even at the hip the gun points at the crosshair: the arm stays low, the wrist tilts the barrel onto the target
  const S=bpt(chest,-.27,.12,0),e=Math.atan2(aimT.y-S.y,Math.max(.5,Math.hypot(aimT.x-S.x,aimT.z-S.z))),ee=cl(e,-1.1,1.2)+recoil;
@@ -2153,6 +2153,10 @@ function gunArm(dt){
    wj.cx=cl(wj.cx+lc.x*g,-.9,.9);wj.cz=cl(wj.cz+lc.z*g,-.9,.9);}}
  else{wj.cx*=1-Math.min(1,dt*6);wj.cz*=1-Math.min(1,dt*6);}
  joints['elbow-1'].x=ex;wj.x=-(Math.PI/2+eb)-(pc+sx+ex)+wj.cx;wj.z=wj.cz;joints['shoulder-1'].z=-.12*(1-aimK)+t2z;joints['shoulder-1'].y=T2?T2.y*(wpn.two?Math.max(.6,aimK):aimK):0;
+ if(cur.rlT){const D=cur.rlD||2000,u=cl(1-(cur.rlT-performance.now())/D,0,1),k=Math.sin(Math.PI*Math.min(1,u*1.1)),sw=u>.4&&u<.75?Math.sin((u-.4)/.35*Math.PI):0;   // reload: gun comes in and cants over, the free hand drops to the belt for a fresh mag and slaps it home
+  joints['shoulder-1'].x=sx+.45*k;joints['elbow-1'].x=ex-.55*k;wj.x+=.55*k;wj.z+=.7*k+.18*sw;joints['shoulder-1'].z+=.15*k;
+  const fs=joints['shoulder1'],fe=joints['elbow1'];if(fs&&fe&&!fs.cut){const g=u<.25?u/.25:u<.55?1-(u-.25)/.3*2:-1+Math.min(1,(u-.55)/.2)*.3;   // 1 = down at the belt, -1 = up at the mag well
+   fs.x=g>0?.25*g-pc:-.9*(-g)*k-pc;fe.x=g>0?-.2-.3*g:-1.5*(-g)*k-.2;fs.z=.12+.25*Math.max(0,-g);}}
 }
 // raycast helper
 const rr=new C.RaycastResult();
@@ -2422,11 +2426,18 @@ function sfxBody(d,dt){if(dt<=0||!d.parts||!d.list||!sfxNB&&!sfxInit())return;
    sfxStepSample({x:fp.x,y:gy,z:fp.z},Math.min(1.4,str));sfx('step',{x:fp.x,y:gy,z:fp.z},Math.min(1.4,str),sf);if(imp>3)sfx('land',{x:fp.x,y:gy,z:fp.z},Math.min(1.3,.5+imp*.12),0);}
   s.vy=vy;}}
 const _d0=new THREE.Vector3();
+// magazines: real-world capacity per gun, reload time by weapon type
+const MAG={pistol:15,revolver:6,smg:30,ar:30,shotgun:6,sniper:5,lmg:100,deagle:7,m1911:7,glock18:33,uzi:20,mp5:30,p90:50,vector:25,thompson:30,ak47:30,m16:30,famas:25,scar:20,aug:30,m14:20,svd:10,awm:5,barrett:10,spas:8,aa12:20,sawedoff:2,m60:100,minigun:500,glock17:17,usp45:12,p226:15,fiveseven:20,cz75:16,makarov:8,m93r:20,luger:8,skorpion:20,tec9:32,python:6,rhino:6,ump45:25,mac10:30,bizon:64,mp7:40,sten:32,ppsh:71,grease:30,ak74:30,akm:30,ak12:30,galil:35,an94:30,g36c:30,hk416:30,sg552:30,acr:30,tavor:30,l85:30,f2000:30,fal:20,g3:20,sks:10,garand:8,mini14:20,mk12:20,vss:10,mosin:5,kar98k:5,m200:7,l96:10,tac50:5,ntw20:3,m95:5,m500:6,m4super:7,saiga:10,ksg:14,m1887:5,usas:20,coach:2,pkm:100,rpk:45,mg42:50,negev:150,mg3:100,xm556:500,ppk:7,mk23:12,p99:15,m17:17,tt33:8,hipower:13,c96:10,aps:20,tmp:30,saa:6,sw500:5,webley:6,mateba:6,mp5k:30,mp5sd:30,mp40:32,evo3:30,pp2000:20,aks74u:30,uzifull:32,mpx:30,m16a1:20,scarl:30,qbz95:30,x95:30,arx160:30,bren2:30,g11:45,stg44:30,asval:20,groza:20,badger:30,bar:20,hk417:20,sr25:20,psg1:5,svt40:10,m1carbine:15,win1894:8,g28:10,lee:10,m1903:5,scout:5,sv98:10,dsr1:5,mrad:10,ax50:5,ksvk:5,ks23:3,striker:12,ithaca:4,m1897:5,nova:4,spas15:6,bren:30,lewis:47,dp28:47,mg34:50,ultimax:100,l86:30,stoner:150},RLT={Sidearm:1.4,Revolver:2.2,'Machine pistol':1.6,SMG:1.9,'Assault rifle':2.2,'Burst rifle':2.2,'Battle rifle':2.4,'Marksman rifle':2.4,'Sniper rifle':2.8,'Anti-materiel':3.2,Shotgun:2.6,'Light MG':4.2,'Rotary MG':5};
+const magOf=w=>w.mag||(w.mag=MAG[Object.keys(W).find(k=>W[k]===w)]||30);
+function startReload(now){if(cur.dead||cur.rlT||(cur.ammo!=null&&cur.ammo>=magOf(wpn)))return;cur.rlD=(RLT[wpn.type]||2.2)*1000;cur.rlT=now+cur.rlD;if(cur===player)hudAmmo();}
+function hudAmmo(){const el=$('ammo');if(!el)return;const d=player,m=d.magN;if(!m)return;const a=d.ammo??m,t=d.rlT?'RELOADING…':a+' / '+m;if(el.textContent!==t){el.textContent=t;el.style.color=d.rlT?'#ffd36b':a<=Math.ceil(m*.25)?'#ff6b5a':'#fff';}}
 function fire(now){
+ if(cur.rlT){if(now<cur.rlT)return;cur.rlT=0;cur.ammo=magOf(wpn);}   // reload finished: full mag
+ if(cur.ammo==null)cur.ammo=magOf(wpn);if(cur.ammo<=0){startReload(now);return;}   // empty: reload by itself
  if(joints['wrist-1'].cut||joints['elbow-1'].cut||joints['shoulder-1'].cut)return;
  if(limp||now-lastShot<wpn.rate||duelHold())return;
  const g2=aimK>.5&&canGrip2();                                                    // aimed with both hands: much steadier
- lastShot=now;shellAt=now+30;flashUntil=now+55;recoil=wpn.recoil*(g2?.45:1);if(isPlayer)camPitch=Math.max(-.6,camPitch-wpn.ck*(g2?.45:1));
+ lastShot=now;cur.ammo--;if(cur===player)hudAmmo();shellAt=now+30;flashUntil=now+55;recoil=wpn.recoil*(g2?.45:1);if(isPlayer)camPitch=Math.max(-.6,camPitch-wpn.ck*(g2?.45:1));
  {const pp=player.pel.position,dd=Math.hypot(pel.position.x-pp.x,pel.position.z-pp.z);shotSound(isPlayer?1:Math.min(.8,5/(dd+2)),wpn.snd,false,wpn.type,wpn.name);}
  gun.group.updateMatrixWorld(true);gun.muzzle.getWorldPosition(_mp);gun.muzzle.getWorldQuaternion(_q);_d0.set(0,0,1).applyQuaternion(_q);
  if(aimK>.5){_t.copy(aimT).sub(_mp);if(_t.length()>1.5)_d0.copy(_t.normalize());}      // aimed: shoot at the crosshair
@@ -2490,7 +2501,7 @@ function syncBots(){if(!mode)return;use(player);
  while(a.length>wantA){removeBot(a.pop());}while(b.length>wantB){removeBot(b.pop());}
  for(let i=a.length;i<wantA;i++)addBot('A');for(let i=b.length;i<wantB;i++)addBot(GM[gmode].team?'B':null);}
 // put the current doll back on its feet at a spawn point, facing the middle of the map
-function respawnAt(sp){if(cur.veh)vehExit(true);try{scrStop(cur);}catch(e){}cur.dying=null;   // a fresh body: every death vocal stops
+function respawnAt(sp){if(cur.veh)vehExit(true);cur.rlT=0;if(wpn)cur.ammo=magOf(wpn);try{scrStop(cur);}catch(e){}cur.dying=null;   // a fresh body: every death vocal stops
 const a=(sp.x||sp.z)?Math.atan2(-sp.x,-sp.z):0,ca=Math.cos(a),sa=Math.sin(a),q=new Q();q.setFromAxisAngle(Y,a);
  if(cs>0)endClimb(0);for(const k in pins)unpin(k);
  for(const b of list){const[hx,hy,hz]=b.home;b.position.set(sp.x+hx*ca+hz*sa,hy,sp.z-hx*sa+hz*ca);b.quaternion.copy(q);
@@ -3356,7 +3367,7 @@ $('sbback').onclick=()=>{$('sb').style.display='none';NET.want=false;if(NET.lobb
 $('mLeave').onclick=()=>NET.on?leaveServer():location.reload();   // vs bots: back to the main menu
 // ---------- combat HUD ----------
 function updateHUD(){$('hpf').style.width=player.hp+'%';$('hpf').style.background=player.hp>50?'#4cd06a':player.hp>25?'#e8b23a':'#e04a3a';
- $('hpt').textContent=Math.max(0,player.hp|0);{const pw=cur===player?wpn:player.wpn;$('wn').textContent=pw?pw.name:'';}$('kd').textContent=`K ${player.kills}  ·  D ${player.deaths}`;}
+ $('hpt').textContent=Math.max(0,player.hp|0);{const pw=cur===player?wpn:player.wpn;$('wn').textContent=pw?pw.name:'';}$('kd').textContent=`K ${player.kills}  ·  D ${player.deaths}`;hudAmmo();}
 let hmT=0;function hitMarker(kill,hs){const h=$('hm');h.style.color=kill?'#ff3b30':hs?'#ffd23f':'#fff';h.style.opacity=1;h.style.transform='translate(-50%,-50%) scale('+(kill?1.5:1)+')';hmT=performance.now()+(kill?380:160);}
 function hurtFlash(dmg){const v=$('hurt');v.style.transition='none';v.style.opacity=Math.min(1,.35+dmg/60);requestAnimationFrame(()=>{v.style.transition='opacity .6s';v.style.opacity=0;});}
 function addFeed(by,T,hs){if(ATT.on)return;const e=document.createElement('div');e.className='fe';
@@ -3583,7 +3594,8 @@ function frame(now){
  for(const pp of NET.puppets.values())sfxBody(pp,fdt);
  // respawns: bots after 5 s at the safest spawn; the player watches their ragdoll for 3 s, then a 5 s countdown (SPACE skips)
  duelTick(now);
- if(ATT.on&&ATT.hero&&!ATT.hero.dead&&now-(ATT.hero.heroHit||0)>2500)ATT.hero.hp=Math.min(1000,ATT.hero.hp+8);   // catches his breath between fights
+ for(const d of[player,...bots])if(d.rlT&&now>=d.rlT){d.rlT=0;d.ammo=null;if(d===player)hudAmmo();}   // reloads finish on their own, fired or not
+if(ATT.on&&ATT.hero&&!ATT.hero.dead&&now-(ATT.hero.heroHit||0)>2500)ATT.hero.hp=Math.min(1000,ATT.hero.hp+8);   // catches his breath between fights
 if(ATT.on&&ATT.fadeAt&&now>ATT.fadeAt){const cv=renderer.domElement;
  if(!ATT.dark){cv.style.transition='filter .9s';cv.style.filter='brightness(0)';ATT.dark=now+1000;}
  else if(now>ATT.dark){attractStop();ATT.off=false;attractStart();cv.style.filter='brightness(0)';ATT.fadeInAt=performance.now()+300;}}
@@ -3623,6 +3635,9 @@ if(ATT.on&&ATT.fadeInAt&&now>ATT.fadeInAt){renderer.domElement.style.filter='';A
   for(const n of['head','neck'])if(player.parts[n].mesh.visible===fp)player.parts[n].mesh.visible=!fp;   // every frame: the killcam ending (respawn) shows all parts again, which used to leave your hat and face in view
   if(fp){const e=bpt(player.parts.head,0,.03,.09),vx=Math.sin(camYaw)*cp,vy=Math.sin(camPitch),vz=Math.cos(camYaw)*cp;
    if(aimK>.01){const rx=Math.cos(camYaw),rz=-Math.sin(camYaw);e.x+=rx*.07*aimK;e.z+=rz*.07*aimK;e.y-=.07*aimK;}   // aiming: cheek drops toward the gun
+   {const fd=Math.min(.1,(now-(_fpS.t||now))/1000);_fpS.t=now;   // smooth the eye: physics jiggle filtered out, a gentle steady bob put back
+    if(!fpWas||_fpS.distanceTo(e)>1.5)_fpS.copy(e);else{_fpS.x+=(e.x-_fpS.x)*(1-Math.exp(-fd*22));_fpS.z+=(e.z-_fpS.z)*(1-Math.exp(-fd*22));_fpS.y+=(e.y-_fpS.y)*(1-Math.exp(-fd*7));}
+    fpWas=true;const bob=player.dead?0:Math.sin((cur===player?phase:player.phase||0)*2)*.012*Math.min(1,cur===player?mv:player.mv||0);e.copy(_fpS);e.y+=bob;}
    cam.position.set(e.x,e.y,e.z);cam.lookAt(e.x-vx,e.y-vy,e.z-vz);}
   else{cam.position.set(pvx+Math.sin(camYaw)*cp*cd,Math.max(.2,pvy+Math.sin(camPitch)*cd),pvz+Math.cos(camYaw)*cp*cd);cam.lookAt(pvx,pvy,pvz);}
   if(ATT.on)attractCam(now);
@@ -3638,6 +3653,8 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.5.1',n:['Smoother first-person walking: the camera filters out the ragdoll\'s physics jiggle and uses a gentle, steady head bob instead']},
+ {v:'1.5.0',n:['Magazines and reloading: every gun has its real-world magazine size (Glock 17: 17, AK-47: 30, M249: 100, Minigun: 500...)','Press R to reload (the RESET button on touch screens is now RELOAD); an empty gun reloads by itself','Reload time depends on the weapon type: about 1.4 s for pistols up to 4-5 s for machine guns','Ammo counter under your weapon name, turning red when low','R no longer resets your ragdoll','Reload animation: the gun comes in and tilts over while the free hand goes to the belt for a fresh mag and slaps it in','Touch screens: the RELOAD button now sits bottom right with the other action buttons']},
  {v:'1.4.5',n:['Riders on quad bikes can now be shot and killed (bullets used to pass straight through them); a killed rider falls off']},
  {v:'1.4.4',n:['FIX: on Mac the mouse sometimes stayed free and hit the screen edge, limiting how far you could turn. Clicking in the game now always recaptures the mouse']},
  {v:'1.4.3',n:['Hold Q to aim down sights on keyboard (right click still works too)','FIX: patch notes and version label were broken by a typo in the last update']},
