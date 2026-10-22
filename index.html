@@ -2219,6 +2219,11 @@ function lvLoop(){if(!loOpen||window.loPick||!LV.r)return;requestAnimationFrame(
  const fov=LV.cam.fov*Math.PI/180,d=Math.max(LV.len/2/Math.tan(fov/2)/Math.max(.5,LV.cam.aspect)*1.35,LV.len*.95);LV.cam.position.set(0,d*.32,d);LV.cam.lookAt(0,-LV.h*.1,0);LV.r.render(LV.sc,LV.cam);}
 // ---------- first-person ADS: the eye goes behind the gun's own sight (optic centre, or the top of the iron sights) ----------
 function sightOf(g){const G=g.group;if(G.userData.sl)return G.userData.sl;let s=G.userData.sight;
+ // optic: anything ahead of it (front sight post, gas block, muzzle device, rail) must sit below the line of sight - like a real lower-1/3 co-witness.
+ // if the model has something taller out front, the sight line rides just above it (the optic housing is drawn around that line)
+ if(s&&s.t){G.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(G.matrixWorld).invert(),v=new THREE.Vector3(),zf=s.z+s.len+.005;let fy=-1;
+  G.traverse(o=>{if(!o.isMesh||o===g.flash||!o.geometry.attributes.position)return;const P=o.geometry.attributes.position,M=new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld);for(let i=0;i<P.count;i++){v.fromBufferAttribute(P,i).applyMatrix4(M);if(v.z>zf&&Math.abs(v.x)<.03&&v.y>fy)fy=v.y;}});
+  if(fy>s.y-.012)s=Object.assign({},s,{y:fy+.012});}
  if(!s){let my=-1,zs=0;G.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(G.matrixWorld).invert(),v=new THREE.Vector3();let zmax=-1;
   G.traverse(o=>{if(!o.isMesh||o===g.flash||!o.geometry.attributes.position)return;const P=o.geometry.attributes.position,M=new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld);for(let i=0;i<P.count;i+=3){v.fromBufferAttribute(P,i).applyMatrix4(M);if(v.z>zmax)zmax=v.z;}});
   G.traverse(o=>{if(!o.isMesh||o===g.flash||!o.geometry.attributes.position)return;const P=o.geometry.attributes.position,M=new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld);for(let i=0;i<P.count;i++){v.fromBufferAttribute(P,i).applyMatrix4(M);if(v.z<zmax-.12&&v.z>-.12&&v.y>my&&v.y<.16){my=v.y;zs=v.z;}}});
@@ -3947,7 +3952,7 @@ if(ATT.on&&ATT.fadeInAt&&now>ATT.fadeInAt){renderer.domElement.style.filter='';A
     if(!fpWas||_fpS.distanceTo(e)>1.5)_fpS.copy(e);else{_fpS.x+=(e.x-_fpS.x)*(1-Math.exp(-fd*22));_fpS.z+=(e.z-_fpS.z)*(1-Math.exp(-fd*22));_fpS.y+=(e.y-_fpS.y)*(1-Math.exp(-fd*7));}
     fpWas=true;const bob=player.dead?0:Math.sin((cur===player?phase:player.phase||0)*2)*.012*Math.min(1,cur===player?mv:player.mv||0);e.copy(_fpS);e.y+=bob;}
    adsEye(e,cur===player?aimK:(player.aimK||0),new THREE.Vector3(-vx,-vy,-vz));cam.position.set(e.x,e.y,e.z);cam.lookAt(e.x-vx,e.y-vy,e.z-vz);}
-  else{optView(null,0);if(cam.near!==.1){cam.near=.1;cam.updateProjectionMatrix();}cam.position.set(pvx+Math.sin(camYaw)*cp*cd,Math.max(.2,pvy+Math.sin(camPitch)*cd),pvz+Math.cos(camYaw)*cp*cd);cam.lookAt(pvx,pvy,pvz);}
+  else{optView(null,0);if(player.gun)player.gun.group.visible=true;if(cam.near!==.1){cam.near=.1;cam.updateProjectionMatrix();}cam.position.set(pvx+Math.sin(camYaw)*cp*cd,Math.max(.2,pvy+Math.sin(camPitch)*cd),pvz+Math.cos(camYaw)*cp*cd);cam.lookAt(pvx,pvy,pvz);}
   if(ATT.on)attractCam(now);
   cam.updateMatrixWorld();camDirV.set(0,1-2*chY,.5).unproject(cam).sub(cam.position).normalize();   // ray through the crosshair
   {const r=castRay(cam.position,camDirV,80,player);aimT.set(r.p.x,r.p.y,r.p.z);}}   // the crosshair target, always (the gun tracks it even at the hip)
@@ -3963,6 +3968,7 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.10.10',n:['Aiming through an optic: the gun stays in view, but the line of sight now always rides above everything out front (front sight post, gas block, muzzle, rail), like a real lower-third co-witness, so nothing blocks the reticle']},
  {v:'1.10.9',n:['Guns with an optic now really use it when you aim in first person: you look through the red dot, holo, ACOG or scope housing with its own lit reticle (red dot, holo ring, ACOG chevron, crosshair scope)','The optic body no longer blocks your view - it is cut away and replaced by a proper sight picture, lined up with where the gun shoots','When you aim in first person the gun is now brought up square to your eye, so the sights line up straight down the barrel']},
  {v:'1.10.8',n:['First-person sight view is now skipped on any gun whose shape blocks the view from behind its sight (each gun is checked automatically); scoped snipers still use the full-screen scope']},
  {v:'1.10.7',n:['First-person sight view only for guns with a real sight: any gun with an optic, plus pistols, revolvers, rifles, marksman rifles and SMGs on their iron sights. Shotguns, LMGs, miniguns, machine pistols and unscoped heavies keep the normal aim']},
