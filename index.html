@@ -1,4 +1,20 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}#hud{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:none;justify-content:space-between;align-items:flex-end;padding:0 18px;pointer-events:none;z-index:4;color:#fff;font-family:'Barlow Semi Condensed',sans-serif;text-shadow:0 1px 3px #000}
+#hud>div{background:linear-gradient(180deg,#0c0d10cc,#0c0d10ee);border:1px solid #ffffff1c;border-bottom:2px solid #ff5a1f;padding:8px 12px}
+#hudL{width:118px}.hl{font:700 10px 'Barlow Semi Condensed';letter-spacing:3px;opacity:.6;margin-bottom:4px}
+#pdbox{width:118px;height:190px;position:relative}#pd{width:100%;height:100%}
+#pd rect{stroke:#000a;stroke-width:1;transition:fill .25s}#pd rect.cut{fill:none!important;stroke:#ff3b30;stroke-dasharray:3 2}
+body.pdlive #pd{visibility:hidden}body.pdlive #hudL{background:#0c0d1066!important}
+#hudC{align-self:flex-end;width:min(420px,40vw);text-align:center;background:none!important;border:0!important;padding:0!important}
+#kd{font:600 12px 'Barlow Semi Condensed';letter-spacing:3px;opacity:.85;margin-bottom:5px}
+#hpw{height:16px;background:#000a;border:1px solid #ffffff30;position:relative;overflow:hidden;transform:skewX(-14deg)}
+#hpf{height:100%;width:100%;background:#4cd06a;transition:width .15s,background .3s}
+#hpt{position:absolute;inset:0;font:700 12px/16px 'Barlow Semi Condensed';letter-spacing:2px;transform:skewX(14deg)}
+#hudR{min-width:190px;text-align:right}#wgi{height:58px;max-width:170px;object-fit:contain;filter:drop-shadow(0 1px 2px #000);display:block;margin-left:auto}
+#wn{font:700 17px 'Barlow Semi Condensed';letter-spacing:2px;text-transform:uppercase}#wty{font:600 10px 'Barlow Semi Condensed';letter-spacing:3px;opacity:.55;text-transform:uppercase}
+#ammo{font:700 34px/1 'Barlow Semi Condensed';letter-spacing:1px;margin-top:2px}#ammo small{font-size:16px;opacity:.6;margin-left:4px}
+#rlb{height:3px;background:#ffffff22;margin-top:5px;visibility:hidden}#rlb i{display:block;height:100%;width:0;background:#ffd36b}
+body.touchui #hudL{display:none}body.touchui #hudR{position:absolute;right:auto;left:50%;transform:translateX(-50%);bottom:64px;min-width:0;padding:4px 10px;display:flex;gap:10px;align-items:center}body.touchui #wgi{height:26px}body.touchui #ammo{font-size:22px;margin:0}body.touchui #wty{display:none}
+</style></head><body>
 <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Physics Ragdoll Walker</title>
 <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:system-ui,sans-serif}canvas{display:block}#m{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#0009;color:#eee;z-index:10}#m>div{background:#15171c;padding:20px 26px;border-radius:12px;min-width:260px}#m h3{margin:0 0 14px}#m label{display:block;margin:12px 0 4px;font-size:13px}#m input{width:100%}#m small{opacity:.6}#m>div{width:min(340px,86vw)}#m .mp{display:flex;flex-direction:column}#m .mp[hidden]{display:none}.mbtn{width:100%;padding:11px 14px;margin:0 0 8px;font:600 15px 'Barlow Semi Condensed',system-ui;letter-spacing:1.5px;text-transform:uppercase;text-align:left;color:#fff;background:#22252c;border:1px solid #3a3d44;cursor:pointer}.mbtn:hover{border-color:#ff5a1f}.mbtn.pri{background:#ff5a1f;border-color:#ff5a1f}.mbtn.nav::after{content:'›';float:right;opacity:.7}.mbtn.back{margin-top:16px;text-align:center}#m .mchk{display:flex;align-items:center;gap:8px}#m .mchk input{width:auto}#mm{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;background:radial-gradient(ellipse at 50% 30%,#2a1010cc,#000e 70%);color:#fff;user-select:none;-webkit-user-select:none}
 #logo{margin-top:12vh;text-align:center;font-family:'Black Ops One',Impact,sans-serif;line-height:.9;transform:rotate(-3deg)}
@@ -134,8 +150,11 @@ input[type=range],input[type=checkbox]{accent-color:var(--acc)}
 <div class="tb sm" id="tLimp" style="right:30px;top:30px">LIMP</div>
 <div class="tb" id="tReset" style="right:250px;bottom:140px">RELOAD</div>
 <div class="tb sm" id="tMenu" style="right:162px;top:30px">MENU</div><div class="tb sm" id="tView" style="right:228px;top:30px">VIEW</div><div class="tb" id="tCrouch" style="right:250px;bottom:40px">CROUCH</div></div>
-<div id="hud" style="position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:none;flex-direction:column;align-items:center;gap:6px;pointer-events:none;z-index:4;font:600 13px system-ui;color:#fff;text-shadow:0 1px 2px #000">
-<div id="wn" style="font:400 15px 'Black Ops One',Impact,sans-serif;letter-spacing:1px;opacity:.9"></div><div id="ammo" style="font:700 18px 'Barlow Semi Condensed',sans-serif;letter-spacing:2px"></div><div id="kd"></div><div style="width:240px;height:14px;background:#0009;border:1px solid #fff4;border-radius:7px;overflow:hidden;position:relative"><div id="hpf" style="height:100%;width:100%;background:#4cd06a;transition:width .15s"></div><span id="hpt" style="position:absolute;inset:0;text-align:center;font-size:11px;line-height:14px">100</span></div></div>
+<div id="hud">
+<div id="hudL"><div class="hl">STATUS</div><div id="pdbox"><svg id="pd" viewBox="0 0 120 200"></svg></div></div>
+<div id="hudC"><div id="kd"></div><div id="hpw"><div id="hpf"></div><span id="hpt">100</span></div></div>
+<div id="hudR"><img id="wgi" alt=""><div id="wn"></div><div id="wty"></div><div id="ammo"></div><div id="rlb"><i></i></div></div>
+</div>
 <div id="feed" style="position:absolute;right:14px;top:calc(14px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:flex-end;gap:4px;pointer-events:none;z-index:4;font:600 13px system-ui;color:#fff"></div>
 <div id="hm" style="position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font:700 22px system-ui;opacity:0;pointer-events:none;z-index:4;transition:opacity .12s;text-shadow:0 0 3px #000">✕</div>
 <div id="duelcd" style="position:fixed;left:50%;top:22%;transform:translateX(-50%);display:none;z-index:7;pointer-events:none;text-align:center;color:#fff;text-shadow:0 2px 6px #000"><div style="font:400 min(9vw,44px) 'Black Ops One',Impact,sans-serif;letter-spacing:3px;color:#ffd36b">ROUND OVER</div><div id="duelcdt" style="font:600 18px system-ui;margin-top:6px"></div></div>
@@ -180,7 +199,7 @@ input[type=range],input[type=checkbox]{accent-color:var(--acc)}
 <button class="mbtn nav" data-go="audio">Audio</button><button class="mbtn nav" data-go="gfx">Graphics</button><button class="mbtn nav" data-go="ctl">Controls</button><button class="mbtn nav" data-go="ai">AI enemies</button>
 <button id="mLeave" class="mbtn" style="display:none">Leave server</button><small>or press P</small></div>
 <div class="mp" data-p="audio" hidden><h3>AUDIO</h3><label>Master volume <span id="vv"></span></label><input id="vol" type="range" min="0" max="100"><label>Gunshots <span id="vgunv"></span></label><input id="vgun" type="range" min="0" max="150" step="1"><label>Effects &amp; gore <span id="vfxv"></span></label><input id="vfx" type="range" min="0" max="150" step="1"><label>Voices &amp; screams <span id="vvoxv"></span></label><input id="vvox" type="range" min="0" max="150" step="1"><button class="mbtn back">‹ Back</button></div>
-<div class="mp" data-p="gfx" hidden><h3>GRAPHICS</h3><label class="mchk"><input id="opt" type="checkbox"> Optimised <small>(less lag, lower quality)</small></label><label class="mchk"><input id="gshadow" type="checkbox"> Shadows</label><label>Render resolution % <span id="gresv"></span></label><input id="gres" type="range" min="50" max="100" step="5"><label>Field of view <span id="gfovv"></span></label><input id="gfov" type="range" min="50" max="100" step="1"><label>Render distance <span id="grdv"></span> <small>(fog closes in nearer)</small></label><input id="grd" type="range" min="30" max="300" step="10"><button class="mbtn back">‹ Back</button></div>
+<div class="mp" data-p="gfx" hidden><h3>GRAPHICS</h3><label class="mchk"><input id="opt" type="checkbox"> Optimised <small>(less lag, lower quality)</small></label><label class="mchk"><input id="gshadow" type="checkbox"> Shadows</label><label class="mchk"><input id="gpd" type="checkbox"> Live 3D paper doll <small>(status box shows your real ragdoll)</small></label><label>Render resolution % <span id="gresv"></span></label><input id="gres" type="range" min="50" max="100" step="5"><label>Field of view <span id="gfovv"></span></label><input id="gfov" type="range" min="50" max="100" step="1"><label>Render distance <span id="grdv"></span> <small>(fog closes in nearer)</small></label><input id="grd" type="range" min="30" max="300" step="10"><button class="mbtn back">‹ Back</button></div>
 <div class="mp" data-p="ctl" hidden><h3>CONTROLS</h3><label>Mouse sensitivity <span id="sv"></span></label><input id="sens" type="range" min="10" max="500" step="5"><button class="mbtn back">‹ Back</button></div>
 <div class="mp" data-p="ai" hidden><h3>AI ENEMIES</h3><label>Number of bots <span id="bv"></span> <small>(split into teams in team modes; 1v1 always 1)</small></label><input id="bots" type="range" min="0" max="8"><label>Difficulty</label><select id="diff" style="width:100%;padding:6px;border-radius:6px;background:#22252c;color:#eee;border:1px solid #444"><option value="0">Easy</option><option value="1">Normal</option><option value="2">Hard</option><option value="3">Insane</option></select><button class="mbtn back">‹ Back</button></div>
 </div></div>
@@ -1221,9 +1240,9 @@ let menuOpen=false;const menuEl=document.getElementById('m'),volEl=document.getE
 function mPanel(p){for(const el of menuEl.querySelectorAll('.mp'))el.hidden=el.dataset.p!==p;}
 menuEl.addEventListener('click',e=>{const t=e.target.closest('.mbtn');if(!t)return;if(t.dataset.go)mPanel(t.dataset.go);else if(t.classList.contains('back'))mPanel('main');});
 const MX=['vgun','vfx','vvox'];
-function showSettings(){for(const k of MX){$(k).value=Math.round(settings[k]*100);$(k+'v').textContent=$(k).value+'%';}$('gshadow').checked=settings.shadow!==false;$('gres').value=Math.round((settings.res||1)*100);$('gresv').textContent=$('gres').value+'%';$('gfov').value=settings.fov||60;$('grd').value=settings.rd||300;$('grdv').textContent=+$('grd').value>=300?'Max':$('grd').value+' m';$('gfovv').textContent=$('gfov').value+'°';botsEl.value=settings.bots;diffEl.value=settings.diff;document.getElementById('bv').textContent=settings.bots;optEl.checked=!!settings.opt;volEl.value=Math.round(settings.vol*100);sensEl.value=Math.round(settings.sens*100);document.getElementById('vv').textContent=volEl.value+'%';document.getElementById('sv').textContent=(settings.sens).toFixed(2)+'x';}
-function saveSettings(){for(const k of MX)settings[k]=$(k).value/100;settings.shadow=$('gshadow').checked;settings.res=$('gres').value/100;settings.fov=+$('gfov').value;settings.rd=+$('grd').value;settings.vol=volEl.value/100;settings.sens=sensEl.value/100;settings.opt=optEl.checked;settings.bots=+botsEl.value;MS.enemies=Math.max(0,settings.bots-(GM[gmode].team?MS.allies:0));settings.diff=+diffEl.value;applyOpt();syncBots();if(master)master.gain.value=settings.vol;showSettings();try{localStorage.setItem('ragdollSettings',JSON.stringify(settings));}catch(e){}}
-for(const el of[volEl,sensEl,optEl,botsEl,diffEl,...MX.map($),$('gshadow'),$('gres'),$('gfov'),$('grd')])for(const ev of['input','change'])el.addEventListener(ev,saveSettings);
+function showSettings(){for(const k of MX){$(k).value=Math.round(settings[k]*100);$(k+'v').textContent=$(k).value+'%';}$('gshadow').checked=settings.shadow!==false;$('gpd').checked=!!settings.pdLive;$('gres').value=Math.round((settings.res||1)*100);$('gresv').textContent=$('gres').value+'%';$('gfov').value=settings.fov||60;$('grd').value=settings.rd||300;$('grdv').textContent=+$('grd').value>=300?'Max':$('grd').value+' m';$('gfovv').textContent=$('gfov').value+'°';botsEl.value=settings.bots;diffEl.value=settings.diff;document.getElementById('bv').textContent=settings.bots;optEl.checked=!!settings.opt;volEl.value=Math.round(settings.vol*100);sensEl.value=Math.round(settings.sens*100);document.getElementById('vv').textContent=volEl.value+'%';document.getElementById('sv').textContent=(settings.sens).toFixed(2)+'x';}
+function saveSettings(){for(const k of MX)settings[k]=$(k).value/100;settings.shadow=$('gshadow').checked;settings.pdLive=$('gpd').checked;settings.res=$('gres').value/100;settings.fov=+$('gfov').value;settings.rd=+$('grd').value;settings.vol=volEl.value/100;settings.sens=sensEl.value/100;settings.opt=optEl.checked;settings.bots=+botsEl.value;MS.enemies=Math.max(0,settings.bots-(GM[gmode].team?MS.allies:0));settings.diff=+diffEl.value;applyOpt();syncBots();if(master)master.gain.value=settings.vol;showSettings();try{localStorage.setItem('ragdollSettings',JSON.stringify(settings));}catch(e){}}
+for(const el of[volEl,sensEl,optEl,botsEl,diffEl,...MX.map($),$('gshadow'),$('gpd'),$('gres'),$('gfov'),$('grd')])for(const ev of['input','change'])el.addEventListener(ev,saveSettings);
 function toggleMenu(){menuOpen=!menuOpen;menuEl.style.display=menuOpen?'flex':'none';mPanel('main');{const lb=$('mLeave');lb.style.display=mode?'block':'none';lb.textContent=NET.on?'Leave server':'Leave game';}
  if(menuOpen){for(const k in keys)keys[k]=false;aiming=false;fireHeld=false;for(const id of['tRun','tAim'])document.getElementById(id).classList.remove('on');fireReq=false;showSettings();if(document.pointerLockElement)document.exitPointerLock();}}
 // optimised mode: lower render resolution, no shadows, faster collision broadphase, fewer solver passes, idle objects sleep
@@ -1243,7 +1262,7 @@ applyOpt();
 showSettings();document.getElementById('mClose').onclick=()=>toggleMenu();
 // ---------- main menu + touch controls ----------
 let mode=null;const joy={on:false,x:0,y:0,id:null};
-function startGame(m){attractStop();if(gmode==='cine')gmode=realMode();ATT.on=false;ATT.slowUntil=0;ATT.fadeAt=0;renderer.domElement.style.filter='';   // whatever the cinematic was doing, a real game starts on normal rules
+function startGame(m){document.body.classList.toggle('touchui',m==='touch');attractStop();if(gmode==='cine')gmode=realMode();ATT.on=false;ATT.slowUntil=0;ATT.fadeAt=0;renderer.domElement.style.filter='';   // whatever the cinematic was doing, a real game starts on normal rules
 mode=m;document.getElementById('mm').style.display='none';
  document.getElementById('h').style.display=m==='kb'?'block':'none';
  if(m==='kb'){try{const r=lockEl.requestPointerLock();if(r&&r.catch)r.catch(()=>{plFail=true;});}catch(e){plFail=true;}}
@@ -2061,7 +2080,7 @@ function buildGun(id){
 // give the current doll a weapon / armour
 function equipCur(id){ungrip();if(!W[id])id='pistol';if(gun&&gun.group.parent)gun.group.parent.remove(gun.group);
  gun=id==='pistol'?makePistol():buildGun(id);if(isPlayer)finishGun(gun);
- gun.group.rotation.x=Math.PI/2;gun.group.scale.setScalar(1.15);gun.group.position.set(0,-.0518,.0598);parts['hand-1'].mesh.add(gun.group);wpn=W[id];cur.magN=cur.ammo=magOf(wpn);cur.rlT=0;if(cur===player){hudAmmo();const n=$('wn');if(n)n.textContent=wpn.name;}}
+ gun.group.rotation.x=Math.PI/2;gun.group.scale.setScalar(1.15);gun.group.position.set(0,-.0518,.0598);parts['hand-1'].mesh.add(gun.group);wpn=W[id];cur.magN=cur.ammo=magOf(wpn);cur.rlT=0;cur.wk=id;if(cur===player){hudAmmo();const n=$('wn');if(n)n.textContent=wpn.name;$('wty').textContent=wpn.type||'';try{$('wgi').src=gunImg(id);}catch(e){}}}
 const HEADS=[['none','None'],['combat','Combat helmet'],['nvg','NVG helmet'],['beanie','Beanie'],['beret','Beret'],['cap','Cap'],['bandana','Bandana'],['bucket','Bucket hat'],['headset','Headset'],['balaclava','Balaclava'],['hood','Hood'],['crown','Crown']],
  BODIES=[['none','None'],['vest','Tactical vest'],['plate','Plate carrier'],['hoodie','Hoodie'],['jacket','Leather jacket'],['bando','Bandolier'],['ghillie','Ghillie suit']],
  FACES=[['none','None'],['shades','Shades'],['aviators','Aviators'],['goggles','Goggles'],['mask','Tactical mask'],['skull','Skull mask'],['gas','Gas mask'],['scarf','Scarf'],['patch','Eye patch']],
@@ -2431,7 +2450,30 @@ const _d0=new THREE.Vector3();
 const MAG={pistol:15,revolver:6,smg:30,ar:30,shotgun:6,sniper:5,lmg:100,deagle:7,m1911:7,glock18:33,uzi:20,mp5:30,p90:50,vector:25,thompson:30,ak47:30,m16:30,famas:25,scar:20,aug:30,m14:20,svd:10,awm:5,barrett:10,spas:8,aa12:20,sawedoff:2,m60:100,minigun:500,glock17:17,usp45:12,p226:15,fiveseven:20,cz75:16,makarov:8,m93r:20,luger:8,skorpion:20,tec9:32,python:6,rhino:6,ump45:25,mac10:30,bizon:64,mp7:40,sten:32,ppsh:71,grease:30,ak74:30,akm:30,ak12:30,galil:35,an94:30,g36c:30,hk416:30,sg552:30,acr:30,tavor:30,l85:30,f2000:30,fal:20,g3:20,sks:10,garand:8,mini14:20,mk12:20,vss:10,mosin:5,kar98k:5,m200:7,l96:10,tac50:5,ntw20:3,m95:5,m500:6,m4super:7,saiga:10,ksg:14,m1887:5,usas:20,coach:2,pkm:100,rpk:45,mg42:50,negev:150,mg3:100,xm556:500,ppk:7,mk23:12,p99:15,m17:17,tt33:8,hipower:13,c96:10,aps:20,tmp:30,saa:6,sw500:5,webley:6,mateba:6,mp5k:30,mp5sd:30,mp40:32,evo3:30,pp2000:20,aks74u:30,uzifull:32,mpx:30,m16a1:20,scarl:30,qbz95:30,x95:30,arx160:30,bren2:30,g11:45,stg44:30,asval:20,groza:20,badger:30,bar:20,hk417:20,sr25:20,psg1:5,svt40:10,m1carbine:15,win1894:8,g28:10,lee:10,m1903:5,scout:5,sv98:10,dsr1:5,mrad:10,ax50:5,ksvk:5,ks23:3,striker:12,ithaca:4,m1897:5,nova:4,spas15:6,bren:30,lewis:47,dp28:47,mg34:50,ultimax:100,l86:30,stoner:150},RLT={Sidearm:1.4,Revolver:2.2,'Machine pistol':1.6,SMG:1.9,'Assault rifle':2.2,'Burst rifle':2.2,'Battle rifle':2.4,'Marksman rifle':2.4,'Sniper rifle':2.8,'Anti-materiel':3.2,Shotgun:2.6,'Light MG':4.2,'Rotary MG':5};
 const magOf=w=>w.mag||(w.mag=MAG[Object.keys(W).find(k=>W[k]===w)]||30);
 function startReload(now){if(cur.dead||cur.rlT||(cur.ammo!=null&&cur.ammo>=magOf(wpn)))return;cur.rlD=(RLT[wpn.type]||2.2)*1000;cur.rlT=now+cur.rlD;if(cur===player)hudAmmo();}
-function hudAmmo(){const el=$('ammo');if(!el)return;const d=player,m=d.magN;if(!m)return;const a=d.ammo??m,t=d.rlT?'RELOADING…':a+' / '+m;if(el.textContent!==t){el.textContent=t;el.style.color=d.rlT?'#ffd36b':a<=Math.ceil(m*.25)?'#ff6b5a':'#fff';}}
+// ---------- HUD: paper doll (static 2D diagram by default, live 3D view as an option), weapon panel ----------
+const PD=[['head',48,4,24,24],['neck',55,28,10,6],['chest',38,34,44,30],['abdomen',40,64,40,20],['pelvis',38,84,44,18],
+ ['uarm1',26,34,11,32],['farm1',26,67,10,30],['hand1',25,98,12,12],['uarm-1',83,34,11,32],['farm-1',84,67,10,30],['hand-1',83,98,12,12],
+ ['thigh1',39,103,20,44],['shin1',40,148,18,38],['foot1',37,187,22,10],['thigh-1',61,103,20,44],['shin-1',62,148,18,38],['foot-1',61,187,22,10]];
+const PDMAX={head:60,neck:40,chest:120,abdomen:100,pelvis:90,uarm:60,farm:50,hand:35,thigh:80,shin:60,foot:40,toe:40};
+const JOF={head:'neck',neck:'neck',uarm:'shoulder',farm:'elbow',hand:'wrist',thigh:'hip',shin:'knee',foot:'ankle'};
+(()=>{const sv=document.getElementById('pd');if(sv)sv.innerHTML=PD.map(([n,x,y,w,h])=>`<rect id="pd_${n}" x="${x}" y="${y}" width="${w}" height="${h}" rx="2"/>`).join('');})();
+let pdT=0;function pdTick(now){if(now<pdT)return;pdT=now+150;const d=player;if(!d.parts)return;
+ for(const[n]of PD){const el=document.getElementById('pd_'+n),b=d.parts[n];if(!el||!b)continue;const sd=(n.match(/-?1$/)||[''])[0],pn=b.pn,j=JOF[pn]&&d.joints[pn==='head'?'neck':JOF[pn]+sd];
+  let v=Math.min(1,(b.pd||0)/(PDMAX[pn]||60));if(pn==='foot'){const t=d.parts['toe'+sd];if(t)v=Math.max(v,Math.min(1,(t.pd||0)/40));}
+  const up={farm:['uarm'],hand:['uarm','farm'],shin:['thigh'],foot:['thigh','shin']}[pn]||[],cut=(j&&j.cut)||(pn==='head'&&d.joints.head&&d.joints.head.cut)||up.some(q=>{const jj=d.joints[JOF[q]+sd];return jj&&jj.cut;});   // lose the arm, lose everything below itel.classList.toggle('cut',!!cut);
+  el.style.fill=d.dead?'#3a1010':`hsl(${Math.round(120*(1-v))},${70}%,${48-v*14}%)`;}
+ const rb=$('rlb');if(rb){const on=!!d.rlT;rb.style.visibility=on?'visible':'hidden';if(on)rb.firstChild.style.width=Math.round(cl(1-(d.rlT-now)/(d.rlD||2000),0,1)*100)+'%';}}
+// live paper doll: the real ragdoll filmed from the front into the status box
+const pdCam=new THREE.PerspectiveCamera(26,118/190,.3,8);pdCam.layers.set(1);let pdRect=null,pdF=0;
+function pdLive(){if(!settings.pdLive||!mode||document.body.classList.contains('touchui')){document.body.classList.remove('pdlive');return;}document.body.classList.add('pdlive');
+ if(pdF++%30===0){const el=$('pdbox');pdRect=el?el.getBoundingClientRect():null;scene.traverse(o=>{if(o.isLight)o.layers.enable(1);});for(const b of player.list)b.mesh.traverse(o=>o.layers.enable(1));}
+ if(!pdRect||!pdRect.width)return;const c=player.parts.chest.mesh.position,y=player.yaw||0,fx=Math.sin(y),fz=Math.cos(y);
+ pdCam.position.set(c.x+fx*3.3,c.y-.05,c.z+fz*3.3);pdCam.lookAt(c.x,c.y-.25,c.z);pdCam.aspect=pdRect.width/pdRect.height;pdCam.updateProjectionMatrix();
+ const x=pdRect.left,yb=innerHeight-pdRect.bottom,bg=scene.background,fg=scene.fog;scene.background=null;scene.fog=null;renderer.autoClear=false;
+ renderer.setScissorTest(true);renderer.setScissor(x,yb,pdRect.width,pdRect.height);renderer.setViewport(x,yb,pdRect.width,pdRect.height);
+ renderer.setClearColor(0x101216,1);renderer.clear(true,true,false);renderer.render(scene,pdCam);
+ renderer.setScissorTest(false);renderer.setViewport(0,0,innerWidth,innerHeight);renderer.autoClear=true;scene.background=bg;scene.fog=fg;}
+function hudAmmo(){const el=$('ammo');if(!el)return;const d=player,m=d.magN;if(!m)return;const a=d.ammo??m,t=d.rlT?'RELOADING':a+'|'+m;if(el.dataset.t!==t){el.dataset.t=t;el.innerHTML=d.rlT?'<span style="font-size:20px;letter-spacing:3px">RELOADING</span>':a+'<small>/ '+m+'</small>';el.style.color=d.rlT?'#ffd36b':a<=Math.ceil(m*.25)?'#ff6b5a':'#fff';}}
 function fire(now){
  if(cur.rlT){if(now<cur.rlT)return;cur.rlT=0;cur.ammo=magOf(wpn);}   // reload finished: full mag
  if(cur.ammo==null)cur.ammo=magOf(wpn);if(cur.ammo<=0){startReload(now);return;}   // empty: reload by itself
@@ -2502,7 +2544,7 @@ function syncBots(){if(!mode)return;use(player);
  while(a.length>wantA){removeBot(a.pop());}while(b.length>wantB){removeBot(b.pop());}
  for(let i=a.length;i<wantA;i++)addBot('A');for(let i=b.length;i<wantB;i++)addBot(GM[gmode].team?'B':null);}
 // put the current doll back on its feet at a spawn point, facing the middle of the map
-function respawnAt(sp){if(cur.veh)vehExit(true);cur.rlT=0;if(wpn)cur.ammo=magOf(wpn);try{scrStop(cur);}catch(e){}cur.dying=null;   // a fresh body: every death vocal stops
+function respawnAt(sp){if(cur.veh)vehExit(true);for(const b of list)b.pd=0;cur.rlT=0;if(wpn)cur.ammo=magOf(wpn);try{scrStop(cur);}catch(e){}cur.dying=null;   // a fresh body: every death vocal stops
 const a=(sp.x||sp.z)?Math.atan2(-sp.x,-sp.z):0,ca=Math.cos(a),sa=Math.sin(a),q=new Q();q.setFromAxisAngle(Y,a);
  if(cs>0)endClimb(0);for(const k in pins)unpin(k);
  for(const b of list){const[hx,hy,hz]=b.home;b.position.set(sp.x+hx*ca+hz*sa,hy,sp.z-hx*sa+hz*ca);b.quaternion.copy(q);
@@ -2631,6 +2673,7 @@ function hurt(T,b,p,dir,by,now,w=W.pistol){if(ATT.on&&T===player)return;if(T.dyi
  const off=Math.min(1,Math.hypot(lp.x/he.x,lp.y/he.y,lp.z/he.z)/1.73);
  const dmg=Math.round(w.dmg*(b.pn==='head'?50+8*(1-off):24*(DM[b.pn]||1)*(1.25-.4*off))*(by&&by.hero?2.2:1)*(T.hero?.25:1));   // ...and shrugs off most of what hits him   // the menu's super killer hits much harder   // head: 2-shot kill with the pistol
  if(LIMB[b.pn])b.wk=Math.max(.3,(b.wk||1)*LIMB[b.pn]);                                             // that muscle is now weaker
+ b.pd=(b.pd||0)+dmg;   // per-limb damage for the paper doll
  T.hp-=dmg;if(T.hero){T.hp=Math.max(T.hp,60);T.heroHit=now;}   // the menu's super killer can be hurt but never brought down
  if(off_)T.hp=0;
  if(T===player)hurtFlash(dmg);
@@ -3646,7 +3689,7 @@ if(ATT.on&&ATT.fadeInAt&&now>ATT.fadeInAt){renderer.domElement.style.filter='';A
   {const r=castRay(cam.position,camDirV,80,player);aimT.set(r.p.x,r.p.y,r.p.z);}}   // the crosshair target, always (the gun tracks it even at the hip)
  endFlow(now);kcRecord(now);if(kcFrame(now))camYaw=camYaw;   // killcam (after recording, so the replay never records itself)
  sun.position.set(pel.position.x+5,12,pel.position.z+4);sun.target.position.set(pel.position.x,0,pel.position.z);
- if(!(CZ.on||loOpen))renderer.render(scene,cam);
+ if(!(CZ.on||loOpen)){renderer.render(scene,cam);if(mode&&!ATT.on){pdTick(now);try{pdLive();}catch(e){}}}
 }
 requestAnimationFrame(frame);
 </script></body></html>
@@ -3654,6 +3697,7 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.6.0',n:['New in-game HUD: health bar across the bottom middle, weapon panel bottom right (gun snapshot, name, type, big ammo count and a reload bar)','Paper doll in the bottom left: a front-view diagram of your body where every limb shifts from green to red as it takes damage, and shows as a dashed outline when it is blown off','Optional live 3D paper doll (Pause > Graphics): the status box films your actual ragdoll from the front, wounds and all']},
  {v:'1.5.1',n:['Loadout: every gun card now shows its MAGAZINE size','Bounding nerfed: a bound now only takes you a little faster than your normal sprint (about 20%)','Smoother first-person walking: the camera filters out the ragdoll\'s physics jiggle and uses a gentle, steady head bob instead']},
  {v:'1.5.0',n:['Magazines and reloading: every gun has its real-world magazine size (Glock 17: 17, AK-47: 30, M249: 100, Minigun: 500...)','Press R to reload (the RESET button on touch screens is now RELOAD); an empty gun reloads by itself','Reload time depends on the weapon type: about 1.4 s for pistols up to 4-5 s for machine guns','Ammo counter under your weapon name, turning red when low','R no longer resets your ragdoll','Reload animation: the gun comes in and tilts over while the free hand goes to the belt for a fresh mag and slaps it in','Touch screens: the RELOAD button now sits bottom right with the other action buttons']},
  {v:'1.4.5',n:['Riders on quad bikes can now be shot and killed (bullets used to pass straight through them); a killed rider falls off']},
