@@ -1295,7 +1295,7 @@ function clearMap(){try{if(player.veh){const c=cur;use(player);vehExit(true);use
 function buildMap(id,nav=true){if(!MAPS[id])id='tester';clearMap();const M=MAPS[id];curMap=id;M.build();scene.background=new THREE.Color(M.bg);try{applyGfx();}catch(e){}
  cx.fillStyle=M.ground[0];cx.fillRect(0,0,256,256);cx.fillStyle=M.ground[1];cx.fillRect(0,0,128,128);cx.fillRect(128,128,128,128);tex.needsUpdate=true;
  if(nav)buildNav(M);
- if(nav&&ATT.on){for(const d of bots){use(d);respawnAt(safestSpawn(d));}use(player);respawnAt({x:M.half-1.5,z:M.half-1.5});}}   // menus changed the map: put the attract-mode fighters on it
+}
 // ---------- AI navigation: a walkable grid over the map (cells clear of obstacles, links where a body can walk straight between) + A* ----------
 let NAV=null;
 function walkRay(ax,az,bx,bz){const dx=bx-ax,dz=bz-az,l=Math.hypot(dx,dz)||1;return!castRay({x:ax,y:.9,z:az},{x:dx/l,y:0,z:dz/l},l,null,1).hit;}
@@ -1381,7 +1381,7 @@ applyOpt();
 showSettings();document.getElementById('mClose').onclick=()=>toggleMenu();
 // ---------- main menu + touch controls ----------
 let mode=null;const joy={on:false,x:0,y:0,id:null};
-function startGame(m){document.body.classList.toggle('touchui',m==='touch');attractStop();if(gmode==='cine')gmode=realMode();ATT.on=false;ATT.slowUntil=0;ATT.fadeAt=0;renderer.domElement.style.filter='';   // whatever the cinematic was doing, a real game starts on normal rules
+function startGame(m){document.body.classList.toggle('touchui',m==='touch');MP.on=false;
 mode=m;document.getElementById('mm').style.display='none';
  document.getElementById('h').style.display=m==='kb'?'block':'none';
  if(m==='kb'){try{const r=lockEl.requestPointerLock();if(r&&r.catch)r.catch(()=>{plFail=true;});}catch(e){plFail=true;}}
@@ -2382,7 +2382,8 @@ addEventListener('keydown',e=>{if(e.key!=='1'||e.repeat)return;const open=loOpen
  const n=performance.now();CHEAT.t=CHEAT.t.filter(x=>n-x<1500);CHEAT.t.push(n);if(CHEAT.t.length<5||CHEAT.on)return;CHEAT.on=true;CHEAT.t=[];try{localStorage.setItem('rsUnlockAll','1');}catch(er){}
  const el=document.createElement('div');el.textContent='EVERYTHING UNLOCKED';el.style.cssText="position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:99;padding:12px 26px;background:#ff7a1a;color:#111;font:700 24px 'Barlow Semi Condensed';letter-spacing:.2em;pointer-events:none;box-shadow:0 0 30px #ff7a1a";document.body.appendChild(el);setTimeout(()=>el.remove(),2200);
  try{if(loOpen){LV.id=null;renderLoadout();}if($('acp').style.display==='flex')acRender();}catch(er){}},true);
-function finishGun(g){const id=settings.camo||'none',c=CAMOS.find(x=>x[0]===id);if(!c||c[2]==='none')return;if(c[4]&&!CHEAT.on&&!(ACC.ses&&ACC.row&&c[4](ACC.row)))return;const tx=camoTex2(id),lk=c[6]||{},MC={};   // locked camos (signed out, or not earned) don't show
+const myCamo=()=>{const c=CAMOS.find(x=>x[0]===(settings.camo||'none'));return c&&(!c[4]||CHEAT.on||(ACC.ses&&ACC.row&&c[4](ACC.row)))?c[0]:'none';};   // what others see
+function finishGun(g,rid){const id=rid||myCamo(),c=CAMOS.find(x=>x[0]===id);if(!c||c[2]==='none')return;const tx=camoTex2(id),lk=c[6]||{},MC={};   // locked camos (signed out, or not earned) don't show
  g.group.traverse(o=>{const m=o.material;if(!o.isMesh||!m||!m.isMeshStandardMaterial||o===g.flash)return;
   if(m.transparent||(m.userData&&m.userData.lens)||(m.emissive&&m.emissive.getHex()!==0))return;const hsl={};m.color.getHSL(hsl);if(hsl.l<.02)return;   // keep glass, lit reticles, the bore
   let n=MC[m.uuid];if(!n){n=MC[m.uuid]=m.clone();n.map=tx;n.color.setHex(0xffffff);n.metalness=lk.m?.85:Math.min(m.metalness,.35);n.roughness=lk.m?.28:.6;
@@ -2509,7 +2510,7 @@ function acMatchEnd(win){if(!ACC.row||ACC.mDone)return;ACC.mDone=true;const R=AC
 async function acFlush(zeroing){if(!ACC.ses||!ACC.row)return;let dk=Math.max(0,player.kills-ACC.sk),dd=Math.max(0,player.deaths-ACC.sd);
  if(!ACC.dirty&&!dk&&!dd&&ACC.secs<1)return;const R=ACC.row;R.kills+=dk;R.deaths+=dd;if(mode){R.best_kills=Math.max(R.best_kills,player.kills);R.most_deaths=Math.max(R.most_deaths,player.deaths);}R.headshots+=ACC.hs;R.play_secs+=Math.round(ACC.secs);ACC.sk=player.kills;ACC.sd=player.deaths;ACC.hs=0;ACC.secs=0;ACC.dirty=false;
  if(ACC.busy){ACC.pend=true;return;}ACC.busy=true;try{const {id,username,updated_at,avatar,card,title,...body}=R;await sbFetch('/rest/v1/stats?id=eq.'+ACC.ses.uid,{method:'PATCH',keepalive:!!ACC.leaving,body:JSON.stringify({...body,updated_at:new Date().toISOString()})});}catch(e){console.warn('stats sync',e);ACC.dirty=true;}ACC.busy=false;if(ACC.pend){ACC.pend=false;ACC.dirty=true;acFlush();}if($('acp').style.display==='flex')acRender();}
-setInterval(()=>{if(mode&&!matchOver&&!menuOpen&&!loOpen&&ACC.ses&&!ATT.on&&!document.hidden)ACC.secs+=1;},1000);setInterval(acFlush,45000);addEventListener('pagehide',()=>{ACC.leaving=true;ACC.busy=false;acFlush();});
+setInterval(()=>{if(mode&&!matchOver&&!menuOpen&&!loOpen&&ACC.ses&&!document.hidden)ACC.secs+=1;},1000);setInterval(acFlush,45000);addEventListener('pagehide',()=>{ACC.leaving=true;ACC.busy=false;acFlush();});
 // UI: account chip top-right of the main menu; signed out = sign-in/create form, signed in = full stats
 function acUI(){const b=$('acbtn');if(!b)return;b.style.background=ACC.ses?cardBg(pfOf(ACC.row).card):'';b.className=ACC.ses?cardCls(pfOf(ACC.row).card).trim():'';b.innerHTML=ACC.ses?`${embSvg(pfOf(ACC.row).avatar,34)}<span><b class="nt-${pfOf(ACC.row).title}">${ACC.ses.name}</b><small>${titleOf(pfOf(ACC.row).title).toUpperCase()}</small></span>`:`<span class="acav">?</span><span><b>SIGN IN</b><small>TRACK YOUR STATS</small></span>`;}
 const fmtT=s=>{const h=s/3600|0,m=(s%3600)/60|0;return h?h+'h '+m+'m':m+'m';};
@@ -2668,7 +2669,7 @@ function dressCur(c){const d=cur;for(const m of d.cosm||[])m.parent&&m.parent.re
  if(c.belt){add('pelvis',.36,.06,.26,ac(0x7a5c3a),0,.08,0);add('pelvis',.05,.04,.02,BLK,0,.08,.135);for(const[x,z]of[[-.19,.03],[.19,.03]]){add('pelvis',.03,.1,.06,ac(0x7a5c3a),x,.03,z);}add('pelvis',.06,.08,.04,0xaa2020,.1,.03,-.14);cyl('pelvis',.02,.12,BLK,-.12,.04,-.14);}   // battle belt, mag pouches, IFAK, tourniquet
  if(c.tags){add('chest',.032,.05,.006,0xb8b8b8,0,.03,.113,0,'metal');add('chest',.004,.12,.004,0x999999,0,.1,.113);}
  if(c.watch){add('farm1',.1,.04,.1,0x1a1a1a,0,-.1,0);add('farm1',.05,.045,.03,0x101010,0,-.1,.045);}}
-function randomLoadoutCur(){if(cur.hero){equipCur(ATT.wpn);cur.hp=1000;return;}const ks=Object.keys(W);equipCur(ks[Math.random()*ks.length|0]);
+function randomLoadoutCur(){const ks=Object.keys(W);equipCur(ks[Math.random()*ks.length|0]);
  const P=a=>a[Math.random()*a.length|0][0],Z=(a,p)=>Math.random()<p?P(a):'none';dressCur({head:P(HEADS),body:Z(BODIES.filter(b=>b[0]!=='ghillie'),.5),face:Z(FACES,.4),back:Z(BACKS,.25),skin:P(SKINS.slice(0,5)),knee:Math.random()<.3,gloves:Math.random()<.4});}
 // right arm: pistol held low in the right hand; with RMB the arm comes up and the pistol aims at the crosshair target
 // two-handed stance: a = how far the upper arm drops below the aim line, e = elbow bend, z/y = shoulder turned in, ha/he = hip carry
@@ -2797,14 +2798,14 @@ function sfxLoadScream(){if(scrLoad||!ac)return;scrLoad=1;SCRB64.forEach(b64=>{t
 // agony screams: per fighter, max 3 screamers at once. chain=true (dead, not headshot) keeps screaming clip after clip until a head shot / respawn
 function scrStop(T){const st=T.scr;if(!st)return;if(st.on){st.on=false;scrActive--;}T.scr=null;
  if(st.env&&st.src){try{const t=ac.currentTime;st.env.gain.cancelScheduledValues(t);st.env.gain.setValueAtTime(st.env.gain.value,t);st.env.gain.linearRampToValueAtTime(0,t+.12);st.src.stop(t+.13);}catch(e){}}}
-function scrPlay(T){const st=T.scr;if(!st||!st.on)return;if((st.chain&&!T.dead)||(T!==player&&!bots.includes(T))||ATT.on){scrStop(T);return;}   // respawned, removed (e.g. a menu-cinematic bot), or behind the menu: drop it   // respawned while a death scream was queued: drop it
+function scrPlay(T){const st=T.scr;if(!st||!st.on)return;if((st.chain&&!T.dead)||(T!==player&&!bots.includes(T))){scrStop(T);return;}   // respawned or removed: drop it   // respawned while a death scream was queued: drop it
  const t=ac.currentTime,hb=T.parts&&T.parts.head,p=hb?hb.position:{x:0,y:0,z:0};T.scrLast=t;
  let i=Math.floor(Math.random()*scrBuf.length);if(i===scrLastI&&scrBuf.length>1)i=(i+1)%scrBuf.length;scrLastI=i;const buf=scrBuf[i],rate=.9+(sfxVP(T)-.82)*.44;
  const next=()=>{if(T.scr!==st||!st.on)return;if(st.chain&&T.dead&&!matchOver)setTimeout(()=>scrPlay(T),150+Math.random()*250);else scrStop(T);};
  bloodOnly=true;sfxMul=settings.vvox;const o=sfxOut(p,.4);sfxMul=settings.vfx;bloodOnly=false;
  if(!o){setTimeout(next,buf.duration*1000/rate);return;}
  const s=ac.createBufferSource(),e=ac.createGain();s.buffer=buf;s.playbackRate.value=rate;e.gain.value=buf._g||1;s.connect(e);e.connect(o);s.onended=next;st.src=s;st.env=e;s.start(t);}
-function scrStart(T,chain){if(KC.on||ATT.on||!sfxInit()||!scrBuf.length)return;
+function scrStart(T,chain){if(KC.on||!sfxInit()||!scrBuf.length)return;
  if(T.scr&&T.scr.on){if(chain)T.scr.chain=true;return;}
  if(scrActive>=3||(!chain&&ac.currentTime-(T.scrLast||-99)<2.5))return;
  T.scr={on:true,chain:!!chain};scrActive++;scrPlay(T);}
@@ -2868,7 +2869,7 @@ function sfxT(out,t,dur,o){o=o||{};const os=ac.createOscillator(),e=ac.createGai
  os.connect(e);e.connect(out);os.start(t);os.stop(t+dur+.03);}
 // a gain node at the right loudness and stereo position for a sound at world point p (null = not positional)
 let bloodOnly=false,sfxMul=1;   // sfxMul: the Audio menu's level for whatever is playing (effects or voices)   // all game sounds are muted except the blood squirt samples
-function sfxOut(p,vol){if(!bloodOnly||ATT.on)return null;   // the menu's background fight is silent (menu music will play over it)
+function sfxOut(p,vol){if(!bloodOnly)return null;
  const g=ac.createGain();let v=vol*sfxMul;
  if(p){const L=KC.on?cam.position:player.pel.position,dx=p.x-L.x,dy=p.y-L.y,dz=p.z-L.z,d=Math.sqrt(dx*dx+dy*dy+dz*dz);v*=Math.min(1,5/(d+2.5));if(v<.015)return null;
   const e=cam.matrixWorld.elements,cx=p.x-cam.position.x,cy=p.y-cam.position.y,cz=p.z-cam.position.z,cd=Math.sqrt(cx*cx+cy*cy+cz*cz)||1;
@@ -2877,7 +2878,7 @@ function sfxOut(p,vol){if(!bloodOnly||ATT.on)return null;   // the menu's backgr
  else g.connect(master);
  g.gain.value=v;return g;}
 // ---- guns: the shared muzzle blast + thump, then a layer that makes each category sound like itself ----
-function shotSound(vol=1,snd=[3000,170,.2],force,type,name){if(ATT.on||(KC.on&&!force))return;try{if(!sfxInit())return;master.gain.value=settings.vol;
+function shotSound(vol=1,snd=[3000,170,.2],force,type,name){if(KC.on&&!force)return;try{if(!sfxInit())return;master.gain.value=settings.vol;
  const c=SFX_CAT[type]||'pistol',t=ac.currentTime+.002,o=ac.createGain();o.gain.value=vol*settings.vgun;o.connect(master);
  if(sfxGunSample(o,t,c,name))return;
  sfxN(o,t,snd[2]*1.3,{type:'lowpass',f:snd[0],g:.5,atk:.001});sfxT(o,t,.09,{f:snd[1],f2:40,g:.6,atk:.001});
@@ -2954,7 +2955,7 @@ function sfxPlay0(n,p,a,b){if(!sfxInit()||!sfxGate(n))return;try{master.gain.val
    else{sfxVoice(o,t,.7,150*a,70*a,[700,1100],2.2,6);sfxSquelch(o,t+.25,.7);sfxSquelch(o,t+.5,.5);sfxN(o,t+.2,.5,{type:'bandpass',f:900,f2:400,q:2,g:.2});}break;   // dying groan and gurgle
  }}catch(e){}}
 // sfx(): play a positional sound AND remember it, so the killcam replay plays it again at exactly the right moment (live sounds are muted while a replay runs)
-function sfx(n,p,a,b){if(ATT.on||(KC.on&&!KC.rep))return;if(!sfxInit())return;if(!KC.rep)KC.ev.push({t:simT,ty:'sfx',n,p:{x:p.x,y:p.y,z:p.z},a,b});sfxPlay(n,p,a,b);}
+function sfx(n,p,a,b){if(KC.on&&!KC.rep)return;if(!sfxInit())return;if(!KC.rep)KC.ev.push({t:simT,ty:'sfx',n,p:{x:p.x,y:p.y,z:p.z},a,b});sfxPlay(n,p,a,b);}
 // per doll, per frame: footsteps (a foot coming down onto the floor = one step) and dead bodies hitting the ground
 function sfxBody(d,dt){if(dt<=0||!d.parts||!d.list||!sfxNB&&!sfxInit())return;
  if(d.dead){for(const b of d.list){const m=b.mesh;if(!m)continue;const y=m.position.y,vy=b.sfxY==null?0:(y-b.sfxY)/dt,was=b.sfxV||0;b.sfxY=y;b.sfxV=vy;
@@ -3100,7 +3101,7 @@ function clearDir(P,a){const dir={x:Math.sin(a),y:0,z:Math.cos(a)};return!castRa
 // AI: perceive -> pick a goal (objective / fight / hunt / retreat) -> move along routes -> look at and shoot whoever is visible
 function aiThink(d,dt,now){
  if(d.dead){aiming=false;for(const k in keys)keys[k]=false;return;}
- const D=(d.diff!=null?DIFF[d.diff]:DIFF[settings.diff|0])||DIFF[1],P=pel.position;   // attract mode sets difficulty per bot
+ const D=(d.diff!=null?DIFF[d.diff]:DIFF[settings.diff|0])||DIFF[1],P=pel.position;
  d.tt-=dt;
  if(now>(d.tkT||0)){d.tkT=now+50;const c=parts.chest.position,ry=yaw;d.tk=[0,0];   // squeeze past doorframes: feel for walls at each shoulder
   for(const g of[1,-1]){const dx=Math.cos(ry)*g,dz=-Math.sin(ry)*g,r=castRay({x:c.x,y:c.y+.1,z:c.z},{x:dx,y:0,z:dz},.55,null,1);if(r.hit)d.tk[g>0?0:1]=1-Math.hypot(r.p.x-c.x,r.p.z-c.z)/.55;}}
@@ -3193,7 +3194,7 @@ function dyingPose(d,now){const D=d.dying,t=(now-D.t0)/1000,T=D.dur/1000;if(t>T)
   case'leg':arm('1',-.45,0,-.25,-.6,.4);arm('-1',-.4,0,-.25,-.6,.35);set('abd',.55+.1*sp2,.4);set('hip'+fs,-1+.2*sp,.4);set('knee'+fs,1.4,.4);set('hip'+os,-.3*Math.abs(sp2),.3);break;
   default:arm(os,-.9,0,-.85,-1.8,.45);set('abd',.3+.1*sp2,.3);set('hip1',-.5+.3*sp,.3);set('knee1',.8+.3*sp,.3);}   // arm hit: the other hand holds it
  return tone;}
-function hurt(T,b,p,dir,by,now,w=W.pistol){if(ATT.on&&T===player)return;if(T.dying&&b.pn==='head')T.dying=null;   // a head shot ends the struggle
+function hurt(T,b,p,dir,by,now,w=W.pistol){if(T.dying&&b.pn==='head')T.dying=null;   // a head shot ends the struggle
 
  if(by&&T!==by&&!isEnemy(by,T))return;                                           // no friendly fire
  if(matchOver)return;
@@ -3202,15 +3203,15 @@ function hurt(T,b,p,dir,by,now,w=W.pistol){if(ATT.on&&T===player)return;if(T.dyi
  b.flinch=now+(T===player?(pkOn('focus')?110:230)*(pkOn('qrec')?.6:1):230);
  bloodHit(T,b,p,dir,w.wound);if(T.dead&&b.pn==='head')scrStop(T);   // a head shot silences a screaming body
  b.dacc=(b.dacc||0)+w.dmg*24*(DM[b.pn]||1)*(w.gore||0);                         // trauma from heavy weapons builds up on each section
- let off_=false;if(w.gore&&!T.hero&&SEVER[b.pn]&&b.dacc>=SEVER[b.pn][1]&&!(T.dead&&b.pn!=='head'&&Math.random()<.4)){sever(T,b,dir,by,now);off_=b.pn==='head'||b.pn==='neck';}   // losing the head or neck is always fatal
+ let off_=false;if(w.gore&&SEVER[b.pn]&&b.dacc>=SEVER[b.pn][1]&&!(T.dead&&b.pn!=='head'&&Math.random()<.4)){sever(T,b,dir,by,now);off_=b.pn==='head'||b.pn==='neck';}   // losing the head or neck is always fatal
  if(T.dead)return;
  const lp=new V();b.pointToLocalFrame(new V(p.x,p.y,p.z),lp);const he=b.shapes[0].halfExtents;
  const off=Math.min(1,Math.hypot(lp.x/he.x,lp.y/he.y,lp.z/he.z)/1.73);
- const dmg=Math.round(w.dmg*(b.pn==='head'?50+8*(1-off):24*(DM[b.pn]||1)*(1.25-.4*off))*(by&&by.hero?2.2:1)*(T.hero?.25:1));   // ...and shrugs off most of what hits him   // the menu's super killer hits much harder   // head: 2-shot kill with the pistol
+ const dmg=Math.round(w.dmg*(b.pn==='head'?50+8*(1-off):24*(DM[b.pn]||1)*(1.25-.4*off))*1);   // head: 2-shot kill with the pistol
  if(LIMB[b.pn])b.wk=Math.max(.3,(b.wk||1)*LIMB[b.pn]);                                             // that muscle is now weaker
  b.pd=(b.pd||0)+dmg;{const he=b.shapes[0].halfExtents;(b.pdh=b.pdh||[]).push([cl(lp.x/he.x,-1,1),cl(lp.y/he.y,-1,1)]);if(b.pdh.length>12)b.pdh.shift();}   // per-limb damage + where each round landed, for the paper doll
  let dmg2=dmg;if(T===player){if(pkOn('reinf')&&b.pn!=='head')dmg2*=.88;if(pkOn('last')){if(T.hp-dmg2<25&&!T.lsUsed){T.lsUsed=1;T.lsT=now+3000;}if(now<(T.lsT||0))dmg2*=.5;}dmg2=Math.round(dmg2);}
- T.hp-=dmg2;if(T.hero){T.hp=Math.max(T.hp,60);T.heroHit=now;}   // the menu's super killer can be hurt but never brought down
+ T.hp-=dmg2;
  if(off_)T.hp=0;
  if(T===player)hurtFlash(dmg*(pkOn('tfocus')?.4:1));
  if(T.hp>0)T.brNext=Math.max(T.brNext||0,now+900);   // breathing picks up just after the wince
@@ -3551,58 +3552,7 @@ const GG=['minigun','aa12','m60','ak47','scar','famas','aug','vector','p90','spa
 let gmode='ffa',matchOver=false,teamScore={A:0,B:0},zoneOwner=null,ZONE=null,zoneMesh=null,zoneRing=null;
 const ZONES={tester:{x:0,z:0,r:4.5},park:{x:0,z:0,r:6},house:{x:-5,z:-4.6,r:3.4},warehouse:{x:0,z:0,r:4},village:{x:0,z:0,r:4},facility:{x:0,z:0,r:3.6},docks:{x:0,z:-18.5,r:3.2},construction:{x:0,z:0,r:4},subway:{x:0,z:0,r:3},forest:{x:0,z:0,r:5},office:{x:0,z:0,r:3},outpost:{x:0,z:0,r:4},killhouse:{x:0,z:0,r:1.4},bunker:{x:0,z:0,r:2.5},canyon:{x:0,z:0,r:5},airfield:{x:0,z:0,r:6},mall:{x:0,z:0,r:3.5},trainyard:{x:0,z:-2,r:3.5},island:{x:-3,z:3,r:4}};
 const teamOf=d=>GM[gmode].team?d.team:null;
-// ---------- main-menu attract mode: bots fight it out behind the menus, filmed by a cinematic camera with slow-mo on every kill ----------
-const ATT={on:false,off:false,hero:null,shot:0,cutT:0,cp:null,cl:null,slowUntil:0,used:-1,wpn:'glock17'};
-// the scene: one Insane-difficulty "super killer" in a black suit against a stream of Easy bots (they're all on the other team, so they all come for him)
-const ATT_MAPS=['killhouse','bunker','office','facility','mall','warehouse','subway'];   // smallest maps first, so the action starts at once
-function attractMap(){let i=0;try{i=(+localStorage.getItem('rsAttMap')||0)+1;localStorage.setItem('rsAttMap',i);}catch(e){i=(ATT.mi=(ATT.mi||0)+1);}return ATT_MAPS[i%ATT_MAPS.length];}
-function attractStart(){ATT.on=true;if(ATT.gm==null)ATT.gm=gmode;gmode='cine';buildMap(attractMap());
- addBot('A');const H=ATT.hero=bots[bots.length-1];H.hero=true;H.diff=3;H.name='Baba Yaga';use(H);equipCur(ATT.wpn);H.hp=1000;
- dressCur({head:'none',body:'none',face:'none',back:'none',skin:'def',shirt:'team',pants:'team',acc:'def'});   // no random kit: just the suit
- const blk=new THREE.MeshStandardMaterial({color:0x0e0f11,roughness:.55}),blk2=new THREE.MeshStandardMaterial({color:0x17181b,roughness:.7});
- for(const n in parts)if(n!=='head'&&n!=='neck')parts[n].mesh.material=/chest|abdomen/.test(n)?blk2:blk;   // all black: suit, shirt, gloves, shoes
- for(let i=0;i<4;i++){addBot('B');bots[bots.length-1].diff=0;}
- world.solver.iterations=10;ATT.fr=0;ATT.obs=null;
- use(player);const M=MAPS[curMap];respawnAt({x:M.half-1.5,z:M.half-1.5});for(const b of player.list)b.mesh.visible=false;ATT.cutT=0;ATT.shot=0;ATT.k=0;ATT.fadeAt=0;ATT.dark=0;ATT.si=-1;ATT.fromP=null;ATT.cp=null;}   // you wait unseen in a corner
-function attractStop(){if(!ATT.on)return;if(gmode==='cine')gmode=realMode();ATT.gm=null;   // give back the mode the player picked
- renderer.domElement.style.filter='';ATT.fadeInAt=0;ATT.on=false;ATT.off=true;ATT.hero=null;ATT.obs=null;optOn=null;applyOpt();   // back to the player's own quality settings
-for(const d of bots.slice()){try{scrStop(d);}catch(e){}d.dying=null;clearBlood(d);removeBot(d);}scrActive=0;use(player);for(const b of player.list)b.mesh.visible=true;
- KC.buf.length=0;KC.ev.length=0;KC.shots.length=0;cam.fov=60;cam.updateProjectionMatrix();}
-// every kill involving the hero: a beat of slow motion and a cut to a close, dramatic angle on him
-function attractKill(T,by,now){const H=ATT.hero;if(by!==H&&T!==H)return;
- if(by===H&&T!==H&&++ATT.k>=2*(bots.length-1)&&!ATT.fadeAt)ATT.fadeAt=now+2200;   // every enemy dead twice: fade out and move to the next map
-ATT.slowUntil=now+1400;ATT.cutT=Math.max(ATT.cutT,now+3000);}   // no cut on a kill: let the slow-mo play out on the current angle
-const _av=new THREE.Vector3(),_ar=new THREE.Vector3(),_occ=new THREE.Raycaster(),_od=new THREE.Vector3();
-// can the camera at p actually see the hero at s? (checks every map mesh, including roofs and decoration the physics doesn't know about)
-function attractClear(p,s){_od.copy(s).sub(p);const d=_od.length();if(d<.05)return false;_od.divideScalar(d);_occ.set(p,_od);_occ.far=d-.35;_occ.camera=cam;
- if(!ATT.obs||ATT.fr%40===0){const c=ATT.hero.parts.chest.mesh.position;ATT.obs=mapObjs.filter(o=>o.m.position.distanceTo(c)<30||!(o.b)).map(o=>o.m);}   // only what's near the hero (decor kept: roofs, canopies)
- if(_occ.intersectObjects(ATT.obs,true).length)return false;
- const ppl=[];for(const q of bots)if(q!==ATT.hero&&q.list)for(const b of q.list)ppl.push(b.mesh);return !_occ.intersectObjects(ppl,false).length;}   // other fighters block the view too
-function attractShot(n,s,T,now){const up=(y)=>new THREE.Vector3(0,y,0),k=now/1000;
- if(n===0)return[s.clone().addScaledVector(_av,-2.3).addScaledVector(_ar,.75).add(up(.5)),T?T.clone():s.clone().addScaledVector(_av,5)];      // over the shoulder, toward the target
- if(n===1){const p=s.clone().addScaledVector(_ar,2.4).addScaledVector(_av,.8);p.y=.4;return[p,s.clone().add(up(.1))];}                         // low, side-on
- if(n===2)return[s.clone().add(new THREE.Vector3(Math.cos(k*.3)*4.6,2.1,Math.sin(k*.3)*4.6)),s.clone()];                                    // slow orbit
- if(n===3)return[s.clone().add(new THREE.Vector3(0,11,0)).addScaledVector(_av,-2.5),s.clone()];                                               // bird's-eye
- if(n===6||n===8){const m=T?s.clone().lerp(T,.5):s.clone().addScaledVector(_av,3);return[s.clone().addScaledVector(_av,-3.2).addScaledVector(_ar,n===6?1.7:-1.7).add(up(1.5)),m];}   // high three-quarter from behind him (either side): him and his target in one frame
- if(n===9){const p=s.clone().addScaledVector(_av,-1.3).addScaledVector(_ar,-.42).add(up(.42)),m=p.clone().addScaledVector(_av,10);return[p,m];}   // close over his right shoulder, just above it, perfectly level   // tight over the shoulder, fits down corridors   // high three-quarter from behind him: him and his target in one frame
- if(n===7){const h=ATT.hero.parts.head.mesh.position;return[h.clone().addScaledVector(_av,.16).add(up(.04)),T?T.clone():h.clone().addScaledVector(_av,10)];}   // first person, through his eyes
- if(n===5&&T){const m=s.clone().lerp(T,.5),D=s.distanceTo(T);return[m.clone().addScaledVector(_ar,Math.max(3,D*.85)).add(up(1.1+D*.08)),m];}  // two-shot: side-on to the fight, hero and target both in frame
- return[s.clone().addScaledVector(_av,2.6).addScaledVector(_ar,-.7).add(up(.2)),s.clone().add(up(.1))];}                                       // in front, looking back at him
-// the camera only ever follows the hero. a blocked or cramped angle is never shown: fall back to bird's-eye, then to the other shots
-function attractCam(now){const H=ATT.hero;if(!H||!H.parts)return;   // three long takes in a loop: bird's-eye, close over the shoulder, first person, blended smoothly
- const s=H.parts.chest.mesh.position,T=!H.dead&&H.target&&H.target.parts&&!H.target.dead?H.target.parts.chest.mesh.position:null;
- _av.set(Math.sin(H.yaw||0),0,Math.cos(H.yaw||0));if(T){_av.set(T.x-s.x,0,T.z-s.z);if(_av.lengthSq()>.01)_av.normalize();}_ar.set(-_av.z,0,_av.x);
- const cv=renderer.domElement;   // angle changes: a quick dip to black, cut, fade back up
- if(ATT.cp&&!ATT.fadeAt&&!ATT.dip&&now>ATT.cutT-280){ATT.dip=1;cv.style.transition='filter .25s';cv.style.filter='brightness(0)';}
- if(now>ATT.cutT){ATT.si=((ATT.si==null?-1:ATT.si)+1)%3;ATT.cutT=now+10000;ATT.cp=null;if(ATT.dip){ATT.dip=0;if(!ATT.fadeAt)cv.style.filter='';}}
- let n=[3,9,7][ATT.si];if(H.dead&&n===7)n=9;
- const[p,l]=attractShot(n,s,T,now),fp=n===7;
- if(!ATT.cp||n!==ATT.used){ATT.cp=p.clone();ATT.cl=l.clone();ATT.used=n;}else{ATT.cp.lerp(p,fp?.6:.08);ATT.cl.lerp(l,fp?.25:.1);}
- const k=1,cp=ATT.cp,cl=ATT.cl;
- H.parts.head.mesh.visible=H.parts.neck.mesh.visible=!(fp&&k>.7);   // first person: don't render his own head once we're in it
- cam.position.copy(cp);cam.up.set(0,1,0);cam.lookAt(cl);if($('mm').style.display!=='none'){if(n===3){cam.updateMatrixWorld();const rv=new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld,0);cam.lookAt(cl.clone().addScaledVector(rv,-3.2*k));}else cam.rotateY(fp?.12:.3);}   // on the title screen, frame the hero in the right half
- if(cam.fov!==52){cam.fov=52;cam.updateProjectionMatrix();}}
-const isEnemy=(a,b)=>a!==b&&(!ATT.on||(a!==player&&b!==player))&&(!GM[gmode].team||a.team!==b.team);
+const isEnemy=(a,b)=>a!==b&&(!GM[gmode].team||a.team!==b.team);
 // team spawns: blue gets the half of the spawn points with lower z, red the other half
 function teamSpawns(team){if(!team||!GM[gmode].team)return spawnPoints;const sp=spawnPoints.slice().sort((a,b)=>a.z-b.z||a.x-b.x),h=Math.ceil(sp.length/2);return team==='A'?sp.slice(0,h):sp.slice(h);}
 function setupZone(){if(zoneMesh){scene.remove(zoneMesh);scene.remove(zoneRing);zoneMesh=zoneRing=null;}ZONE=null;if(gmode!=='zone')return;
@@ -3613,8 +3563,8 @@ function setupZone(){if(zoneMesh){scene.remove(zoneMesh);scene.remove(zoneRing);
  zoneRing.rotation.x=-Math.PI/2;zoneRing.position.set(ZONE.x,.03+groundH(ZONE.x,ZONE.z),ZONE.z);scene.add(zoneRing);}
 // little blue marker over allies so you don't lose track of them
 const allyTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.fillStyle='#4aa3ff';g.strokeStyle='#002244';g.lineWidth=4;g.beginPath();g.moveTo(10,14);g.lineTo(54,14);g.lineTo(32,52);g.closePath();g.fill();g.stroke();return new THREE.CanvasTexture(c);})();
-function markAlly(d){if(ATT.on)return;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:allyTex,depthTest:false,transparent:true}));sp.scale.set(.22,.22,1);sp.position.set(0,.42,0);sp.renderOrder=999;d.parts.head.mesh.add(sp);}
-function onKill(by,T){if(ATT.on){attractKill(T,by,performance.now());return;}if(by&&T&&by!==T&&!matchOver)FK.kill={vic:T,by,t:performance.now()};   // remember the latest kill: the last one before the match ends is the final kill
+function markAlly(d){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:allyTex,depthTest:false,transparent:true}));sp.scale.set(.22,.22,1);sp.position.set(0,.42,0);sp.renderOrder=999;d.parts.head.mesh.add(sp);}
+function onKill(by,T){if(by&&T&&by!==T&&!matchOver)FK.kill={vic:T,by,t:performance.now()};   // remember the latest kill: the last one before the match ends is the final kill
  if(!by||matchOver)return;const M=GM[gmode];
  if(gmode==='tdm'){if(NET.on)return;teamScore[by.team]++;if(teamScore[by.team]>=M.limit)endMatch(by.team===player.team,by.team==='A'?'Blue team wins':'Red team wins');}
  else if(gmode==='ffa'||gmode==='duel'){if(by.kills>=M.limit)endMatch(by===player,by===player?'You reached '+M.limit+' kills':by.name+' reached '+M.limit+' kills');else if(gmode==='duel')DUEL.at=performance.now()+3000+KC_LEN+900;
@@ -3622,9 +3572,7 @@ function onKill(by,T){if(ATT.on){attractKill(T,by,performance.now());return;}if(
  else if(gmode==='gungame'){by.gl=(by.gl||0)+1;if(by.gl>=GG.length)endMatch(by===player,by===player?'You finished the gun ladder':by.name+' finished the gun ladder');else by.pendW=GG[by.gl];}}
 // 1v1 rounds: after every kill a 5 s breather (nobody can shoot), then both fighters are put on the two spawns furthest apart, swapping sides each round
 const DUEL={at:0};
-// the menu cinematic's own mode: team fight, no score limit, never shown in any mode picker. only ever active behind the main menu
-GM.cine={...GM.tdm,name:'Cinematic',hidden:true,limit:1e9};
-const realMode=()=>[NET.srv&&NET.state==='match'?NET.srv.mode:null,settings.gm,ATT.gm].find(g=>g&&GM[g]&&g!=='cine')||'tdm';
+const realMode=()=>[NET.srv&&NET.state==='match'?NET.srv.mode:null,settings.gm].find(g=>g&&GM[g])||'tdm';
 const duelHold=()=>gmode==='duel'&&DUEL.at>0;
 function duelPair(){let a=spawnPoints[0],b=spawnPoints[1]||spawnPoints[0],bd=-1;for(const p of spawnPoints)for(const q of spawnPoints){const d=Math.hypot(p.x-q.x,p.z-q.z);if(d>bd){bd=d;a=p;b=q;}}return[a,b];}
 function duelTick(now){const el=$('duelcd');if(!duelHold()||matchOver){el.style.display='none';if(matchOver)DUEL.at=0;return;}
@@ -3819,7 +3767,7 @@ function netFrame(now,dt){if(!NET.on||!NET.room)return;const R=NET.room;netBotsS
  if(!NET.host&&NET.botT&&now-NET.botT>3000){NET.botT=0;for(const d of[...NET.puppets.values()])if(d.isBot)removePuppet(d);}
  // send my state ~15 times a second
  if(now-NET.sendT>83){NET.sendT=now;use(player);const st=[];for(const b of list){const p=b.position,q=b.quaternion;st.push(R3(p.x),R3(p.y),R3(p.z),R3(q.x),R3(q.y),R3(q.z),R3(q.w));}
-  R.presence({s:st,hp:Math.max(0,player.hp|0),dead:player.dead?1:0,w:wpn.id,c:cosStr(),nm:NET.name.slice(0,40),pf:pfStr(),t:player.team||'',gl:player.gl||0,k:player.kills|0,d:player.deaths|0,h:NET.host?1:0,vh:player.veh?[player.veh.i,R3(player.veh.b.position.x),R3(player.veh.b.position.y),R3(player.veh.b.position.z),R3(player.veh.yaw)]:null,zs:NET.host&&gmode==='zone'?[R3(teamScore.A),R3(teamScore.B),zoneOwner||'']:null}).catch(()=>{});
+  R.presence({s:st,hp:Math.max(0,player.hp|0),dead:player.dead?1:0,w:wpn.id,c:cosStr(),nm:NET.name.slice(0,40),pf:pfStr(),cm:myCamo(),t:player.team||'',gl:player.gl||0,k:player.kills|0,d:player.deaths|0,h:NET.host?1:0,vh:player.veh?[player.veh.i,R3(player.veh.b.position.x),R3(player.veh.b.position.y),R3(player.veh.b.position.z),R3(player.veh.yaw)]:null,zs:NET.host&&gmode==='zone'?[R3(teamScore.A),R3(teamScore.B),zoneOwner||'']:null}).catch(()=>{});
   if(NET.host&&now-(NET.advT||0)>1000){NET.advT=now;NET.lobby.presence({srv:{...NET.srv,n:R.peers().filter(p=>p.presence&&Array.isArray(p.presence.s)).length||1}}).catch(()=>{});}}   // keep the server listing's player count current
  // everyone else: make or update their puppet from their latest state
  for(const pe of R.peers()){if(pe.sameTab)continue;const ps=pe.presence;if(!ps||!Array.isArray(ps.s))continue;
@@ -3829,7 +3777,7 @@ function netFrame(now,dt){if(!NET.on||!NET.room)return;const R=NET.room;netBotsS
   if(Array.isArray(ps.vh))vehRemote(ps.vh,now);
   if(ps.pf!==d.pfs){d.pfs=ps.pf;d.pf=pfParse(ps.pf);}d.hp=+ps.hp||0;d.dead=!!ps.dead;d.gl=+ps.gl||0;d.tgt=ps.s;d.kills=+ps.k||0;d.deaths=+ps.d||0;d.isHost=!!ps.h;
   if(ps.h&&Array.isArray(ps.zs)&&!NET.host&&gmode==='zone'){teamScore.A=+ps.zs[0]||0;teamScore.B=+ps.zs[1]||0;zoneOwner=ps.zs[2]||null;}
-  if(typeof ps.w==='string'&&W[ps.w]&&ps.w!==d.wid){d.wid=ps.w;use(d);equipCur(ps.w);use(player);}
+  const cm=typeof ps.cm==='string'&&CAMOS.some(x=>x[0]===ps.cm)?ps.cm:'none';if(typeof ps.w==='string'&&W[ps.w]&&(ps.w!==d.wid||cm!==d.cm)){d.wid=ps.w;d.cm=cm;use(d);equipCur(ps.w);finishGun(gun,cm);use(player);}
   if(typeof ps.c==='string'&&ps.c!==d.cosK){d.cosK=ps.c;use(d);dressCur(cosParse(ps.c));use(player);}}
  // glide each puppet toward its latest pose (snap after a big jump, e.g. a respawn)
  const k=Math.min(1,dt*18||1);
@@ -3969,7 +3917,7 @@ $('mLeave').onclick=()=>NET.on?leaveServer():location.reload();   // vs bots: ba
 // subtle aim assist (player only): near the crosshair, the view drifts gently onto a visible enemy's chest. stronger while aiming and on touch
 const AA={t:0,T:null,vis:false,last:0};
 function aimAssist(now){const dt=Math.min(.05,(now-(AA.last||now))/1000);AA.last=now;AA.on=false;
- if(settings.aa===false||!mode||ATT.on||player.dead||menuOpen||loOpen||KC.on||matchOver||!dt)return;
+ if(settings.aa===false||!mode||player.dead||menuOpen||loOpen||KC.on||matchOver||!dt)return;
  cam.updateMatrixWorld();const f=new THREE.Vector3(0,1-2*chY,.5).unproject(cam).sub(cam.position).normalize(),cp=cam.position;   // the real crosshair direction (the crosshair sits above screen centre in third person)
  if(now>AA.t){AA.t=now+100;AA.T=null;let best=1e9;
   for(const d of others()){if(d.dead||!d.parts||!isEnemy(player,d))continue;const c=d.parts.chest.position,dx=c.x-cp.x,dy=c.y-cp.y,dz=c.z-cp.z,L=Math.hypot(dx,dy,dz);if(L>60||L<.8)continue;
@@ -3985,7 +3933,7 @@ function updateHUD(){$('hpf').style.width=player.hp+'%';$('hpf').style.backgroun
  $('hpt').textContent=Math.max(0,player.hp|0);{const pw=cur===player?wpn:player.wpn;$('wn').textContent=pw?pw.name:'';}$('kd').textContent=`K ${player.kills}  ·  D ${player.deaths}`;hudAmmo();}
 let hmT=0;function hitMarker(kill,hs){const h=$('hm');h.style.color=kill?'#ff3b30':hs?'#ffd23f':'#fff';h.style.opacity=1;h.style.transform='translate(-50%,-50%) scale('+(kill?1.5:1)+')';hmT=performance.now()+(kill?380:160);}
 function hurtFlash(dmg){const v=$('hurt');v.style.transition='none';v.style.opacity=Math.min(1,.35+dmg/60);requestAnimationFrame(()=>{v.style.transition='opacity .6s';v.style.opacity=0;});}
-function addFeed(by,T,hs){if(ATT.on)return;const e=document.createElement('div');e.className='fe';
+function addFeed(by,T,hs){const e=document.createElement('div');e.className='fe';
  e.innerHTML=`<b style="color:${by===player?'#7fb2ff':'#ff8a7a'}">${by?by.name:'?'}</b> ${hs?'🎯':'🔫'} <b style="color:${T===player?'#7fb2ff':'#ff8a7a'}">${T.name}</b>`;
  $('feed').prepend(e);setTimeout(()=>e.remove(),5000);while($('feed').children.length>5)$('feed').lastChild.remove();}
 function deathScreen(now){const el=$('dead');if(!player.dead){el.style.display='none';KC.done=false;KC.cdT=0;return;}
@@ -4155,7 +4103,30 @@ function pmChar(sc,x,z,yaw,BL,DK,look,gunId,mine){
   mk('thigh'+k,.08,.22,.08,sd*.1,.76,0,DK);mk('shin'+k,.065,.22,.065,sd*.1,.32,0,DK);mk('foot'+k,.08,.05,.10,sd*.1,.05,0,K);mk('toe'+k,.08,.05,.05,sd*.1,.05,.15,K);}
  const h=P['hand-1'].mesh;h.rotation.x=-Math.PI/2;h.position.set(-.27,1.12,.12);P['farm-1'].mesh.rotation.x=-.5;P['farm-1'].mesh.position.set(-.27,1.3,.05);P['uarm-1'].mesh.rotation.x=-.3;P['uarm-1'].mesh.position.set(-.27,1.5,.02);
  const sc0=cur,sp0=parts;cur={};parts=P;window.__czOn=true;try{dressCur(look);}finally{cur=sc0;parts=sp0;window.__czOn=false;}
- const g=gunId==='pistol'?makePistol():buildGun(gunId);if(mine)finishGun(g);g.group.rotation.x=Math.PI/2;g.group.scale.setScalar(1.15);g.group.position.set(0,-.0518,.0598);g.flash.visible=false;g.light.intensity=0;h.add(g.group);}
+ const g=gunId==='pistol'?makePistol():buildGun(gunId);if(mine)finishGun(g);g.group.rotation.x=Math.PI/2;g.group.scale.setScalar(1.15);g.group.position.set(0,-.0518,.0598);g.flash.visible=false;g.light.intensity=0;h.add(g.group);return P;}
+
+// ---------- main menu backdrop: a lone operator in a black suit with night vision, posed in a dark studio on the right of the screen ----------
+const MP={on:true,sc:null,cam:null};
+function mpBuild(){const sc=MP.sc=new THREE.Scene();sc.background=new THREE.Color(0x050608);sc.fog=new THREE.Fog(0x050608,6,14);
+ sc.add(new THREE.HemisphereLight(0x8090a8,0x0a0a0c,.35));
+ const key=new THREE.SpotLight(0xfff0dc,2.2,14,.42,.6);key.position.set(-1.6,5,3);key.target.position.set(0,1,0);key.castShadow=true;key.shadow.mapSize.set(1024,1024);sc.add(key,key.target);
+ const rim=new THREE.DirectionalLight(0x5aa8ff,1.4);rim.position.set(3,2.4,-3);sc.add(rim);const rim2=new THREE.DirectionalLight(0xff7a1a,.5);rim2.position.set(-3,1,-2);sc.add(rim2);
+ const fl=new THREE.Mesh(new THREE.CircleGeometry(6,48),new THREE.MeshStandardMaterial({color:0x0c0d10,roughness:.85}));fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;sc.add(fl);
+ const BLK=0x0e0f11,P=pmChar(sc,0,0,-.45,BLK,BLK,{head:'none',face:'gas',body:'none',back:'none',skin:'def',shirt:'black',pants:'black',acc:'wolf',gloves:true},'glock17',false);MP.P=P;
+ const add=(n,w,h,d,c,x,y,z)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color:c,roughness:.6}));m.position.set(x,y,z);P[n].mesh.add(m);return m;};
+ add('chest',.12,.24,.01,0xe8e8e8,0,.02,.112);add('chest',.03,.2,.012,0x0a0a0a,0,0,.12);for(const sd of[-1,1]){const l=add('chest',.07,.22,.012,0x151619,sd*.07,.02,.118);l.rotation.z=sd*.32;}   // white shirt, black tie, lapels
+ // pose: arms down, pistol hanging pointed at the floor by his right leg, head turned slightly to camera
+ const M=n=>P[n].mesh;for(const sd of[-1,1]){M('uarm'+sd).position.set(sd*.27,1.49,0);M('farm'+sd).position.set(sd*.28,1.18,0);M('hand'+sd).position.set(sd*.285,.97,.0);for(const n of['uarm','farm','hand'])M(n+sd).rotation.set(0,0,sd*.05);}
+ M('hand-1').rotation.set(.12,0,-.05);M('head').rotation.set(.06,.3,0);
+ for(const sd of['1','-1'])M('farm'+sd).material.color.setHex(0x0e0f11);   // suit sleeves
+ sc.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=o===fl;}});
+ MP.glow=new THREE.PointLight(0x3aff6a,0,.5);MP.glow.position.set(0,2.0,.5);sc.add(MP.glow);
+ MP.cam=new THREE.PerspectiveCamera(30,1,.1,40);}
+function mpRender(now){if(!MP.sc)mpBuild();const W_=innerWidth,H_=innerHeight,a=W_/H_,t=now/1000,c=MP.cam;
+ c.aspect=a;const port=a<1;c.position.set(Math.sin(t*.12)*.25,1.2+Math.sin(t*.2)*.04,port?9.5:5.4);c.lookAt(0,1.02,0);
+ c.setViewOffset(W_,H_,-W_*(port?.3:.22),port?-H_*.22:-H_*.02,W_,H_);c.updateProjectionMatrix();   // push him right of the menu (and down on tall screens)
+ MP.P.chest.mesh.scale.y=1+Math.sin(t*1.6)*.012;
+ if(window.__ch)window.__ch.style.opacity=0;renderer.render(MP.sc,c);}
 function pmShot(build,camZ,camY){
  const W_=320,H_=280,r=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});r.setPixelRatio(1);r.setSize(W_,H_);
  const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0x444455,.95));const dl=new THREE.DirectionalLight(0xffffff,1.1);dl.position.set(3,5,4);sc.add(dl);const rl=new THREE.DirectionalLight(0x88aaff,.5);rl.position.set(-3,2,-4);sc.add(rl);
@@ -4199,8 +4170,7 @@ function frame(now){
  requestAnimationFrame(frame);
  const mFrz=matchOver&&!(FK.phase===1&&now-FK.t0<1600);   // the world keeps moving 1.6 s past the final kill, so its replay has the body falling, not frozen
  const fdt=((menuOpen||loOpen)&&!NET.on)||mFrz?0:Math.min(.05,(now-last)/1000);simT=now;
- if(!mode&&!ATT.on&&!ATT.off&&$('mm').style.display!=='none')attractStart();
- acc+=Math.min(.05,(now-last)/1000)*(ATT.on&&now<ATT.slowUntil?.3:1);last=now;   // attract mode: kills play in slow motion
+ acc+=Math.min(.05,(now-last)/1000);last=now;
  if(((menuOpen||loOpen)&&!NET.on)||mFrz)acc=0;                                   // the pause menu pauses the game
  const all=[player,...bots];
  for(const d of all){use(d);sense();}
@@ -4218,11 +4188,6 @@ function frame(now){
  duelTick(now);
  swapTick(now);pkWarn();
  for(const d of[player,...bots])if(d.rlT&&now>=d.rlT){d.rlT=0;d.ammo=null;if(d===player)hudAmmo();}   // reloads finish on their own, fired or not
-if(ATT.on&&ATT.hero&&!ATT.hero.dead&&now-(ATT.hero.heroHit||0)>2500)ATT.hero.hp=Math.min(1000,ATT.hero.hp+8);   // catches his breath between fights
-if(ATT.on&&ATT.fadeAt&&now>ATT.fadeAt){const cv=renderer.domElement;
- if(!ATT.dark){cv.style.transition='filter .9s';cv.style.filter='brightness(0)';ATT.dark=now+1000;}
- else if(now>ATT.dark){attractStop();ATT.off=false;attractStart();cv.style.filter='brightness(0)';ATT.fadeInAt=performance.now()+300;}}
-if(ATT.on&&ATT.fadeInAt&&now>ATT.fadeInAt){renderer.domElement.style.filter='';ATT.fadeInAt=0;}
  for(const d of[player,...bots])if(!d.dead&&d.hp<65)sfxBreath(d,now);
  {const h=player.dead||!mode?100:player.hp,k=Math.max(0,Math.min(1,(40-h)/28));   // low-health vignette: nothing above 40 hp, full strength by ~12 hp, with a heartbeat pulse when critical
   $('lowhp').style.opacity=k?(Math.pow(k,1.4)*(h<15?.88+.12*Math.pow(Math.max(0,Math.sin(now/1000*Math.PI*2.2)),4):1)).toFixed(3):0;}
@@ -4264,14 +4229,13 @@ if(ATT.on&&ATT.fadeInAt&&now>ATT.fadeInAt){renderer.domElement.style.filter='';A
     fpWas=true;const bob=player.dead?0:Math.sin((cur===player?phase:player.phase||0)*2)*.012*Math.min(1,cur===player?mv:player.mv||0);e.copy(_fpS);e.y+=bob;}
    adsEye(e,cur===player?aimK:(player.aimK||0),new THREE.Vector3(-vx,-vy,-vz));cam.position.set(e.x,e.y,e.z);cam.lookAt(e.x-vx,e.y-vy,e.z-vz);}
   else{optView(null,0);if(player.gun)player.gun.group.visible=true;if(cam.near!==.1){cam.near=.1;cam.updateProjectionMatrix();}cam.position.set(pvx+Math.sin(camYaw)*cp*cd,Math.max(.2,pvy+Math.sin(camPitch)*cd),pvz+Math.cos(camYaw)*cp*cd);cam.lookAt(pvx,pvy,pvz);}
-  if(ATT.on)attractCam(now);
   cam.updateMatrixWorld();camDirV.set(0,1-2*chY,.5).unproject(cam).sub(cam.position).normalize();   // ray through the crosshair
   {const r=castRay(cam.position,camDirV,80,player);aimT.set(r.p.x,r.p.y,r.p.z);}}   // the crosshair target, always (the gun tracks it even at the hip)
- if(NET.srv&&NET.state==='match'&&GM[NET.srv.mode]&&gmode!==NET.srv.mode&&!ATT.on)gmode=NET.srv.mode;   // online: everyone always plays the server's mode
+ if(NET.srv&&NET.state==='match'&&GM[NET.srv.mode]&&gmode!==NET.srv.mode)gmode=NET.srv.mode;   // online: everyone always plays the server's mode
  if(!KC.on)for(const d of[player,...bots]){const m=d.parts&&d.parts.head&&d.parts.head.mesh,h=m&&m.userData.hx;if(h&&(m.visible!==(h[0]!==0)||(h[0]===1&&m.geometry===m.userData.g0)||(h[0]===2&&m.userData.c0.some(c=>c.visible))))headLook(m,...h);}   // keep a destroyed head destroyed
  endFlow(now);kcRecord(now);if(kcFrame(now))camYaw=camYaw;   // killcam (after recording, so the replay never records itself)
  sun.position.set(pel.position.x+5,12,pel.position.z+4);sun.target.position.set(pel.position.x,0,pel.position.z);
- if(!(CZ.on||loOpen)){renderer.render(scene,cam);if(mode&&!ATT.on){pdTick(now);try{pdLive();}catch(e){}}}
+ if(!(CZ.on||loOpen)){if(!mode&&$('mm').style.display!=='none')mpRender(now);else renderer.render(scene,cam);if(mode){pdTick(now);try{pdLive();}catch(e){}}}
 }
 requestAnimationFrame(frame);
 </script></body></html>
@@ -4279,6 +4243,8 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.17.0',n:['New main menu: the old background fight is gone for good - in its place a lone operator in a black suit and gas mask stands posed in a dark studio on the right of the screen']},
+ {v:'1.16.1',n:['Online: other players now see your weapon camo (and you see theirs), including in kill cam replays']},
  {v:'1.16.0',n:['Gun progression: 38 guns are free from the start (the basic pistols, SMGs, rifles, shotguns, snipers and LMGs), the other 110 unlock as you play','The stronger the gun, the higher the requirement - mostly kills, plus some games played, wins and (for snipers) headshots, up to 4,000 kills for the very best','Locked guns show their requirement on the loadout; the arrows only cycle through guns you own']},
  {v:'1.15.0',n:['Every gun now handles differently: pistols and SMGs let you move and aim faster, assault rifles are balanced, marksman/sniper rifles, LMGs and the minigun slow you down and take longer to aim','Higher calibre = more recoil: big-damage rounds (battle rifles, magnums, snipers, anti-materiel) kick much harder, small calibres barely move','The loadout shows each gun\'s buffs and debuffs (move speed, aim speed, recoil) plus a MOBILITY bar']},
  {v:'1.14.4',n:['9 new ANIMATED camos: Circuit Pulse and Hex Shield (glow pulses), Toxic Waste, Aurora, Prismatic and Galaxy (flowing), Magma Flow (lava runs down the gun), Electric and Void Rift (crackle and flicker)','They unlock from 15-killstreaks and 150 games up to 10,000 kills for Void Rift']},
