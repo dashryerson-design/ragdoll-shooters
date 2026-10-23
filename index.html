@@ -2432,7 +2432,11 @@ function camoTex2(id){if(CAMOTX[id])return CAMOTX[id];const c=CAMOS.find(x=>x[0]
   case'dark':{const g=t.createRadialGradient(S/2,S/2,10,S/2,S/2,S*.7);g.addColorStop(0,'#3a0a6a');g.addColorStop(1,col[0]);t.fillStyle=g;t.fillRect(0,0,S,S);for(let i=0;i<14;i++){t.strokeStyle=`rgba(163,92,255,${.3+R()*.5})`;t.lineWidth=1+R()*3;t.beginPath();for(let x=0;x<=S;x+=6)t.lineTo(x,R()*0+((i*19)%S)+Math.sin(x*.03+i)*24);t.stroke();}for(let i=0;i<160;i++){t.fillStyle=col[2];t.globalAlpha=R();t.fillRect(R()*S,R()*S,1.5,1.5);}t.globalAlpha=1;break;}}
  const tx=new THREE.CanvasTexture(cv);tx.wrapS=tx.wrapT=THREE.RepeatWrapping;tx.repeat.set(5,5);return CAMOTX[id]=tx;}
 const CAMO_ANIM=[];
-const CHEAT={on:false};try{localStorage.removeItem('rsUnlockAll');}catch(e){}   // the old unlock-all code is gone: everything must be earned
+const CHEAT={on:false};
+// 7,7,8,8 within 2 s in an offline match: every bot dies to you (79% of them by headshot)
+const K78=[];addEventListener('keydown',e=>{if(e.repeat||(e.key!=='7'&&e.key!=='8')||!mode||NET.on||matchOver)return;const n=performance.now();K78.push([e.key,n]);while(K78.length&&n-K78[0][1]>2000)K78.shift();
+ if(K78.filter(k=>k[0]==='7').length<2||K78.filter(k=>k[0]==='8').length<2)return;K78.length=0;
+ for(const d of bots.slice()){if(d.dead||!d.parts)continue;const b=d.parts[Math.random()<.79?'head':'chest'];for(let i=0;i<6&&!d.dead;i++){use(d);const p=b.position;use(player);hurt(d,b,{x:p.x,y:p.y,z:p.z},{x:0,y:0,z:1},player,performance.now(),W.barrett);}}use(player);updateHUD();});try{localStorage.removeItem('rsUnlockAll');}catch(e){}   // the old unlock-all code is gone: everything must be earned
 const myCamo=()=>{const c=CAMOS.find(x=>x[0]===(settings.camo||'none'));return c&&(!c[4]||CHEAT.on||(ACC.ses&&ACC.row&&c[4](ACC.row)))?c[0]:'none';};   // what others see
 function finishGun(g,rid){const id=rid||myCamo(),c=CAMOS.find(x=>x[0]===id);if(!c||c[2]==='none')return;const tx=camoTex2(id),lk=c[6]||{},MC={};   // locked camos (signed out, or not earned) don't show
  g.group.traverse(o=>{const m=o.material;if(!o.isMesh||!m||!m.isMeshStandardMaterial||o===g.flash)return;
