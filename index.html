@@ -2488,6 +2488,15 @@ const TITLES=[['rookie','Rookie','',null],['recruit','Recruit','',R=>R.games>=1,
  ['cartographer','Map Master','',R=>Object.keys(MAPS).filter(m=>!MAPS[m].hidden&&!MAPS[m].duel).every(m=>((R.map_kills||{})[m]|0)>=50),'50 kills on every map'],
  ['god','God of War','',R=>R.kills>=10000&&R.wins>=500,'10,000 kills and 500 wins']];
 const PF0={avatar:'skull:0',card:'ember',title:'rookie'};
+// glowing / animated rewards are much harder: their stat requirements are multiplied (streak / single-game ones a bit less, so they stay possible)
+function hardItem(it,ti,xi,k){const f0=it[ti];if(!f0)return;const ks=Math.max(1.5,k/2);
+ it[ti]=R=>{const S={};for(const key in R){const v=R[key];S[key]=typeof v==='number'?v/(key==='best_streak'||key==='best_kills'?ks:k):v;}if(R.map_kills){S.map_kills={};for(const m in R.map_kills)S.map_kills[m]=R.map_kills[m]/k;}return f0(S);};
+ it[xi]=String(it[xi]).replace(/(\d[\d,]*)(\s+)(\S+)/g,(m,n,sp,w)=>{const v=Math.round(+n.replace(/,/g,'')*(/killstreak|kills in one/.test(w+String(it[xi]).slice(String(it[xi]).indexOf(n)+n.length,String(it[xi]).indexOf(n)+n.length+20))?ks:k));return v.toLocaleString()+sp+w;}).replace(/^an (\d)/,'a $1');}
+for(const c of CAMOS){const L=c[6]||{};if(L.e||L.a)hardItem(c,4,5,L.a?5:3);}
+for(const c of CARDS)if(c[5])hardItem(c,3,4,5);
+for(const e of EMB)if(e[4]&&/animate/.test(e[4]('#fff')))hardItem(e,2,3,5);
+for(const t of TITLES){const anim=['ghost','headhunter','champion','warlord','nuke','legend','god','cartographer'],glow=['winner','marksman','hunter','untouch','butcher','reaper','lifer'];if(anim.includes(t[0]))hardItem(t,3,4,5);else if(glow.includes(t[0]))hardItem(t,3,4,2.5);}
+
 const pfOf=R=>({avatar:(R&&R.avatar)||PF0.avatar,card:(R&&R.card)||PF0.card,title:(R&&R.title)||PF0.title});
 function embSvg(av,sz=34){const[g,c]=String(av||PF0.avatar).split(':'),e=EMB.find(x=>x[0]===g)||EMB[0],col=ECOL[+c]||ECOL[0],dark=['#eef0f3','#ffcc1a','#3fd06a','#20c4c4'].includes(col);
  return `<svg class="emb" viewBox="0 0 24 24" width="${sz}" height="${sz}"><rect width="24" height="24" fill="${col}"/>${e[4]?`<g transform="translate(12 12) scale(.82) translate(-12 -12)">${e[4](dark?'#111':'#fff')}</g>`:`<path d="${e[1]}" transform="translate(12 12) scale(.72) translate(-12 -12)" fill="${dark?'#111':'#fff'}" fill-rule="evenodd"/>`}</svg>`;}
@@ -4311,6 +4320,7 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.20.1',n:['Glowing and animated rewards are now much harder to earn: animated camos, calling cards and emblems need about 5x the stats, glowing camos 3x, and glowing / animated titles (Tactical Nuke, Legend, God of War...) 2.5x to 5x - killstreak and single-game goals rise less so they stay possible']},
  {v:'1.20.0',n:['Map challenges: your kills are now counted per map, and new rewards unlock from them','8 map camos: Glitch (500 kills on Tester, animated), Rust Bucket (Docks), Breach (Killhouse), Graffiti (Subway), Overgrown (Forest), Blueprint (Construction), Corporate (Office), Airshow (Airfield)','5 map calling cards: Simulation (Tester, animated), Harbour Night (Docks), Close Quarters (Killhouse), Deep Woods (Forest), Last Train (Subway, animated)','6 map titles: Test Pilot, Dockhand, Breacher, Woodsman, Tunnel Rat and Map Master (50 kills on every map)']},
  {v:'1.19.0',n:['Progression reset: every account starts from zero and every camo, calling card, emblem, title, cosmetic and gun must now be earned - the old unlock-all code has been removed','Anything you had equipped that you have not unlocked is switched back to the default']},
  {v:'1.18.3',n:['FIX: aiming a scoped sniper in first person could fill the screen with the scope\'s camo - the scope body no longer blocks the view']},
