@@ -2477,12 +2477,12 @@ const CARDS=[['ember','Ember','linear-gradient(120deg,#2a0d05,#ff5a1f 60%,#ffd36
  ['lasttrain','Last Train','linear-gradient(0deg,#0000 0 30%,#ffd36b 30% 34%,#0000 34%) 0 0/60px 100%,linear-gradient(180deg,#141418,#2a2a30 60%,#0a0a0c)',MK('subway',150),MKT('subway',150),1],
  ['immortal','Immortal','linear-gradient(115deg,#fff8e0,#d4af37 20%,#fff 35%,#a35cff 55%,#3a8fff 75%,#fff8e0)',R=>R.kills>=10000&&R.wins>=500,'10,000 kills and 500 wins']];
 const TITLES=[['rookie','Rookie','',null],['recruit','Recruit','',R=>R.games>=1,'play 1 game'],['grunt','Grunt','',R=>R.kills>=10,'10 kills'],['operator','Operator','',R=>R.kills>=50,'50 kills'],
- ['sharp','Sharpshooter','',R=>R.headshots>=25,'25 headshots'],['wrecker','Wrecker','',R=>R.best_kills>=15,'15 kills in one game'],['streaker','On A Roll','',R=>R.best_streak>=7,'a 7 killstreak'],
+ ['sharp','Sharpshooter','',R=>R.headshots>=25,'25 headshots'],['wrecker','Wrecker','',R=>R.best_kills>=15,'15 kills in one game'],['streaker','On A Roll','',R=>R.best_streak>=12,'a 12 killstreak'],
  ['veteran','Veteran','',R=>R.games>=50,'50 games played'],['winner','Victor','',R=>R.wins>=25,'25 wins'],['marksman','Marksman','',R=>R.headshots>=150,'150 headshots'],
  ['hunter','Hunter','',R=>R.kills>=500,'500 kills'],['untouch','Untouchable','',R=>R.best_kills>=15&&R.most_deaths<=1&&R.games>=1,'a 15+ kill game with 1 death or less'],
- ['butcher','Butcher','',R=>R.best_kills>=30,'30 kills in one game'],['reaper','Reaper','',R=>R.kills>=1000,'1,000 kills'],['ghost','Ghost','',R=>R.best_streak>=15,'a 15 killstreak'],
+ ['butcher','Butcher','',R=>R.best_kills>=30,'30 kills in one game'],['reaper','Reaper','',R=>R.kills>=1000,'1,000 kills'],['ghost','Ghost','',R=>R.best_streak>=20,'a 20 killstreak'],
  ['lifer','Lifer','',R=>R.play_secs>=72000,'20 hours played'],['headhunter','Headhunter','',R=>R.headshots>=500,'500 headshots'],['champion','Champion','',R=>R.wins>=100,'100 wins'],
- ['warlord','Warlord','',R=>R.kills>=2500,'2,500 kills'],['nuke','Tactical Nuke','',R=>R.best_streak>=25,'a 25 killstreak'],['legend','Legend','',R=>R.kills>=5000,'5,000 kills'],
+ ['warlord','Warlord','',R=>R.kills>=2500,'2,500 kills'],['nuke','Tactical Nuke','',R=>R.best_streak>=40,'a 40 killstreak'],['legend','Legend','',R=>R.kills>=5000,'5,000 kills'],
  ['testpilot','Test Pilot','',MK('tester',100),MKT('tester',100)],['dockhand','Dockhand','',MK('docks',100),MKT('docks',100)],['breacher','Breacher','',MK('killhouse',150),MKT('killhouse',150)],
  ['woodsman','Woodsman','',MK('forest',100),MKT('forest',100)],['tunnelrat','Tunnel Rat','',MK('subway',100),MKT('subway',100)],
  ['cartographer','Map Master','',R=>Object.keys(MAPS).filter(m=>!MAPS[m].hidden&&!MAPS[m].duel).every(m=>((R.map_kills||{})[m]|0)>=50),'50 kills on every map'],
@@ -2542,10 +2542,10 @@ function acOut(){acFlush();ACC.ses=null;ACC.row=null;acSave();acUI();}
 // stat tracking: kills/deaths are sent as the difference since the last sync; per-match records at the end of each match
 function acKill(hs){if(!ACC.ses||gmode==='tut')return;if(ACC.row){const m=ACC.row.map_kills=ACC.row.map_kills||{};m[curMap]=(m[curMap]|0)+1;ACC.mkd=true;}if(hs)ACC.hs++;ACC.streak++;if(ACC.row&&ACC.streak>ACC.row.best_streak){ACC.row.best_streak=ACC.streak;}ACC.dirty=true;}
 function acDeath(){ACC.streak=0;ACC.dirty=true;}
-function acReset(){acFlush(true);ACC.sk=ACC.sd=0;ACC.streak=0;ACC.mDone=false;ACC.m0=true;}
-function acMatchEnd(win){if(!ACC.row||ACC.mDone)return;ACC.mDone=true;const R=ACC.row;R.games++;if(win)R.wins++;R.best_kills=Math.max(R.best_kills,player.kills);R.most_deaths=Math.max(R.most_deaths,player.deaths);ACC.dirty=true;acFlush();}
-async function acFlush(zeroing){if(!ACC.ses||!ACC.row)return;if(gmode==='tut'){ACC.sk=player.kills;ACC.sd=player.deaths;ACC.secs=0;return;}let dk=Math.max(0,player.kills-ACC.sk),dd=Math.max(0,player.deaths-ACC.sd);
- if(!ACC.dirty&&!dk&&!dd&&ACC.secs<1)return;const R=ACC.row;R.kills+=dk;R.deaths+=dd;if(mode){R.best_kills=Math.max(R.best_kills,player.kills);R.most_deaths=Math.max(R.most_deaths,player.deaths);}R.headshots+=ACC.hs;R.play_secs+=Math.round(ACC.secs);ACC.sk=player.kills;ACC.sd=player.deaths;ACC.hs=0;ACC.secs=0;ACC.dirty=false;
+function acReset(){acFlush(true);ACC.sk=ACC.sd=0;ACC.mIgn=0;ACC.streak=0;ACC.mDone=false;ACC.m0=true;}
+function acMatchEnd(win){if(!ACC.row||ACC.mDone)return;ACC.mDone=true;const R=ACC.row;R.games++;if(win)R.wins++;R.best_kills=Math.max(R.best_kills,player.kills-(ACC.mIgn|0));R.most_deaths=Math.max(R.most_deaths,player.deaths);ACC.dirty=true;acFlush();}
+async function acFlush(zeroing){if(!ACC.ses||!ACC.row)return;if(gmode==='tut'){ACC.ign=0;ACC.sk=player.kills;ACC.sd=player.deaths;ACC.secs=0;return;}let dk=Math.max(0,player.kills-ACC.sk-(ACC.ign|0)),dd=Math.max(0,player.deaths-ACC.sd);
+ if(!ACC.dirty&&!dk&&!dd&&ACC.secs<1)return;const R=ACC.row;R.kills+=dk;R.deaths+=dd;if(mode){R.best_kills=Math.max(R.best_kills,player.kills-(ACC.mIgn|0));R.most_deaths=Math.max(R.most_deaths,player.deaths);}R.headshots+=ACC.hs;R.play_secs+=Math.round(ACC.secs);ACC.sk=player.kills;ACC.sd=player.deaths;ACC.ign=0;ACC.hs=0;ACC.secs=0;ACC.dirty=false;
  if(ACC.busy){ACC.pend=true;return;}ACC.busy=true;try{const {id,username,updated_at,avatar,card,title,map_kills,...body}=R;if(ACC.mkd){ACC.mkd=false;sbFetch('/rest/v1/stats?id=eq.'+ACC.ses.uid,{method:'PATCH',keepalive:!!ACC.leaving,body:JSON.stringify({map_kills})}).catch(()=>{});}await sbFetch('/rest/v1/stats?id=eq.'+ACC.ses.uid,{method:'PATCH',keepalive:!!ACC.leaving,body:JSON.stringify({...body,updated_at:new Date().toISOString()})});}catch(e){console.warn('stats sync',e);ACC.dirty=true;}ACC.busy=false;if(ACC.pend){ACC.pend=false;ACC.dirty=true;acFlush();}if($('acp').style.display==='flex')acRender();}
 setInterval(()=>{if(mode&&!matchOver&&!menuOpen&&!loOpen&&ACC.ses&&!document.hidden)ACC.secs+=1;},1000);setInterval(acFlush,45000);addEventListener('pagehide',()=>{ACC.leaving=true;ACC.busy=false;acFlush();});
 // UI: account chip top-right of the main menu; signed out = sign-in/create form, signed in = full stats
@@ -3288,7 +3288,7 @@ function hurt(T,b,p,dir,by,now,w=W.pistol){if(T.dying&&b.pn==='head')T.dying=nul
  if(T.hp>0){if(now-(T.sfxP||0)>420){T.sfxP=now;sfx('pain',p,sfxVP(T),b.pn);}const kind=PART_PAIN[b.pn]||'chest',side=/-1$/.test(Object.keys(T.parts).find(k=>T.parts[k]===b)||'')?-1:1,
   P={kind,side,t0:now,amp:Math.min(1,.55+dmg/45),hold:PAIN[kind].hold*(.8+Math.random()*.4)};P.kind=kind;
   if(T===cur)pain=P;else T.pain=P;}
- if(T.hp<=0&&!T.dead){T.hp=0;T.dead=true;T.deadAt=now;T.pooled=false;T.deaths++;T.killer=by;if(T===player)acDeath();if(by===player&&T!==player&&!NET.on)acKill(b.pn==='head'||b.pn==='neck');startDying(T,b.pn,now);sfx('die',p,sfxVP(T),b.pn);if(b.pn==='head')scrStop(T);else scrStart(T,true);for(const k in T.keys)T.keys[k]=false;
+ if(T.hp<=0&&!T.dead){T.hp=0;T.dead=true;T.deadAt=now;T.pooled=false;T.deaths++;T.killer=by;if(T===player)acDeath();if(by===player&&T!==player&&!NET.on){if(T.ai&&(T.diff!=null?T.diff:settings.diff|0)===0){ACC.ign=(ACC.ign|0)+1;ACC.mIgn=(ACC.mIgn|0)+1;}else acKill(b.pn==='head'||b.pn==='neck');}   // Easy bots don't countstartDying(T,b.pn,now);sfx('die',p,sfxVP(T),b.pn);if(b.pn==='head')scrStop(T);else scrStart(T,true);for(const k in T.keys)T.keys[k]=false;
   if(NET.on)netKill(by,T,b.pn==='head'||b.pn==='neck');else{if(by)by.kills++;onKill(by,T);addFeed(by,T,b.pn==='head'||b.pn==='neck');}
   b.applyImpulse(new V(dir.x*10*w.kick,dir.y*10*w.kick+3,dir.z*10*w.kick),new V(p.x-b.position.x,p.y-b.position.y,p.z-b.position.z));}
  if(by===player)hitMarker(T.dead,b.pn==='head'||b.pn==='neck');
@@ -4320,6 +4320,8 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.20.3',n:['Killstreak titles are tougher: On A Roll needs a 12 streak, Ghost a 50 streak and Tactical Nuke a 100 streak']},
+ {v:'1.20.2',n:['Kills on Easy bots no longer count towards your account stats or unlocks']},
  {v:'1.20.1',n:['Glowing and animated rewards are now much harder to earn: animated camos, calling cards and emblems need about 5x the stats, glowing camos 3x, and glowing / animated titles (Tactical Nuke, Legend, God of War...) 2.5x to 5x - killstreak and single-game goals rise less so they stay possible']},
  {v:'1.20.0',n:['Map challenges: your kills are now counted per map, and new rewards unlock from them','8 map camos: Glitch (500 kills on Tester, animated), Rust Bucket (Docks), Breach (Killhouse), Graffiti (Subway), Overgrown (Forest), Blueprint (Construction), Corporate (Office), Airshow (Airfield)','5 map calling cards: Simulation (Tester, animated), Harbour Night (Docks), Close Quarters (Killhouse), Deep Woods (Forest), Last Train (Subway, animated)','6 map titles: Test Pilot, Dockhand, Breacher, Woodsman, Tunnel Rat and Map Master (50 kills on every map)']},
  {v:'1.19.0',n:['Progression reset: every account starts from zero and every camo, calling card, emblem, title, cosmetic and gun must now be earned - the old unlock-all code has been removed','Anything you had equipped that you have not unlocked is switched back to the default']},
