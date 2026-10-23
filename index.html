@@ -2327,6 +2327,15 @@ const CAMOS=[['none','Factory','none',[],null],['black','Matte Black','solid',['
  ['damascus','Damascus','damascus',['#3a3d42','#9aa0a8','#1c1e22'],R=>R.kills>=600,'600 kills',{m:1}],['cyber','Cyber','cyber',['#06080c','#20f0ff'],R=>R.best_streak>=10,'a 10 killstreak',{e:1}],
  ['lava','Molten','lava',['#140402','#ff4a10','#ffd040'],R=>R.kills>=1000,'1,000 kills',{e:1}],['gold','Gold','metal',['#8a6410','#f0c850','#fff3b0'],R=>R.kills>=1500,'1,500 kills',{m:1}],
  ['platinum','Platinum','metal',['#7a7e86','#e4e8ee','#ffffff'],R=>R.wins>=100,'100 wins',{m:1}],['diamond','Diamond','diamond',['#9fe8ff','#ffffff','#3aa0e0'],R=>R.kills>=4000,'4,000 kills',{m:1,e:.25}],
+ ['circuit','Circuit Pulse','cyber',['#04060a','#3aff8a'],R=>R.headshots>=400,'400 headshots',{e:1,a:'pulse'}],
+ ['toxicflow','Toxic Waste','toxic',['#0a1404','#6aff1a','#c8ff3a'],R=>R.games>=150,'150 games played',{e:.8,a:'flow'}],
+ ['hexpulse','Hex Shield','hex',['#04101e','#20c4ff'],R=>R.best_streak>=15,'a 15 killstreak',{e:1,a:'pulse'}],
+ ['magma','Magma Flow','lava',['#140402','#ff3a00','#ffcc30'],R=>R.kills>=2000,'2,000 kills',{e:1,a:'flowy'}],
+ ['electric','Electric','electric',['#020414','#9cd8ff','#ffffff'],R=>R.kills>=3000,'3,000 kills',{e:1,a:'flicker'}],
+ ['aurorac','Aurora','aurora',['#020814','#3fffb0','#a35cff'],R=>R.wins>=150,'150 wins',{e:.9,a:'flow'}],
+ ['prism','Prismatic','prism',[],R=>R.wins>=300,'300 wins',{e:.6,a:'flow',m:1}],
+ ['galaxyc','Galaxy','galaxy',['#03010a','#ff2fd0','#3a8fff'],R=>R.kills>=5000,'5,000 kills',{e:.9,a:'flow'}],
+ ['rift','Void Rift','rift',['#000000','#a35cff','#ffffff'],R=>R.kills>=10000,'10,000 kills',{e:1,a:'flicker'}],
  ['darkmatter','Dark Matter','dark',['#08000f','#a35cff','#ffffff'],R=>R.kills>=7500&&R.best_streak>=25,'7,500 kills and a 25 killstreak',{e:1,a:1}]];
 const CAMOTX={};
 function camoTex2(id){if(CAMOTX[id])return CAMOTX[id];const c=CAMOS.find(x=>x[0]===id);if(!c||c[2]==='none')return null;const S=256,cv=document.createElement('canvas');cv.width=cv.height=S;const t=cv.getContext('2d'),col=c[3];
@@ -2347,6 +2356,12 @@ function camoTex2(id){if(CAMOTX[id])return CAMOTX[id];const c=CAMOS.find(x=>x[0]
   case'lava':for(let i=0;i<60;i++){const x=R()*S,y=R()*S;wrap(()=>blob(x,y,10+R()*20,'#2a0804'));}t.strokeStyle=col[1];t.lineWidth=3;for(let i=0;i<30;i++){let x=R()*S,y=R()*S;t.beginPath();t.moveTo(x,y);for(let k=0;k<6;k++){x+=(R()-.5)*40;y+=(R()-.5)*40;t.lineTo(x,y);}t.stroke();}t.strokeStyle=col[2];t.lineWidth=1;t.stroke();break;
   case'metal':{const g=t.createLinearGradient(0,0,S,S);g.addColorStop(0,col[0]);g.addColorStop(.35,col[1]);g.addColorStop(.5,col[2]);g.addColorStop(.65,col[1]);g.addColorStop(1,col[0]);t.fillStyle=g;t.fillRect(0,0,S,S);for(let i=0;i<500;i++){t.fillStyle=`rgba(255,255,255,${R()*.08})`;t.fillRect(0,R()*S,S,1);}break;}
   case'diamond':for(let i=0;i<220;i++){const x=R()*S,y=R()*S,r=6+R()*14;t.fillStyle=col[i%3];t.globalAlpha=.55+R()*.45;t.beginPath();t.moveTo(x,y-r);t.lineTo(x+r*.7,y);t.lineTo(x,y+r);t.lineTo(x-r*.7,y);t.fill();}t.globalAlpha=1;break;
+  case'toxic':{t.fillStyle='#0a1404';t.fillRect(0,0,S,S);for(let i=0;i<55;i++){const x=R()*S,y=R()*S,r=8+R()*22,cl=col[1+(i%2)];wrap(()=>{const g=t.createRadialGradient(x,y,1,x,y,r);g.addColorStop(0,cl);g.addColorStop(1,'#0a140400');t.fillStyle=g;t.beginPath();t.arc(x,y,r,0,6.3);t.fill();});}break;}
+  case'electric':{t.fillStyle=col[0];t.fillRect(0,0,S,S);for(let i=0;i<22;i++){let x=R()*S,y=0;t.strokeStyle=i%3?col[1]:col[2];t.lineWidth=i%3?1.5:2.5;t.shadowColor=col[1];t.shadowBlur=6;t.beginPath();t.moveTo(x,y);while(y<S){x+=(R()-.5)*26;y+=8+R()*14;t.lineTo(x,y);}t.stroke();}t.shadowBlur=0;break;}
+  case'aurora':{t.fillStyle=col[0];t.fillRect(0,0,S,S);for(let i=0;i<9;i++){const y=R()*S,g=t.createLinearGradient(0,y-30,0,y+30);const cl=col[1+(i%2)];g.addColorStop(0,cl+'00');g.addColorStop(.5,cl+'cc');g.addColorStop(1,cl+'00');t.fillStyle=g;t.beginPath();t.moveTo(0,y);for(let x=0;x<=S;x+=8)t.lineTo(x,y+Math.sin(x*.03+i)*18-30);for(let x=S;x>=0;x-=8)t.lineTo(x,y+Math.sin(x*.03+i)*18+30);t.fill();}break;}
+  case'prism':{const g=t.createLinearGradient(0,0,S,S);['#ff3a3a','#ffcc1a','#3fd06a','#20c4ff','#a35cff','#ff3a3a'].forEach((c2,i)=>g.addColorStop(i/5,c2));t.fillStyle=g;t.fillRect(0,0,S,S);for(let i=0;i<400;i++){t.fillStyle=`rgba(255,255,255,${R()*.25})`;t.fillRect(R()*S,R()*S,2,2);}break;}
+  case'galaxy':{t.fillStyle=col[0];t.fillRect(0,0,S,S);for(let i=0;i<8;i++){const x=R()*S,y=R()*S,r=30+R()*50;wrap(()=>{const g=t.createRadialGradient(x,y,2,x,y,r);g.addColorStop(0,col[1+(i%2)]+'99');g.addColorStop(1,'#0000');t.fillStyle=g;t.fillRect(x-r,y-r,r*2,r*2);});}for(let i=0;i<260;i++){t.fillStyle='#fff';t.globalAlpha=R();const z=R()<.1?2.5:1.2;t.fillRect(R()*S,R()*S,z,z);}t.globalAlpha=1;break;}
+  case'rift':{t.fillStyle=col[0];t.fillRect(0,0,S,S);for(let i=0;i<16;i++){let x=R()*S,y=R()*S;t.strokeStyle=i%4?col[1]:col[2];t.lineWidth=1+R()*3;t.shadowColor=col[1];t.shadowBlur=10;t.beginPath();t.moveTo(x,y);for(let k=0;k<7;k++){x+=(R()-.5)*50;y+=(R()-.5)*50;t.lineTo(x,y);}t.stroke();}t.shadowBlur=0;break;}
   case'dark':{const g=t.createRadialGradient(S/2,S/2,10,S/2,S/2,S*.7);g.addColorStop(0,'#3a0a6a');g.addColorStop(1,col[0]);t.fillStyle=g;t.fillRect(0,0,S,S);for(let i=0;i<14;i++){t.strokeStyle=`rgba(163,92,255,${.3+R()*.5})`;t.lineWidth=1+R()*3;t.beginPath();for(let x=0;x<=S;x+=6)t.lineTo(x,R()*0+((i*19)%S)+Math.sin(x*.03+i)*24);t.stroke();}for(let i=0;i<160;i++){t.fillStyle=col[2];t.globalAlpha=R();t.fillRect(R()*S,R()*S,1.5,1.5);}t.globalAlpha=1;break;}}
  const tx=new THREE.CanvasTexture(cv);tx.wrapS=tx.wrapT=THREE.RepeatWrapping;tx.repeat.set(5,5);return CAMOTX[id]=tx;}
 const CAMO_ANIM=[];
@@ -2361,8 +2376,10 @@ function finishGun(g){const id=settings.camo||'none',c=CAMOS.find(x=>x[0]===id);
   if(m.transparent||(m.userData&&m.userData.lens)||(m.emissive&&m.emissive.getHex()!==0))return;const hsl={};m.color.getHSL(hsl);if(hsl.l<.02)return;   // keep glass, lit reticles, the bore
   let n=MC[m.uuid];if(!n){n=MC[m.uuid]=m.clone();n.map=tx;n.color.setHex(0xffffff);n.metalness=lk.m?.85:Math.min(m.metalness,.35);n.roughness=lk.m?.28:.6;
    if(lk.e){n.emissiveMap=tx;n.emissive=new THREE.Color(0xffffff);n.emissiveIntensity=lk.e===1?.9:lk.e;}n.needsUpdate=true;}o.material=n;});
- if(lk.a&&!CAMO_ANIM.includes(tx))CAMO_ANIM.push(tx);}
-(function camoAnim(){requestAnimationFrame(camoAnim);for(const t of CAMO_ANIM){t.offset.x+=.0006;t.offset.y+=.0003;}})();
+ if(lk.a){if(!CAMO_ANIM.some(a=>a.t===tx))CAMO_ANIM.push({t:tx,a:lk.a,mats:new Set()});const A=CAMO_ANIM.find(a=>a.t===tx);for(const k in MC)A.mats.add(MC[k]);}}
+(function camoAnim(){requestAnimationFrame(camoAnim);const T=performance.now()/1000;for(const A of CAMO_ANIM){const t=A.t;
+ if(A.a===1){t.offset.x+=.0006;t.offset.y+=.0003;}else if(A.a==='flow'){t.offset.x+=.0012;}else if(A.a==='flowy'){t.offset.y-=.0015;}
+ const k=A.a==='pulse'?.45+.55*Math.abs(Math.sin(T*2.4)):A.a==='flicker'?(Math.random()<.08?1.8:.55+.2*Math.sin(T*9)):null;if(k!=null)for(const m of A.mats)m.emissiveIntensity=k;}})();
 function camoSw(c,sz=58){const tx=camoTex2(c[0]);return tx?`<span class="cmsw" style="width:${sz}px;height:${sz}px;background:url(${tx.image.toDataURL()}) center/${sz*1.6}px"></span>`:`<span class="cmsw" style="width:${sz}px;height:${sz}px;background:#2a2c30;display:flex;align-items:center;justify-content:center;font:600 10px Barlow">STOCK</span>`;}
 // ---------- account customisation: emblem (profile picture), calling card and title; some unlock from career stats ----------
 const EMB=[['skull','M12 3c-5 0-8 3-8 7 0 3 1.5 4.5 3 5.5V19h2v-2h2v2h2v-2h2v2h2v-3.5c1.5-1 3-2.5 3-5.5 0-4-3-7-8-7zM9 9.5a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2zm6 0a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2z'],
@@ -4244,6 +4261,7 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.14.4',n:['9 new ANIMATED camos: Circuit Pulse and Hex Shield (glow pulses), Toxic Waste, Aurora, Prismatic and Galaxy (flowing), Magma Flow (lava runs down the gun), Electric and Void Rift (crackle and flicker)','They unlock from 15-killstreaks and 150 games up to 10,000 kills for Void Rift']},
  {v:'1.14.3',n:['12 new detailed emblems, 8 of them animated: spinning Reticle and Radiation, Heartbeat line, watching Eye, Flaming Skull, Nuke mushroom cloud, sparkling Gem and swirling Vortex - plus Biohazard, Phoenix, Viper and Jolly Roger','They unlock from 60 headshots up to 5,000 kills']},
  {v:'1.14.2',n:['10 ANIMATED calling cards: Tracer Fire (150 kills), Code Rain (75 headshots), Vital Signs (8 killstreak), Plasma (30 wins), Storm Front (75 wins), Northern Lights (100 games), Firestorm (800 kills), Meltdown (20 killstreak), Hyperspace (3,000 kills), Galaxy (6,000 kills)','They move everywhere your card shows: account button, profile, kill cam and MVP banner']},
  {v:'1.14.1',n:['Click any player on the Top Players leaderboard to see their profile: calling card, emblem, title and full career stats']},
