@@ -2542,7 +2542,7 @@ const CARDS=[['ember','Ember','linear-gradient(120deg,#2a0d05,#ff5a1f 60%,#ffd36
 const TITLES=[['rookie','Rookie','',null],['recruit','Recruit','',R=>R.games>=1,'play 1 game'],['grunt','Grunt','',R=>R.kills>=10,'10 kills'],['operator','Operator','',R=>R.kills>=50,'50 kills'],
  ['sharp','Sharpshooter','',R=>R.headshots>=25,'25 headshots'],['wrecker','Wrecker','',R=>R.best_kills>=15,'15 kills in one game'],['streaker','On A Roll','',R=>R.best_streak>=12,'a 12 killstreak'],
  ['veteran','Veteran','',R=>R.games>=50,'50 games played'],['winner','Victor','',R=>R.wins>=25,'25 wins'],['marksman','Marksman','',R=>R.headshots>=150,'150 headshots'],
- ['hunter','Hunter','',R=>R.kills>=500,'500 kills'],['untouch','Untouchable','',R=>R.best_kills>=15&&R.most_deaths<=1&&R.games>=1,'a 15+ kill game with 1 death or less'],
+ ['hunter','Hunter','',R=>R.kills>=500,'500 kills'],['untouch','Untouchable','',R=>((R.map_kills||{})._clean|0)>=15,'a 15+ kill game with 1 death or less'],
  ['butcher','Butcher','',R=>R.best_kills>=30,'30 kills in one game'],['reaper','Reaper','',R=>R.kills>=1000,'1,000 kills'],['ghost','Ghost','',R=>R.best_streak>=20,'a 20 killstreak'],
  ['lifer','Lifer','',R=>R.play_secs>=72000,'20 hours played'],['headhunter','Headhunter','',R=>R.headshots>=500,'500 headshots'],['champion','Champion','',R=>R.wins>=100,'100 wins'],
  ['warlord','Warlord','',R=>R.kills>=2500,'2,500 kills'],['nuke','Tactical Nuke','',R=>R.best_streak>=40,'a 40 killstreak'],['legend','Legend','',R=>R.kills>=5000,'5,000 kills'],
@@ -2560,7 +2560,8 @@ function rqProg(txt,R){R=R||AC0;const n=v=>+String(v).replace(/,/g,''),mk=R.map_
   if((m=part.match(/([\d,]+) kills on every map/))){const ms=Object.keys(MAPS).filter(x=>!MAPS[x].hidden&&!MAPS[x].duel);need=ms.length;cur=ms.filter(x=>(mk[x]|0)>=n(m[1])).length;lab='maps done';}
   else if((m=part.match(/([\d,]+) Insane bot kills/))){need=n(m[1]);cur=mk._insane|0;lab='Insane bot kills';}
   else if((m=part.match(/([\d,]+) kills on (.+)/))){const k=Object.keys(MAPS).find(x=>MAPS[x].name===m[2]);need=n(m[1]);cur=mk[k]|0;lab='kills on '+m[2];}
-  else if((m=part.match(/([\d,]+)\+? kills? in one game/))||(m=part.match(/([\d,]+)\+ kill game/))){need=n(m[1]);cur=R.best_kills|0;lab='kills in one game';}
+  else if((m=part.match(/([\d,]+)\+ kill game with 1 death/))){need=n(m[1]);cur=mk._clean|0;lab='kills, 1 death or less';}
+  else if((m=part.match(/([\d,]+)\+? kills? in one game/))){need=n(m[1]);cur=R.best_kills|0;lab='kills in one game';}
   else if((m=part.match(/([\d,]+) killstreak/))){need=n(m[1]);cur=R.best_streak|0;lab='killstreak';}
   else if((m=part.match(/([\d,]+) headshots/))){need=n(m[1]);cur=R.headshots|0;lab='headshots';}
   else if((m=part.match(/([\d,]+) hours played/))){need=n(m[1]);cur=Math.floor((R.play_secs|0)/3600);lab='hours played';}
@@ -2582,7 +2583,7 @@ for(const e of EMB)if(e[4]&&/animate/.test(e[4]('#fff')))hardItem(e,2,3,5);
 // killstreak cards and emblems: an absolute flex - 3x the streak (capped at 100)
 for(const[list,ti,xi]of[[CARDS,3,4],[EMB,2,3]])for(const it of list){if(!it[ti]||!/killstreak/.test(it[xi])||/Insane/.test(it[xi]))continue;const n=+String(it[xi]).match(/\d[\d,]*/)[0].replace(/,/g,''),need=Math.min(100,n*3),f0=it[ti];
  it[ti]=R=>f0(R)&&R.best_streak>=need;it[xi]=String(it[xi]).replace(/\d[\d,]*/,need).replace(/^an (\d)/,'a $1');}
-for(const t of TITLES){const anim=['ghost','headhunter','champion','warlord','nuke','legend','god','cartographer'],glow=['winner','marksman','hunter','untouch','butcher','reaper','lifer'];if(anim.includes(t[0]))hardItem(t,3,4,5);else if(glow.includes(t[0]))hardItem(t,3,4,2.5);}
+for(const t of TITLES){const anim=['ghost','headhunter','champion','warlord','nuke','legend','god','cartographer'],glow=['winner','marksman','hunter','butcher','reaper','lifer'];if(anim.includes(t[0]))hardItem(t,3,4,5);else if(glow.includes(t[0]))hardItem(t,3,4,2.5);}
 
 const pfOf=R=>({avatar:(R&&R.avatar)||PF0.avatar,card:(R&&R.card)||PF0.card,title:(R&&R.title)||PF0.title});
 function embSvg(av,sz=34){const[g,c]=String(av||PF0.avatar).split(':'),e=EMB.find(x=>x[0]===g)||EMB[0],X=+c>=12?ECOLX[+c-12]:null,col=X?(X[1]?'url(#eg'+(embSvg.n=(embSvg.n||0)+1)+')':X[2]):(ECOL[+c]||ECOL[0]),dark=X?!!X[5]:['#eef0f3','#ffcc1a','#3fd06a','#20c4c4'].includes(col);
@@ -2630,9 +2631,9 @@ function acOut(){acFlush();ACC.ses=null;ACC.row=null;acSave();acUI();}
 function acKill(hs,T){if(!ACC.ses||gmode==='tut')return;if(ACC.row&&T&&T.ai&&(T.diff!=null?T.diff:settings.diff|0)===3){const m=ACC.row.map_kills=ACC.row.map_kills||{};m._insane=(m._insane|0)+1;ACC.mkd=true;}if(ACC.row){const m=ACC.row.map_kills=ACC.row.map_kills||{};m[curMap]=(m[curMap]|0)+1;ACC.mkd=true;}if(hs)ACC.hs++;ACC.streak++;if(ACC.row&&ACC.streak>ACC.row.best_streak){ACC.row.best_streak=ACC.streak;}ACC.dirty=true;}
 function acDeath(){ACC.streak=0;ACC.dirty=true;}
 function acReset(){acFlush(true);ACC.sk=ACC.sd=0;ACC.mIgn=0;ACC.streak=0;ACC.mDone=false;ACC.m0=true;}
-function acMatchEnd(win){if(!ACC.row||ACC.mDone)return;ACC.mDone=true;const R=ACC.row;R.games++;if(win)R.wins++;R.best_kills=Math.max(R.best_kills,player.kills-(ACC.mIgn|0));R.most_deaths=Math.max(R.most_deaths,player.deaths);ACC.dirty=true;acFlush();}
+function acMatchEnd(win){if(!ACC.row||ACC.mDone)return;ACC.mDone=true;const R=ACC.row;R.games++;if(win)R.wins++;R.best_kills=Math.max(R.best_kills,player.kills-(ACC.mIgn|0));R.most_deaths=Math.max(R.most_deaths,player.deaths);if(player.deaths<=1&&gmode!=='tut'){const m=R.map_kills=R.map_kills||{},k=player.kills-(ACC.mIgn|0);if(k>(m._clean|0)){m._clean=k;ACC.mkd=true;}}ACC.dirty=true;acFlush();}
 async function acFlush(zeroing){if(!ACC.ses||!ACC.row)return;if(gmode==='tut'){ACC.ign=0;ACC.sk=player.kills;ACC.sd=player.deaths;ACC.secs=0;return;}let dk=Math.max(0,player.kills-ACC.sk-(ACC.ign|0)),dd=Math.max(0,player.deaths-ACC.sd);
- if(!ACC.dirty&&!dk&&!dd&&ACC.secs<1)return;const R=ACC.row;R.kills+=dk;R.deaths+=dd;if(mode){R.best_kills=Math.max(R.best_kills,player.kills-(ACC.mIgn|0));R.most_deaths=Math.max(R.most_deaths,player.deaths);}R.headshots+=ACC.hs;R.play_secs+=Math.round(ACC.secs);ACC.sk=player.kills;ACC.sd=player.deaths;ACC.ign=0;ACC.hs=0;ACC.secs=0;ACC.dirty=false;
+ if(!ACC.dirty&&!dk&&!dd&&ACC.secs<1)return;const R=ACC.row;R.kills+=dk;R.deaths+=dd;if(mode){R.best_kills=Math.max(R.best_kills,player.kills-(ACC.mIgn|0));R.most_deaths=Math.max(R.most_deaths,player.deaths);if(player.deaths<=1&&gmode!=='tut'){const m=R.map_kills=R.map_kills||{},k=player.kills-(ACC.mIgn|0);if(k>(m._clean|0)){m._clean=k;ACC.mkd=true;}}}R.headshots+=ACC.hs;R.play_secs+=Math.round(ACC.secs);ACC.sk=player.kills;ACC.sd=player.deaths;ACC.ign=0;ACC.hs=0;ACC.secs=0;ACC.dirty=false;
  if(ACC.busy){ACC.pend=true;return;}ACC.busy=true;try{const {id,username,updated_at,avatar,card,title,map_kills,...body}=R;if(ACC.mkd){ACC.mkd=false;sbFetch('/rest/v1/stats?id=eq.'+ACC.ses.uid,{method:'PATCH',keepalive:!!ACC.leaving,body:JSON.stringify({map_kills})}).catch(()=>{});}await sbFetch('/rest/v1/stats?id=eq.'+ACC.ses.uid,{method:'PATCH',keepalive:!!ACC.leaving,body:JSON.stringify({...body,updated_at:new Date().toISOString()})});}catch(e){console.warn('stats sync',e);ACC.dirty=true;}ACC.busy=false;if(ACC.pend){ACC.pend=false;ACC.dirty=true;acFlush();}if($('acp').style.display==='flex')acRender();}
 setInterval(()=>{if(mode&&!matchOver&&!menuOpen&&!loOpen&&ACC.ses&&!document.hidden)ACC.secs+=1;},1000);setInterval(acFlush,45000);addEventListener('pagehide',()=>{ACC.leaving=true;ACC.busy=false;acFlush();});
 // UI: account chip top-right of the main menu; signed out = sign-in/create form, signed in = full stats
@@ -4422,6 +4423,7 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.24.1',n:['FIX: Untouchable could never unlock once you had ever died twice in any game - it now tracks your best game with 1 death or less']},
  {v:'1.24.0',n:['15 new premium emblem backgrounds: plain Navy, Maroon, Teal and Olive Drab, gradient Sunset, Ocean, Toxic and Gold, animated Rainbow, Pulse, Aurora and Galaxy, plus Insane challenge backgrounds Ember, animated Bloodmoon and Hellfire - the fancier the background, the harder the unlock']},
  {v:'1.23.1',n:['Players are invincible for 3 seconds after spawning, so they can\'t be spawn killed (bots don\'t get this)']},
  {v:'1.23.0',n:['Insane bots are much deadlier: near-perfect aim, faster reactions, faster turning and a higher fire rate','New Insane challenges - kills on Insane bots now count separately and unlock demon gear: Demon horns (10), Oni mask (25), Infernal plate (75), the Demon emblem (50), the glowing Demon Slayer title (100) and the animated Hellgate calling card (1,250)','Picking Easy bots now warns you that kills won\'t count; the final kill replay always hands back the menu once all angles have played']},
