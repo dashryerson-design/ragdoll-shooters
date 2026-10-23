@@ -2321,7 +2321,8 @@ const ADS_B=new THREE.Matrix4().compose(new THREE.Vector3(0,-.0518,.0598),new TH
 function adsHold(G,base,k){G.matrixAutoUpdate=true;G.position.setFromMatrixPosition(base);G.quaternion.setFromRotationMatrix(new THREE.Matrix4().extractRotation(base));G.scale.setScalar(1.15);}   // (base given in parent space)
 function adsEye(e,k,vd){const g=player.gun,pw=player===cur?wpn:player.wpn,id=player.wk,si=g&&g.group.userData.sight,hand=player.parts&&player.parts['hand-1']&&player.parts['hand-1'].mesh;
  if(!g||!pw||g.group.parent!==hand||!(si||IRON_T.includes(pw.type))||(!si&&!adsClear(id)))k=0;
- const opt=si&&si.t&&k>.85;   // scoped snipers too: the scope body is cut away so it can't block the viewcam.near=opt?(si.rel+si.len)*1.15+.02:.02;cam.updateProjectionMatrix();optView(si&&pw.zoom<=30?si.t:null,k);if(!g)return;const G=g.group;
+ const opt=si&&si.t&&k>.85;   // scoped snipers too: the scope body is cut away so it can't block the view
+ cam.near=opt?(si.rel+si.len)*1.15+.02:.02;cam.updateProjectionMatrix();optView(si&&pw.zoom<=30?si.t:null,k);if(!g)return;const G=g.group;
  if(k<.01){if(G.userData.lt){G.userData.lt=0;if(G.parent===hand){G.rotation.order='XYZ';G.rotation.set(Math.PI/2,0,0);G.position.set(0,-.0518,.0598);G.scale.setScalar(1.15);}G.traverse(o=>{if(o.isMesh&&o.material&&o.material.userData&&o.material.userData.lens)o.material.opacity=1;});}return;}
  G.userData.lt=1;const s=sightOf(g);hand.updateMatrixWorld(true);
  // where the sight would be in the hand's natural grip: the eye drifts there (so it follows the body), and the gun is then brought up square to the eye
@@ -3160,8 +3161,9 @@ const a=(sp.x||sp.z)?Math.atan2(-sp.x,-sp.z):0,ca=Math.cos(a),sa=Math.sin(a),q=n
  cur.hp=100;cur.dead=false;cur.dying=null;cur.skip=false;if(isPlayer){tgt.set(sp.x,1,sp.z);updateHUD();}}
 function los(a,b){const dx=b.x-a.x,dy=b.y-a.y,dz=b.z-a.z,d=Math.hypot(dx,dy,dz)||1;return!castRay(a,{x:dx/d,y:dy/d,z:dz/d},d,null,1).hit;}
 // safest spawn = furthest from every living doll, heavily penalised if anyone can see it
-function safestSpawn(d){const pts=teamSpawns(d.team);let best=pts[0]||spawnPoints[0],bs=-1e9;
- for(const sp of pts){let md=60,seen=0;
+function safestSpawn(d){const near=sp=>d.ai&&[player,...others()].some(o=>o!==d&&!o.ai&&!o.dead&&o.pel&&Math.hypot(o.pel.position.x-sp.x,o.pel.position.z-sp.z)<14);   // bots never spawn on top of a human
+ let pts=teamSpawns(d.team);if(d.ai&&pts.every(near))pts=spawnPoints;let best=pts[0]||spawnPoints[0],bs=-1e9;
+ for(const sp of pts){let md=60,seen=near(sp)?40:0;
   for(const o of[player,...others()]){if(o===d||o.dead||!o.pel||!isEnemy(d,o))continue;const p=o.head.position,dd=Math.hypot(p.x-sp.x,p.z-sp.z);md=Math.min(md,dd);
    if(dd<50&&los(p,{x:sp.x,y:1.5,z:sp.z}))seen++;}
   const sc=md-seen*25+Math.random()*3;if(sc>bs){bs=sc;best=sp;}}
@@ -4063,9 +4065,9 @@ function kcReplayEvents(rt){KC.rep=true;
 KC.touch=new Set();
 function kcDolls(){return[player,...bots,...NET.puppets.values()].filter(d=>d&&d.list);}
 function kcReplayGun(d,wk){
- d.kcG=d.kcG||{};
- if(!d.kcG[wk]){const g=wk==='pistol'?makePistol():buildGun(wk);g.group.rotation.x=Math.PI/2;g.group.scale.setScalar(1.15);g.group.position.set(0,-.0518,.0598);d.parts['hand-1'].mesh.add(g.group);d.kcG[wk]=g;}
- return d.kcG[wk];}
+ d.kcG=d.kcG||{};const cm=d===player?myCamo():(d.cm||'none'),key=wk+'|'+cm;   // the replay gun wears the same camo
+ if(!d.kcG[key]){const g=wk==='pistol'?makePistol():buildGun(wk);finishGun(g,cm);g.group.rotation.x=Math.PI/2;g.group.scale.setScalar(1.15);g.group.position.set(0,-.0518,.0598);d.parts['hand-1'].mesh.add(g.group);d.kcG[key]=g;}
+ return d.kcG[key];}
 function kcLiveHide(snapD,rt){
  const inSnap=new Set(snapD.map(x=>x[0]));
  for(const d of kcDolls()){
@@ -4249,7 +4251,7 @@ const tgt=new THREE.Vector3(0,1,0);const _fpS=new THREE.Vector3();let fpOn=false
 function frame(now){
  requestAnimationFrame(frame);
  const mFrz=matchOver&&!(FK.phase===1&&now-FK.t0<1600);   // the world keeps moving 1.6 s past the final kill, so its replay has the body falling, not frozen
- const fdt=((menuOpen||loOpen)&&!NET.on)||mFrz?0:Math.min(.05,(now-last)/1000);simT=now;
+ const rdt=Math.min(.05,(now-last)/1000),fdt=((menuOpen||loOpen)&&!NET.on)||mFrz?0:rdt;simT=now;
  acc+=Math.min(.05,(now-last)/1000);last=now;
  if(((menuOpen||loOpen)&&!NET.on)||mFrz)acc=0;                                   // the pause menu pauses the game
  const all=[player,...bots];
@@ -4276,7 +4278,7 @@ function frame(now){
  if(gmode!=='duel'&&player.dead&&((KC.cdT&&now-KC.cdT>5000)||player.skip)){use(player);respawnAt(safestSpawn(player));}
  use(player);if(player.dead)aiming=false;
  netFrame(now,fdt);
- bloodFrame(fdt,now);deathScreen(now);if(mode){modeFrame(fdt);if(!NET.on&&MS.time>0){const tl=Math.max(0,MS.time*60000-(simT-matchT0)),sec=Math.ceil(tl/1000);$('ssub').textContent+=` · ${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')} left`;}}if(now>hmT)$('hm').style.opacity=0;
+ bloodFrame(KC.on?rdt:fdt,now);   // gore keeps flying during the final-kill replay (the match itself is frozen)deathScreen(now);if(mode){modeFrame(fdt);if(!NET.on&&MS.time>0){const tl=Math.max(0,MS.time*60000-(simT-matchT0)),sec=Math.ceil(tl/1000);$('ssub').textContent+=` · ${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')} left`;}}if(now>hmT)$('hm').style.opacity=0;
  for(const g of breakWalls){let go=false;for(const b of g)if(b.sleepState===0&&b.velocity.lengthSquared()>.04){go=true;break;}if(go)for(const b of g)if(b.sleepState!==0)b.wakeUp();}
  if(optOn&&(++cullTick%8===0)){const px=pel.position.x,pz=pel.position.z,R2=OPT_FAR*OPT_FAR;   // hide far-away objects entirely
   for(const t of terr){const p=t.b.position,v=(p.x-px)**2+(p.z-pz)**2<R2;t.b.mesh.visible=v;}
@@ -4323,6 +4325,8 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.20.6',n:['Bots no longer spawn on spawn points close to a player (they pick a spawn at least 14 m away, even from the other team\'s side if needed)']},
+ {v:'1.20.5',n:['FIX: first person view froze the camera','FIX: gore chunks hung in mid-air during the final kill replay','Weapon camos now show in every replay']},
  {v:'1.20.4',n:['Killstreak calling cards and emblems are now an absolute flex: they need 3x the streak (up to a 100 killstreak)']},
  {v:'1.20.3',n:['Killstreak titles are tougher: On A Roll needs a 12 streak, Ghost a 50 streak and Tactical Nuke a 100 streak']},
  {v:'1.20.2',n:['Kills on Easy bots no longer count towards your account stats or unlocks']},
