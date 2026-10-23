@@ -2495,6 +2495,9 @@ function hardItem(it,ti,xi,k){const f0=it[ti];if(!f0)return;const ks=Math.max(1.
 for(const c of CAMOS){const L=c[6]||{};if(L.e||L.a)hardItem(c,4,5,L.a?5:3);}
 for(const c of CARDS)if(c[5])hardItem(c,3,4,5);
 for(const e of EMB)if(e[4]&&/animate/.test(e[4]('#fff')))hardItem(e,2,3,5);
+// killstreak cards and emblems: an absolute flex - 3x the streak (capped at 100)
+for(const[list,ti,xi]of[[CARDS,3,4],[EMB,2,3]])for(const it of list){if(!it[ti]||!/killstreak/.test(it[xi]))continue;const n=+String(it[xi]).match(/\d[\d,]*/)[0].replace(/,/g,''),need=Math.min(100,n*3),f0=it[ti];
+ it[ti]=R=>f0(R)&&R.best_streak>=need;it[xi]=String(it[xi]).replace(/\d[\d,]*/,need).replace(/^an (\d)/,'a $1');}
 for(const t of TITLES){const anim=['ghost','headhunter','champion','warlord','nuke','legend','god','cartographer'],glow=['winner','marksman','hunter','untouch','butcher','reaper','lifer'];if(anim.includes(t[0]))hardItem(t,3,4,5);else if(glow.includes(t[0]))hardItem(t,3,4,2.5);}
 
 const pfOf=R=>({avatar:(R&&R.avatar)||PF0.avatar,card:(R&&R.card)||PF0.card,title:(R&&R.title)||PF0.title});
@@ -4320,6 +4323,7 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.20.4',n:['Killstreak calling cards and emblems are now an absolute flex: they need 3x the streak (up to a 100 killstreak)']},
  {v:'1.20.3',n:['Killstreak titles are tougher: On A Roll needs a 12 streak, Ghost a 50 streak and Tactical Nuke a 100 streak']},
  {v:'1.20.2',n:['Kills on Easy bots no longer count towards your account stats or unlocks']},
  {v:'1.20.1',n:['Glowing and animated rewards are now much harder to earn: animated camos, calling cards and emblems need about 5x the stats, glowing camos 3x, and glowing / animated titles (Tactical Nuke, Legend, God of War...) 2.5x to 5x - killstreak and single-game goals rise less so they stay possible']},
