@@ -2320,7 +2320,7 @@ addEventListener('keydown',e=>{if(e.key!=='1'||e.repeat)return;const open=loOpen
  const n=performance.now();CHEAT.t=CHEAT.t.filter(x=>n-x<1500);CHEAT.t.push(n);if(CHEAT.t.length<5||CHEAT.on)return;CHEAT.on=true;CHEAT.t=[];try{localStorage.setItem('rsUnlockAll','1');}catch(er){}
  const el=document.createElement('div');el.textContent='EVERYTHING UNLOCKED';el.style.cssText="position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:99;padding:12px 26px;background:#ff7a1a;color:#111;font:700 24px 'Barlow Semi Condensed';letter-spacing:.2em;pointer-events:none;box-shadow:0 0 30px #ff7a1a";document.body.appendChild(el);setTimeout(()=>el.remove(),2200);
  try{if(loOpen){LV.id=null;renderLoadout();}if($('acp').style.display==='flex')acRender();}catch(er){}},true);
-function finishGun(g){const id=settings.camo||'none',c=CAMOS.find(x=>x[0]===id);if(!c||c[2]==='none')return;if(c[4]&&!CHEAT.on&&!(ACC.ses&&ACC.row&&c[4](ACC.row)))return;   // locked camos (signed out, or not earned) don't showconst tx=camoTex2(id),lk=c[6]||{},MC={};
+function finishGun(g){const id=settings.camo||'none',c=CAMOS.find(x=>x[0]===id);if(!c||c[2]==='none')return;if(c[4]&&!CHEAT.on&&!(ACC.ses&&ACC.row&&c[4](ACC.row)))return;const tx=camoTex2(id),lk=c[6]||{},MC={};   // locked camos (signed out, or not earned) don't show
  g.group.traverse(o=>{const m=o.material;if(!o.isMesh||!m||!m.isMeshStandardMaterial||o===g.flash)return;
   if(m.transparent||(m.userData&&m.userData.lens)||(m.emissive&&m.emissive.getHex()!==0))return;const hsl={};m.color.getHSL(hsl);if(hsl.l<.02)return;   // keep glass, lit reticles, the bore
   let n=MC[m.uuid];if(!n){n=MC[m.uuid]=m.clone();n.map=tx;n.color.setHex(0xffffff);n.metalness=lk.m?.85:Math.min(m.metalness,.35);n.roughness=lk.m?.28:.6;
