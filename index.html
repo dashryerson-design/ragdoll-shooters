@@ -1428,7 +1428,7 @@ function renderLoadout(){gunFix();$('ggnote').textContent=gmode==='gungame'?'Ign
 $('lo').addEventListener('click',e=>{const wc=e.target.closest('[data-wc]');if(wc){settings.wcat=wc.dataset.wc;saveLoadout();renderLoadout();return;}const cm=e.target.closest('[data-cm]');if(cm){settings.camo=cm.dataset.cm;saveLoadout();LV.id=null;renderLoadout();return;}const pk=e.target.closest('[data-pk]');if(pk){const a=settings.perks||(settings.perks=[]),i=a.indexOf(pk.dataset.pk);if(i>=0)a.splice(i,1);else{if(a.length>=3)a.shift();a.push(pk.dataset.pk);}saveLoadout();renderLoadout();return;}if(e.target.closest('#lcrate')){window.loPick=true;renderLoadout();return;}const cy=e.target.closest('[data-cy]');if(cy){const k=settings.lsl==='s'?'wpn2':'wpn',L=Object.values(W).filter(w=>k==='wpn'||SEC_T.includes(w.type)).sort((a,b)=>WORD.indexOf(a.type)-WORD.indexOf(b.type)).map(w=>Object.keys(W).find(x=>W[x]===w)).filter(gunOK),i=Math.max(0,L.indexOf(settings[k]));settings[k]=L[(i+ +cy.dataset.cy+L.length)%L.length];saveLoadout();renderLoadout();return;}if(e.target.closest('#lpback')){window.loPick=false;renderLoadout();return;}const sl=e.target.closest('[data-sl]');if(sl){settings.lsl=sl.dataset.sl;window.loPick=sl.dataset.sl==='k'||sl.dataset.sl==='c';renderLoadout();return;}const w=e.target.closest('[data-w]'),c=e.target.closest('[data-k]'),t=e.target.closest('[data-t]');
  if(w){settings[settings.lsl==='s'?'wpn2':'wpn']=w.dataset.w;window.loPick=false;}else if(c)settings[c.dataset.k]=c.dataset.v;else if(t)settings[t.dataset.t]=!settings[t.dataset.t];else return;renderLoadout();});
 function showLoadout(inGame){loOpen=true;window.loPick=false;$('lo').style.display='flex';$('deploy').textContent=inGame?'APPLY':'DEPLOY';renderLoadout();if(document.pointerLockElement)document.exitPointerLock();}
-$('deploy').onclick=()=>{gunFix();loOpen=false;$('lo').style.display='none';saveLoadout();
+$('deploy').onclick=()=>{gunFix();cosFix();loOpen=false;$('lo').style.display='none';saveLoadout();
  use(player);equipCur(settings.wpn);dressCur(settings);
  if(NET.want&&!NET.on){showBrowser();return;}
  if(!mode){matchT0=simT;player.team='A';setupZone();if(gmode==='gungame'){equipCur(GG[0]);}respawnAt(GM[gmode].team?safestSpawn(player):MAPS[curMap||'tester'].start);startGame(pendMode);$('score').style.display='block';}
@@ -2321,7 +2321,7 @@ const ADS_B=new THREE.Matrix4().compose(new THREE.Vector3(0,-.0518,.0598),new TH
 function adsHold(G,base,k){G.matrixAutoUpdate=true;G.position.setFromMatrixPosition(base);G.quaternion.setFromRotationMatrix(new THREE.Matrix4().extractRotation(base));G.scale.setScalar(1.15);}   // (base given in parent space)
 function adsEye(e,k,vd){const g=player.gun,pw=player===cur?wpn:player.wpn,id=player.wk,si=g&&g.group.userData.sight,hand=player.parts&&player.parts['hand-1']&&player.parts['hand-1'].mesh;
  if(!g||!pw||g.group.parent!==hand||!(si||IRON_T.includes(pw.type))||(!si&&!adsClear(id)))k=0;
- const opt=si&&si.t&&pw.zoom<=30&&k>.85;cam.near=opt?(si.rel+si.len)*1.15+.02:.02;cam.updateProjectionMatrix();optView(si&&pw.zoom<=30?si.t:null,k);if(!g)return;const G=g.group;
+ const opt=si&&si.t&&k>.85;   // scoped snipers too: the scope body is cut away so it can't block the viewcam.near=opt?(si.rel+si.len)*1.15+.02:.02;cam.updateProjectionMatrix();optView(si&&pw.zoom<=30?si.t:null,k);if(!g)return;const G=g.group;
  if(k<.01){if(G.userData.lt){G.userData.lt=0;if(G.parent===hand){G.rotation.order='XYZ';G.rotation.set(Math.PI/2,0,0);G.position.set(0,-.0518,.0598);G.scale.setScalar(1.15);}G.traverse(o=>{if(o.isMesh&&o.material&&o.material.userData&&o.material.userData.lens)o.material.opacity=1;});}return;}
  G.userData.lt=1;const s=sightOf(g);hand.updateMatrixWorld(true);
  // where the sight would be in the hand's natural grip: the eye drifts there (so it follows the body), and the gun is then brought up square to the eye
@@ -2382,12 +2382,7 @@ function camoTex2(id){if(CAMOTX[id])return CAMOTX[id];const c=CAMOS.find(x=>x[0]
   case'dark':{const g=t.createRadialGradient(S/2,S/2,10,S/2,S/2,S*.7);g.addColorStop(0,'#3a0a6a');g.addColorStop(1,col[0]);t.fillStyle=g;t.fillRect(0,0,S,S);for(let i=0;i<14;i++){t.strokeStyle=`rgba(163,92,255,${.3+R()*.5})`;t.lineWidth=1+R()*3;t.beginPath();for(let x=0;x<=S;x+=6)t.lineTo(x,R()*0+((i*19)%S)+Math.sin(x*.03+i)*24);t.stroke();}for(let i=0;i<160;i++){t.fillStyle=col[2];t.globalAlpha=R();t.fillRect(R()*S,R()*S,1.5,1.5);}t.globalAlpha=1;break;}}
  const tx=new THREE.CanvasTexture(cv);tx.wrapS=tx.wrapT=THREE.RepeatWrapping;tx.repeat.set(5,5);return CAMOTX[id]=tx;}
 const CAMO_ANIM=[];
-// secret: press 1 five times within 1.5 s on any progression screen (account, loadout, customise) to unlock everything on this device
-const CHEAT={on:false,t:[]};try{CHEAT.on=localStorage.getItem('rsUnlockAll')==='1';}catch(e){}
-addEventListener('keydown',e=>{if(e.key!=='1'||e.repeat)return;const open=loOpen||$('acp').style.display==='flex'||(typeof CZ!=='undefined'&&CZ.on);if(!open)return;
- const n=performance.now();CHEAT.t=CHEAT.t.filter(x=>n-x<1500);CHEAT.t.push(n);if(CHEAT.t.length<5||CHEAT.on)return;CHEAT.on=true;CHEAT.t=[];try{localStorage.setItem('rsUnlockAll','1');}catch(er){}
- const el=document.createElement('div');el.textContent='EVERYTHING UNLOCKED';el.style.cssText="position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:99;padding:12px 26px;background:#ff7a1a;color:#111;font:700 24px 'Barlow Semi Condensed';letter-spacing:.2em;pointer-events:none;box-shadow:0 0 30px #ff7a1a";document.body.appendChild(el);setTimeout(()=>el.remove(),2200);
- try{if(loOpen){LV.id=null;renderLoadout();}if($('acp').style.display==='flex')acRender();}catch(er){}},true);
+const CHEAT={on:false};try{localStorage.removeItem('rsUnlockAll');}catch(e){}   // the old unlock-all code is gone: everything must be earned
 const myCamo=()=>{const c=CAMOS.find(x=>x[0]===(settings.camo||'none'));return c&&(!c[4]||CHEAT.on||(ACC.ses&&ACC.row&&c[4](ACC.row)))?c[0]:'none';};   // what others see
 function finishGun(g,rid){const id=rid||myCamo(),c=CAMOS.find(x=>x[0]===id);if(!c||c[2]==='none')return;const tx=camoTex2(id),lk=c[6]||{},MC={};   // locked camos (signed out, or not earned) don't show
  g.group.traverse(o=>{const m=o.material;if(!o.isMesh||!m||!m.isMeshStandardMaterial||o===g.flash)return;
@@ -2499,8 +2494,10 @@ async function sbFetch(path,o={},auth=true){const h={apikey:SB_KEY,'Content-Type
  const t=await r.text();let j=null;try{j=t?JSON.parse(t):null;}catch(e){}if(!r.ok)throw new Error((j&&(j.msg||j.message||j.error_description||j.error))||('Error '+r.status));return j;}
 async function acRefresh(){try{const j=await sbFetch('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:ACC.ses.refresh_token})},false);ACC.ses={...ACC.ses,access_token:j.access_token,refresh_token:j.refresh_token};acSave();return true;}catch(e){return false;}}
 const AC0={kills:0,deaths:0,games:0,wins:0,best_kills:0,most_deaths:0,headshots:0,best_streak:0,play_secs:0};
+function pfFix(){const R=ACC.row;if(!R)return;const P=pfOf(R),fix={},[g]=P.avatar.split(':'),e=EMB.find(x=>x[0]===g);
+ if(e&&e[2]&&!e[2](R))fix.avatar=PF0.avatar;const c=CARDS.find(x=>x[0]===P.card);if(c&&!unlocked(c,R))fix.card=PF0.card;const t=TITLES.find(x=>x[0]===P.title);if(t&&!unlocked(t,R))fix.title=PF0.title;if(Object.keys(fix).length)pfSave(fix);}
 async function acLoadRow(){const r=await sbFetch('/rest/v1/stats?id=eq.'+ACC.ses.uid+'&select=*');ACC.row=r&&r[0];
- if(!ACC.row){const ins=await sbFetch('/rest/v1/stats',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({id:ACC.ses.uid,username:ACC.ses.name,...AC0})});ACC.row=ins[0];}acUI();}
+ if(!ACC.row){const ins=await sbFetch('/rest/v1/stats',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({id:ACC.ses.uid,username:ACC.ses.name,...AC0})});ACC.row=ins[0];}pfFix();acUI();}
 async function acAuth(signup,name,pw){name=name.trim();if(!/^[A-Za-z0-9_]{3,16}$/.test(name))throw new Error('Username: 3-16 letters, numbers or _');if(pw.length<6)throw new Error('Password: at least 6 characters');
  if(signup){const ex=await sbFetch('/rest/v1/stats?username=ilike.'+encodeURIComponent(name)+'&select=id',{},false);if(ex&&ex.length)throw new Error('That username is taken');}
  const j=await sbFetch(signup?'/auth/v1/signup':'/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:acEmail(name),password:pw,data:{username:name}})},false);
@@ -2552,7 +2549,7 @@ function tutStart(){gmode='tut';buildMap('baseplate');for(const d of bots.slice(
  Object.assign(TUT,{on:true,i:-1,steps:tutSteps()});tutNext();}
 function tutNext(){TUT.i++;TUT.acc=0;TUT.yaw0=camYaw;const st=TUT.steps[TUT.i];$('tut').style.display='block';$('tutt').textContent=st[0];$('tutn').textContent=st[1]?`OBJECTIVE ${TUT.i+1} / ${TUT.steps.length-1}`:'TRAINING COMPLETE';
  const el=$('tut');el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');if(TUT.mk)TUT.mk.visible=TUT.i===1;
- if(!st[1])setTimeout(()=>{const f=$('tutfade');f.style.display='block';requestAnimationFrame(()=>f.style.opacity=1);setTimeout(()=>location.reload(),1300);},3500);}   // congratulations, then fade out to the main menu
+ if(!st[1])setTimeout(()=>{const f=$('tutfade');f.style.display='block';requestAnimationFrame(()=>f.style.opacity=1);setTimeout(()=>{toMenu();f.style.opacity=0;setTimeout(()=>f.style.display='none',1300);},1300);},3500);}   // congratulations, then fade out to the main menu
 function tutTick(){if(!TUT.on||!mode)return;const tn=performance.now(),dt=Math.min(.3,(tn-(TUT.last||tn))/1000);TUT.last=tn;const st=TUT.steps[TUT.i];if(!st||!st[1])return;const c0=cur;use(player);
  const i=TUT.i;if(i===0){let d=camYaw-TUT.yaw0;TUT.acc+=Math.abs(Math.atan2(Math.sin(d),Math.cos(d)));TUT.yaw0=camYaw;}
  else if(i===2&&keys.shift&&mv>.4)TUT.acc+=dt;else if(i===3&&js)TUT.acc=1;else if(i===4&&keys.c)TUT.acc+=dt;else if(i===5&&aimK>.8)TUT.acc+=dt;
@@ -2613,6 +2610,7 @@ const COS_LOCK={'head:capback':[R=>R.games>=1,'play 1 game'],'head:shemwrap':[R=
  'body:hoodie':[R=>R.games>=1,'play 1 game'],'body:flannel':[R=>R.kills>=8,'8 kills'],'body:fleece':[R=>R.games>=3,'3 games'],'body:puffer':[R=>R.kills>=20,'20 kills'],'body:poncho':[R=>R.games>=6,'6 games'],'body:leather':[R=>R.wins>=3,'3 wins'],'body:hivis':[R=>R.kills>=40,'40 kills'],
  'back:sling':[R=>R.games>=1,'play 1 game'],'back:duffel':[R=>R.kills>=10,'10 kills'],'back:etool':[R=>R.games>=5,'5 games'],'back:tube':[R=>R.kills>=60,'60 kills'],
  'kit:holster':[R=>R.kills>=3,'3 kills'],'kit:wristwatch':[R=>R.games>=2,'2 games']};
+function cosFix(){for(const[k]of CZ_OPTS)if(['head','face','body','back'].includes(k)&&!cosOK(k,settings[k]))settings[k]='none';for(const[k]of CZ_TOG)if(settings[k]&&!cosOK('kit',k))settings[k]=false;}
 function cosOK(k,id){const L=COS_LOCK[k+':'+id];return !L||CHEAT.on||!!(ACC.ses&&ACC.row&&L[0](ACC.row));}
 function dressCur(c){const d=cur;for(const m of d.cosm||[])m.parent&&m.parent.remove(m);d.cosm=[];
  const A=colHex(c.acc),ac=def=>A!=null?A:def;
@@ -3665,8 +3663,15 @@ function showModes(){$('gs').style.display='flex';
 $('gs').addEventListener('click',e=>{const t=e.target.closest('[data-on]');if(t){NET.want=t.dataset.on==='1';for(const c of $('gtabs').children)c.classList.toggle('sel',c===t);$('gonl').style.display=NET.want?'block':'none';showModes();return;}
  const c=e.target.closest('[data-g]');if(!c)return;gmode=c.dataset.g;settings.gm=gmode;saveLoadout();$('gs').style.display='none';if(NET.want)showLoadout(false);else showMatchSettings();});
 $('eagain').onclick=()=>NET.on?netAgain():restartMatch();
+// back to the main menu without reloading: drop the match, the bots and every in-game overlay
+function toMenu(){if(menuOpen)toggleMenu();if(document.pointerLockElement)document.exitPointerLock();if(window.resetTouch)resetTouch();
+ FK.phase=0;FK.kill=null;matchOver=false;DUEL.at=0;teamScore={A:0,B:0};for(const d of bots.slice())removeBot(d);
+ TUT.on=false;if(TUT.mk){scene.remove(TUT.mk);TUT.mk=null;}acReset();use(player);player.kills=player.deaths=player.gl=0;respawnAt(MAPS[curMap].start);kcFrame(performance.now());
+ mode=null;fpOn=false;optView(null,0);gmode=realMode();document.body.classList.remove('touchui','kcon');$('feed').innerHTML='';
+ for(const id of['hud','tc','score','end','dead','kc','kcsk','scope','vprompt','bveh','lbbtn','fkskip','fkban','duelcd','pkthr','tut','h','lbov'])$(id).style.display='none';
+ for(const id of['lowhp','hurt'])$(id).style.opacity=0;window.__ch.style.display='';$('mm').style.display='flex';MP.on=true;}
 $('emenu').onclick=async()=>{acFlush();const t0=performance.now();while(ACC.busy&&performance.now()-t0<4000)await new Promise(r=>setTimeout(r,100));   // let the end-of-match save finish before the page reloads
- NET.on?leaveServer():location.reload();};
+ NET.on?leaveServer():toMenu();};
 // ---------- online multiplayer ----------
 // Uses the page's live "room": everyone who has the game open right now. The lobby is for matchmaking; each match gets its own named room.
 //  - presence (about 15/s): my whole ragdoll pose + health/weapon/armour, so everyone else sees my real body (ragdoll deaths included)
@@ -4121,7 +4126,7 @@ function czApply(f){czDress();czLabels();czFocus(f);}
 function czLoop(now){if(!CZ.on)return;requestAnimationFrame(czLoop);const cv=$('czc'),w=cv.clientWidth,h=cv.clientHeight;if(cv.width!==(w*CZ.r.getPixelRatio()|0)||cv.height!==(h*CZ.r.getPixelRatio()|0)){CZ.r.setSize(w,h,false);CZ.cam.aspect=w/h;CZ.cam.updateProjectionMatrix();}
  if(CZ.auto&&!CZ.drag)CZ.yaw+=.008;else if(CZ.tyaw!=null&&!CZ.drag){let d=CZ.tyaw-CZ.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));CZ.yaw+=d*.12;}
  CZ.fy+=(CZ.ty-CZ.fy)*.1;CZ.fd+=(CZ.td-CZ.fd)*.1;CZ.root.rotation.y=CZ.yaw;CZ.cam.position.set(0,CZ.fy+.25,CZ.fd);CZ.cam.lookAt(0,CZ.fy,0);CZ.r.render(CZ.scene,CZ.cam);}
-function showCz(){if(!CZ.ready)czBuild();$('cz').style.display='flex';CZ.on=true;CZ.auto=true;CZ.tyaw=null;czRows();czGun();czApply('');czFocus('');requestAnimationFrame(czLoop);}
+function showCz(){cosFix();if(!CZ.ready)czBuild();$('cz').style.display='flex';CZ.on=true;CZ.auto=true;CZ.tyaw=null;czRows();czGun();czApply('');czFocus('');requestAnimationFrame(czLoop);}
 function hideCz(){CZ.on=false;$('cz').style.display='none';saveLoadout();renderLoadout();}
 $('lcz').onclick=showCz;$('czd').onclick=hideCz;
 $('czcat').addEventListener('click',e=>{const c=e.target.closest('[data-c]');if(!c)return;CZ.cat=c.dataset.c;czRows();const d=CZ_OPTS.find(x=>x[0]===CZ.cat);czFocus(d?d[3]:'');});
@@ -4281,6 +4286,9 @@ requestAnimationFrame(frame);
 <script>
 // ---------- version + patch notes: newest first. small additions +0.0.1, bigger features +0.1 ----------
 const PATCH=[
+ {v:'1.19.0',n:['Progression reset: every account starts from zero and every camo, calling card, emblem, title, cosmetic and gun must now be earned - the old unlock-all code has been removed','Anything you had equipped that you have not unlocked is switched back to the default']},
+ {v:'1.18.3',n:['FIX: aiming a scoped sniper in first person could fill the screen with the scope\'s camo - the scope body no longer blocks the view']},
+ {v:'1.18.2',n:['Leaving a match or finishing the tutorial now takes you straight back to the main menu instead of reloading the page']},
  {v:'1.18.1',n:['FIX: stats from a finished match were sometimes lost - leaving now waits for the save to finish before going back to the menu']},
  {v:'1.18.0',n:['TUTORIAL: new option on the play mode screen - your commander walks you through looking, moving, sprinting, jumping, crouching, aiming, shooting, reloading, switching weapons and changing view on a training ground, with instructions for keyboard or touch']},
  {v:'1.17.0',n:['New main menu: the old background fight is gone for good - in its place a lone operator in a black suit and gas mask stands posed in a dark studio on the right of the screen']},
