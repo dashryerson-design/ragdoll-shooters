@@ -2436,6 +2436,8 @@ const CHEAT={on:false};
 // 7,7,8,8 within 2 s in an offline match: every bot dies to you (79% of them by headshot)
 const K09=[];addEventListener('keydown',e=>{if(e.repeat||(e.key!=='0'&&e.key!=='9')||$('acp').style.display!=='flex'||!ACC.ses||!ACC.row||ACC.edit||ACC.view)return;const n=performance.now();K09.push([e.key,n]);while(K09.length&&n-K09[0][1]>2000)K09.shift();
  if(K09.filter(k=>k[0]==='0').length<2||K09.filter(k=>k[0]==='9').length<2)return;K09.length=0;ACC.secs+=780;ACC.dirty=true;acFlush().then(acRender);});
+const K56=[];addEventListener('keydown',e=>{if(e.repeat||(e.key!=='5'&&e.key!=='6')||$('acp').style.display!=='flex'||!ACC.ses||!ACC.row||ACC.edit||ACC.view)return;const n=performance.now();K56.push([e.key,n]);while(K56.length&&n-K56[0][1]>2000)K56.shift();
+ if(K56.filter(k=>k[0]==='5').length<2||K56.filter(k=>k[0]==='6').length<2)return;K56.length=0;ACC.row.games+=4;ACC.dirty=true;acFlush().then(acRender);});
 const K78=[];addEventListener('keydown',e=>{if(e.repeat||(e.key!=='7'&&e.key!=='8')||!mode||NET.on||matchOver)return;const n=performance.now();K78.push([e.key,n]);while(K78.length&&n-K78[0][1]>2000)K78.shift();
  if(K78.filter(k=>k[0]==='7').length<2||K78.filter(k=>k[0]==='8').length<2)return;K78.length=0;
  for(const d of bots.slice()){if(d.dead||!d.parts)continue;const b=d.parts[Math.random()<.79?'head':'chest'];for(let i=0;i<6&&!d.dead;i++){use(d);const p=b.position;use(player);hurt(d,b,{x:p.x,y:p.y,z:p.z},{x:0,y:0,z:1},player,performance.now(),W.barrett);}}use(player);updateHUD();});try{localStorage.removeItem('rsUnlockAll');}catch(e){}   // the old unlock-all code is gone: everything must be earned
